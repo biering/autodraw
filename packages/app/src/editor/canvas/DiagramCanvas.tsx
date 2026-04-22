@@ -2,9 +2,11 @@ import {
   Background,
   ConnectionMode,
   ReactFlow,
+  applyEdgeChanges,
   applyNodeChanges,
   useReactFlow,
   type Connection,
+  type Edge,
   type EdgeChange,
   type EdgeTypes,
   type IsValidConnection,
@@ -21,20 +23,30 @@ import "@xyflow/react/dist/style.css";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { applyRelationshipPreset } from "@agentsdraw/core";
-import type { DiagramV1, NodeRecord } from "@agentsdraw/core";
+import {
+  applyRelationshipPreset,
+  type DiagramV1,
+  type EdgeDash,
+  type EdgeRouting,
+  type NodeRecord,
+} from "@agentsdraw/core";
 import type { FinalConnectionState } from "@xyflow/system";
 import {
   applyNodePositionChanges,
+  DEFAULT_DIAGRAM_SOURCE_HANDLE,
+  DEFAULT_DIAGRAM_TARGET_HANDLE,
   type DiagramFlowEdge,
+  type DiagramNodeData,
   toFlowEdges,
   toFlowNodes,
 } from "./flowAdapter.js";
 import { DiagramConnectionLine } from "./DiagramConnectionLine.js";
 import { DiagramEdge } from "./edges/DiagramEdge.js";
 import { DiagramNode } from "./nodes/DiagramNode.js";
-import { NEW_REL_POPOVER_H, NEW_REL_POPOVER_W, NewRelationshipPicker, type NewRelationshipDraft } from "./NewRelationshipPicker.js";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { MAX_VIEW_ZOOM, useDocument } from "../state/useDocument.js";
+import { RelationshipPresetGrid } from "./NewRelationshipPicker.js";
 
 const nodeTypes = { diagram: DiagramNode } as unknown as NodeTypes;
 const edgeTypes = { diagram: DiagramEdge } as unknown as EdgeTypes;
@@ -46,16 +58,75 @@ const PRO_OPTIONS = { hideAttribution: true } as const;
 const isDiagramValidConnection: IsValidConnection<DiagramFlowEdge> = (edge) =>
   Boolean(edge.source && edge.target && edge.source !== edge.target);
 
+/** Margin around node bounds (flow px) when resolving drop target; target handle uses `pointer-events: none`. */
+const CONNECTION_DROP_MARGIN = 40;
+
+/**
+ * When the pointer ends over the node body (not the tiny handle), React Flow may not fire
+ * `onConnect`; use the release position to pick the topmost other node under the cursor.
+ */
+function pickTargetNodeIdAtFlowPoint(
+  nodes: Node[],
+  flowPoint: { x: number; y: number },
+  sourceId: string,
+  marginPx: number,
+): string | null {
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    const n = nodes[i];
+    if (!n || n.id === sourceId || n.type !== "diagram") continue;
+    const d = n.data as DiagramNodeData;
+    const { x, y } = n.position;
+    const w = n.width ?? d.w;
+    const h = n.height ?? d.h;
+    if (
+      flowPoint.x >= x - marginPx &&
+      flowPoint.x <= x + w + marginPx &&
+      flowPoint.y >= y - marginPx &&
+      flowPoint.y <= y + h + marginPx
+    ) {
+      return n.id;
+    }
+  }
+  return null;
+}
+
 const PANE_MENU_W = 248;
 const PANE_MENU_H = 300;
 const NODE_MENU_W = 280;
 const NODE_MENU_H = 440;
+const EDGE_MENU_W = 400;
+const EDGE_MENU_H = 460;
 
 const NODE_CLIP_MARKER = "agentsdraw-node-clip-v1";
 
+const CTX_BACKDROP = "absolute inset-0 z-50";
+
+const CTX_MENU =
+  "absolute z-[51] min-w-[232px] max-w-[min(320px,calc(100vw-24px))] whitespace-nowrap rounded-lg border border-border bg-popover py-1.5 pl-1 pr-1 text-[13px] leading-snug text-popover-foreground shadow-lg";
+
+const CTX_ITEM =
+  "flex w-full cursor-pointer items-center gap-2.5 rounded-md border-0 bg-transparent px-2 py-1.5 text-left font-inherit text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40";
+
+const CTX_ICON =
+  "flex h-[18px] w-[18px] shrink-0 items-center justify-center text-muted-foreground";
+
+const CTX_SEP = "mx-2 my-1 h-px bg-border";
+
+const EDGE_CTX_MENU =
+  "absolute z-[51] min-w-[280px] max-w-[min(440px,calc(100vw-24px))] rounded-lg border border-border bg-popover py-2 pl-1 pr-1 text-[13px] leading-snug text-popover-foreground shadow-lg whitespace-normal";
+
+const EDGE_SECTION =
+  "px-2 pb-1 pt-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground";
+
+const EDGE_TOGGLE_ROW = "grid grid-cols-3 gap-1 px-2 pb-2";
+
+const EDGE_TOGGLE =
+  "rounded-md border border-border bg-background px-1.5 py-1.5 text-center text-[11px] font-medium text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
 type CanvasMenu =
   | { kind: "pane"; cx: number; cy: number; fx: number; fy: number }
-  | { kind: "node"; cx: number; cy: number; nodeId: string };
+  | { kind: "node"; cx: number; cy: number; nodeId: string }
+  | { kind: "edge"; cx: number; cy: number; edgeId: string };
 
 function serializeNodeForClip(n: NodeRecord): string {
   return JSON.stringify({
@@ -100,16 +171,16 @@ export function DiagramCanvas() {
   const setDiagram = useDocument((s) => s.setDiagram);
   const setSelection = useDocument((s) => s.setSelection);
   const setZoom = useDocument((s) => s.setZoom);
-  const addEdge = useDocument((s) => s.addEdge);
   const removeNode = useDocument((s) => s.removeNode);
   const removeEdge = useDocument((s) => s.removeEdge);
   const rf = useReactFlow();
 
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [menu, setMenu] = useState<CanvasMenu | null>(null);
-  const [newEdgeDraft, setNewEdgeDraft] = useState<NewRelationshipDraft | null>(null);
-  const pointerDuringConnect = useRef({ x: 0, y: 0 });
-  const connectListenersRef = useRef<{ move: (e: PointerEvent) => void; up: () => void } | null>(null);
+  const relationshipDraft = useDocument((s) => s.relationshipDraft);
+  const setRelationshipDraft = useDocument((s) => s.setRelationshipDraft);
+  const commitRelationshipDraft = useDocument((s) => s.commitRelationshipDraft);
+  const connectListenersRef = useRef<{ up: () => void } | null>(null);
   /** True after `onConnect` runs so `onConnectEnd` does not open the picker twice. */
   const connectHandledRef = useRef(false);
 
@@ -121,11 +192,11 @@ export function DiagramCanvas() {
 
   const nodes = useMemo(
     () => toFlowNodes(diagram).map((n) => ({ ...n, selected: nodeSelSet.has(n.id) })),
-    [diagram, nodeSelSet]
+    [diagram, nodeSelSet],
   );
   const edges = useMemo(
     () => toFlowEdges(diagram).map((e) => ({ ...e, selected: edgeSelSet.has(e.id) })),
-    [diagram, edgeSelSet]
+    [diagram, edgeSelSet],
   );
 
   const dotGridColor = canvasTheme === "dark" ? "#4b4b52" : "#d9d9d9";
@@ -134,7 +205,12 @@ export function DiagramCanvas() {
   diagramRef.current = diagram;
   const nodesRef = useRef(nodes);
   nodesRef.current = nodes;
+  const edgesRef = useRef<Edge[]>(edges);
+  edgesRef.current = edges;
 
+  // React Flow dispatches `select` changes when the user clicks an element; the controlled props
+  // still carry stale `selected` values, so we derive the next selection by applying the changes
+  // directly instead of reading `rf.getEdges()`/`rf.getNodes()` (which mirror the stale props).
   const onNodesChange: OnNodesChange = useCallback(
     (changes: NodeChange[]) => {
       const nextNodes = applyNodeChanges(changes, nodesRef.current);
@@ -144,8 +220,15 @@ export function DiagramCanvas() {
       for (const c of changes) {
         if (c.type === "remove") removeNode(c.id);
       }
+      if (changes.some((c) => c.type === "select")) {
+        const prev = useDocument.getState().selection;
+        setSelection(
+          nextNodes.filter((n) => n.selected).map((n) => n.id),
+          prev.edgeIds,
+        );
+      }
     },
-    [setDiagram, removeNode]
+    [setDiagram, removeNode, setSelection],
   );
 
   const onEdgesChange: OnEdgesChange = useCallback(
@@ -153,21 +236,27 @@ export function DiagramCanvas() {
       for (const c of changes) {
         if (c.type === "remove") removeEdge(c.id);
       }
+      if (changes.some((c) => c.type === "select")) {
+        const nextEdges = applyEdgeChanges(changes, edgesRef.current);
+        const prev = useDocument.getState().selection;
+        setSelection(
+          prev.nodeIds,
+          nextEdges.filter((e) => e.selected).map((e) => e.id),
+        );
+      }
     },
-    [removeEdge]
+    [removeEdge, setSelection],
   );
 
   const onSelectionChange = useCallback<OnSelectionChangeFunc>(
     ({ nodes: ns, edges: es }) => {
       setSelection(
         ns.map((n) => n.id),
-        es.map((e) => e.id)
+        es.map((e) => e.id),
       );
     },
-    [setSelection]
+    [setSelection],
   );
-
-  const closeRelationshipDraft = useCallback(() => setNewEdgeDraft(null), []);
 
   const clampMenu = useCallback((clientX: number, clientY: number, mw: number, mh: number) => {
     const wrap = wrapRef.current;
@@ -182,28 +271,37 @@ export function DiagramCanvas() {
   }, []);
 
   const openRelationshipDraft = useCallback(
-    (source: string, target: string) => {
+    (
+      source: string,
+      target: string,
+      ports?: { sourceHandle?: string | null; targetHandle?: string | null },
+    ) => {
       if (!source || !target || source === target) return;
-      const p = pointerDuringConnect.current;
-      const { cx, cy } = clampMenu(p.x, p.y, NEW_REL_POPOVER_W, NEW_REL_POPOVER_H);
-      setNewEdgeDraft({ source, target, cx, cy });
+      setRelationshipDraft({
+        source,
+        target,
+        sourceHandle: ports?.sourceHandle ?? DEFAULT_DIAGRAM_SOURCE_HANDLE,
+        targetHandle: ports?.targetHandle ?? DEFAULT_DIAGRAM_TARGET_HANDLE,
+      });
     },
-    [clampMenu]
+    [setRelationshipDraft],
   );
 
   const onConnect: OnConnect = useCallback(
     (c: Connection) => {
       if (!c.source || !c.target) return;
       connectHandledRef.current = true;
-      openRelationshipDraft(c.source, c.target);
+      openRelationshipDraft(c.source, c.target, {
+        sourceHandle: c.sourceHandle ?? DEFAULT_DIAGRAM_SOURCE_HANDLE,
+        targetHandle: c.targetHandle ?? DEFAULT_DIAGRAM_TARGET_HANDLE,
+      });
     },
-    [openRelationshipDraft]
+    [openRelationshipDraft],
   );
 
   const clearConnectPointerListeners = useCallback(() => {
     const cur = connectListenersRef.current;
     if (cur) {
-      window.removeEventListener("pointermove", cur.move, true);
       window.removeEventListener("pointerup", cur.up, true);
       window.removeEventListener("pointercancel", cur.up, true);
       connectListenersRef.current = null;
@@ -212,67 +310,69 @@ export function DiagramCanvas() {
 
   const onConnectStart = useCallback(() => {
     connectHandledRef.current = false;
-    setNewEdgeDraft(null);
+    setRelationshipDraft(null);
     clearConnectPointerListeners();
-    const move = (e: PointerEvent) => {
-      pointerDuringConnect.current = { x: e.clientX, y: e.clientY };
-    };
     const up = () => {
       window.setTimeout(() => clearConnectPointerListeners(), 0);
     };
-    connectListenersRef.current = { move, up };
-    window.addEventListener("pointermove", move, { capture: true });
+    connectListenersRef.current = { up };
     window.addEventListener("pointerup", up, { capture: true });
     window.addEventListener("pointercancel", up, { capture: true });
-  }, [clearConnectPointerListeners]);
+  }, [clearConnectPointerListeners, setRelationshipDraft]);
 
   const onConnectEnd = useCallback(
-    (_event: MouseEvent | TouchEvent, state: FinalConnectionState) => {
+    (event: MouseEvent | TouchEvent, state: FinalConnectionState) => {
       clearConnectPointerListeners();
       if (connectHandledRef.current) {
         connectHandledRef.current = false;
         return;
       }
-      if (state.isValid !== true || !state.fromHandle) return;
-      if (state.fromHandle.type !== "source") return;
-      const targetId = state.toHandle?.nodeId ?? state.toNode?.id;
+      if (!state.fromHandle || state.fromHandle.type !== "source") return;
       const sourceId = state.fromHandle.nodeId;
-      if (!targetId || !sourceId || sourceId === targetId) return;
-      openRelationshipDraft(sourceId, targetId);
+      let targetId = state.toHandle?.nodeId ?? state.toNode?.id ?? null;
+
+      const clientX = "clientX" in event ? event.clientX : event.changedTouches?.[0]?.clientX;
+      const clientY = "clientY" in event ? event.clientY : event.changedTouches?.[0]?.clientY;
+      if (!targetId && typeof clientX === "number" && typeof clientY === "number") {
+        const flow = rf.screenToFlowPosition({ x: clientX, y: clientY });
+        targetId = pickTargetNodeIdAtFlowPoint(
+          nodesRef.current,
+          flow,
+          sourceId,
+          CONNECTION_DROP_MARGIN,
+        );
+      }
+
+      if (!targetId || sourceId === targetId) return;
+      if (
+        !isDiagramValidConnection({
+          source: sourceId,
+          target: targetId,
+          sourceHandle: null,
+          targetHandle: null,
+        } as DiagramFlowEdge)
+      ) {
+        return;
+      }
+      const sourceHandle =
+        state.fromHandle?.id != null && state.fromHandle.id !== ""
+          ? state.fromHandle.id
+          : DEFAULT_DIAGRAM_SOURCE_HANDLE;
+      const targetHandle =
+        state.toHandle?.id != null && state.toHandle.id !== ""
+          ? state.toHandle.id
+          : DEFAULT_DIAGRAM_TARGET_HANDLE;
+      openRelationshipDraft(sourceId, targetId, { sourceHandle, targetHandle });
     },
-    [clearConnectPointerListeners, openRelationshipDraft]
+    [clearConnectPointerListeners, openRelationshipDraft, rf],
   );
 
   const closeMenu = useCallback(() => setMenu(null), []);
 
   const dismissOverlays = useCallback(() => {
     setMenu(null);
-    setNewEdgeDraft(null);
-  }, []);
-
-  const newEdgeDraftRef = useRef<NewRelationshipDraft | null>(null);
-  newEdgeDraftRef.current = newEdgeDraft;
-
-  const handleRelationshipPick = useCallback(
-    (presetIndex: number) => {
-      const draft = newEdgeDraftRef.current;
-      if (!draft?.source || !draft?.target) return;
-      const st = applyRelationshipPreset(presetIndex);
-      addEdge({
-        from: draft.source,
-        to: draft.target,
-        routing: st.routing,
-        dash: st.dash,
-        head: st.head,
-        tail: st.tail,
-        label: "",
-        strokeWidth: st.strokeWidth,
-        relationshipPreset: st.relationshipPreset,
-      });
-      setNewEdgeDraft(null);
-    },
-    [addEdge]
-  );
+    setRelationshipDraft(null);
+  }, [setRelationshipDraft]);
 
   const onPaneContextMenu = useCallback(
     (e: ReactMouseEvent<Element> | globalThis.MouseEvent) => {
@@ -281,7 +381,7 @@ export function DiagramCanvas() {
       const { cx, cy } = clampMenu(e.clientX, e.clientY, PANE_MENU_W, PANE_MENU_H);
       setMenu({ kind: "pane", cx, cy, fx: flow.x, fy: flow.y });
     },
-    [rf, clampMenu]
+    [rf, clampMenu],
   );
 
   const onNodeContextMenu = useCallback(
@@ -291,7 +391,21 @@ export function DiagramCanvas() {
       const { cx, cy } = clampMenu(e.clientX, e.clientY, NODE_MENU_W, NODE_MENU_H);
       setMenu({ kind: "node", cx, cy, nodeId: node.id });
     },
-    [clampMenu]
+    [clampMenu],
+  );
+
+  const onEdgeContextMenu = useCallback(
+    (e: ReactMouseEvent<Element>, edge: Edge) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const prev = useDocument.getState().selection;
+      if (!prev.edgeIds.includes(edge.id)) {
+        setSelection([], [edge.id]);
+      }
+      const { cx, cy } = clampMenu(e.clientX, e.clientY, EDGE_MENU_W, EDGE_MENU_H);
+      setMenu({ kind: "edge", cx, cy, edgeId: edge.id });
+    },
+    [clampMenu, setSelection],
   );
 
   const syncZoomFromViewport = useCallback(() => {
@@ -302,14 +416,17 @@ export function DiagramCanvas() {
     (_e: globalThis.MouseEvent | globalThis.TouchEvent | null, viewport: Viewport) => {
       setZoom(viewport.zoom);
     },
-    [setZoom]
+    [setZoom],
   );
 
-  const onFlowInit = useCallback((instance: { fitView: (o?: object) => Promise<boolean>; getZoom: () => number }) => {
-    void instance.fitView({ padding: 0.12, duration: 0, maxZoom: MAX_VIEW_ZOOM });
-    setZoom(instance.getZoom());
-    window.setTimeout(() => setZoom(instance.getZoom()), 160);
-  }, [setZoom]);
+  const onFlowInit = useCallback(
+    (instance: { fitView: (o?: object) => Promise<boolean>; getZoom: () => number }) => {
+      void instance.fitView({ padding: 0.12, duration: 0, maxZoom: MAX_VIEW_ZOOM });
+      setZoom(instance.getZoom());
+      window.setTimeout(() => setZoom(instance.getZoom()), 160);
+    },
+    [setZoom],
+  );
 
   const handleZoomIn = useCallback(() => {
     rf.zoomIn({ duration: 180 });
@@ -340,16 +457,16 @@ export function DiagramCanvas() {
   }, [rf, closeMenu]);
 
   useEffect(() => {
-    if (!menu && !newEdgeDraft) return;
+    if (!menu && !relationshipDraft) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") dismissOverlays();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [menu, newEdgeDraft, dismissOverlays]);
+  }, [menu, relationshipDraft, dismissOverlays]);
 
   return (
-    <div ref={wrapRef} style={{ width: "100%", height: "100%", position: "relative" }}>
+    <div ref={wrapRef} className="relative h-full w-full">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -374,25 +491,66 @@ export function DiagramCanvas() {
         onSelectionChange={onSelectionChange}
         onPaneContextMenu={onPaneContextMenu}
         onNodeContextMenu={onNodeContextMenu}
+        onEdgeContextMenu={onEdgeContextMenu}
         onPaneClick={dismissOverlays}
         onMoveStart={dismissOverlays}
         onMoveEnd={onMoveEnd}
         onInit={onFlowInit}
         maxZoom={MAX_VIEW_ZOOM}
         proOptions={PRO_OPTIONS}
+        deleteKeyCode={null}
       >
         <Background gap={16} size={1.5} color={dotGridColor} />
       </ReactFlow>
-      {newEdgeDraft ? (
-        <NewRelationshipPicker
-          draft={newEdgeDraft}
-          onPick={handleRelationshipPick}
-          onClose={closeRelationshipDraft}
-        />
+      {relationshipDraft ? (
+        <>
+          <div
+            className="absolute inset-0 z-[55] bg-black/15 backdrop-blur-[1px]"
+            role="presentation"
+            aria-hidden
+            onMouseDown={() => setRelationshipDraft(null)}
+          />
+          <div
+            className="absolute left-1/2 top-1/2 z-[56] w-[min(520px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-popover p-4 text-popover-foreground shadow-lg"
+            role="dialog"
+            aria-labelledby="relationship-draft-title"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2
+                  id="relationship-draft-title"
+                  className="m-0 text-[15px] font-semibold tracking-tight"
+                >
+                  New relationship
+                </h2>
+                <p className="mt-1 max-w-xl text-xs leading-snug text-muted-foreground">
+                  Pick a line style. It is added between the two elements you connected.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={() => setRelationshipDraft(null)}
+              >
+                Cancel
+              </Button>
+            </div>
+            <div className="mt-3">
+              <RelationshipPresetGrid
+                onPick={(i) => {
+                  commitRelationshipDraft(i);
+                }}
+              />
+            </div>
+          </div>
+        </>
       ) : null}
       {menu ? (
         <div
-          className="paneCtxBackdrop"
+          className={CTX_BACKDROP}
           role="presentation"
           onMouseDown={dismissOverlays}
           onContextMenu={(e) => {
@@ -402,65 +560,67 @@ export function DiagramCanvas() {
         >
           {menu.kind === "pane" ? (
             <div
-              className="paneCtxMenu"
+              className={CTX_MENU}
               role="menu"
               style={{ left: menu.cx, top: menu.cy }}
               onMouseDown={(e) => e.stopPropagation()}
             >
               <button
                 type="button"
-                className="paneCtxItem"
+                className={CTX_ITEM}
                 role="menuitem"
                 onClick={() => {
                   window.dispatchEvent(
                     new CustomEvent("agentsdraw:open-add-element", {
                       detail: { x: menu.fx, y: menu.fy },
-                    })
+                    }),
                   );
                   closeMenu();
                 }}
               >
-                <span className="paneCtxIcon" aria-hidden>
+                <span className={CTX_ICON} aria-hidden>
                   <IconAddNewElement />
                 </span>
                 Add New Element…
               </button>
-              <div className="paneCtxSep" role="separator" />
-              <button type="button" className="paneCtxItem" role="menuitem" disabled>
-                <span className="paneCtxIcon" aria-hidden>
+              <div className={CTX_SEP} role="separator" />
+              <button type="button" className={CTX_ITEM} role="menuitem" disabled>
+                <span className={CTX_ICON} aria-hidden>
                   <IconPaste />
                 </span>
                 Paste Here
               </button>
-              <div className="paneCtxSep" role="separator" />
-              <button type="button" className="paneCtxItem" role="menuitem" onClick={handleSelectAll}>
-                <span className="paneCtxIcon" aria-hidden>
+              <div className={CTX_SEP} role="separator" />
+              <button type="button" className={CTX_ITEM} role="menuitem" onClick={handleSelectAll}>
+                <span className={CTX_ICON} aria-hidden>
                   <IconSelectAll />
                 </span>
                 Select All
               </button>
-              <div className="paneCtxSep" role="separator" />
-              <button type="button" className="paneCtxItem" role="menuitem" onClick={handleZoomIn}>
-                <span className="paneCtxIcon" aria-hidden>
+              <div className={CTX_SEP} role="separator" />
+              <button type="button" className={CTX_ITEM} role="menuitem" onClick={handleZoomIn}>
+                <span className={CTX_ICON} aria-hidden>
                   <IconZoomIn />
                 </span>
                 Zoom In
               </button>
-              <button type="button" className="paneCtxItem" role="menuitem" onClick={handleZoomOut}>
-                <span className="paneCtxIcon" aria-hidden>
+              <button type="button" className={CTX_ITEM} role="menuitem" onClick={handleZoomOut}>
+                <span className={CTX_ICON} aria-hidden>
                   <IconZoomOut />
                 </span>
                 Zoom Out
               </button>
-              <button type="button" className="paneCtxItem" role="menuitem" onClick={handleZoomTo100}>
-                <span className="paneCtxIcon" aria-hidden>
+              <button type="button" className={CTX_ITEM} role="menuitem" onClick={handleZoomTo100}>
+                <span className={CTX_ICON} aria-hidden>
                   <IconZoom100 />
                 </span>
                 Zoom to 100%
               </button>
             </div>
-          ) : (
+          ) : menu.kind === "node" ? (
             <NodeContextMenu x={menu.cx} y={menu.cy} nodeId={menu.nodeId} onClose={closeMenu} />
+          ) : (
+            <EdgeContextMenu x={menu.cx} y={menu.cy} edgeId={menu.edgeId} onClose={closeMenu} />
           )}
         </div>
       ) : null}
@@ -539,7 +699,7 @@ function NodeContextMenuInner({
         styleId: src.styleId,
         shape: src.shape,
       },
-      { focusLabel: false }
+      { focusLabel: false },
     );
     clearFlowSelection();
     rf.updateNode(newId, { selected: true });
@@ -586,7 +746,9 @@ function NodeContextMenuInner({
       }
     }
     const typeIds = new Set(
-      d.nodes.filter((n) => n.styleId === src.styleId && shapeEqual(n.shape, src.shape)).map((n) => n.id)
+      d.nodes
+        .filter((n) => n.styleId === src.styleId && shapeEqual(n.shape, src.shape))
+        .map((n) => n.id),
     );
     for (const e of d.edges) {
       if (typeIds.has(e.from) && typeIds.has(e.to)) {
@@ -598,70 +760,70 @@ function NodeContextMenuInner({
 
   return (
     <div
-      className="paneCtxMenu"
+      className={CTX_MENU}
       role="menu"
       style={{ left: x, top: y }}
       onMouseDown={(e) => e.stopPropagation()}
     >
-      <button type="button" className="paneCtxItem" role="menuitem" disabled title="Coming soon">
-        <span className="paneCtxIcon" aria-hidden>
+      <button type="button" className={CTX_ITEM} role="menuitem" disabled title="Coming soon">
+        <span className={CTX_ICON} aria-hidden>
           <IconSetType />
         </span>
         Set Type…
       </button>
-      <button type="button" className="paneCtxItem" role="menuitem" disabled title="Coming soon">
-        <span className="paneCtxIcon" aria-hidden>
+      <button type="button" className={CTX_ITEM} role="menuitem" disabled title="Coming soon">
+        <span className={CTX_ICON} aria-hidden>
           <IconRevealPalette />
         </span>
         Reveal Type in Palette…
       </button>
-      <div className="paneCtxSep" role="separator" />
-      <button type="button" className="paneCtxItem" role="menuitem" onClick={handleEditCaption}>
-        <span className="paneCtxIcon" aria-hidden>
+      <div className={CTX_SEP} role="separator" />
+      <button type="button" className={CTX_ITEM} role="menuitem" onClick={handleEditCaption}>
+        <span className={CTX_ICON} aria-hidden>
           <IconEditCaption />
         </span>
         Edit Caption
       </button>
-      <div className="paneCtxSep" role="separator" />
-      <button type="button" className="paneCtxItem" role="menuitem" onClick={handleCut}>
-        <span className="paneCtxIcon" aria-hidden>
+      <div className={CTX_SEP} role="separator" />
+      <button type="button" className={CTX_ITEM} role="menuitem" onClick={handleCut}>
+        <span className={CTX_ICON} aria-hidden>
           <IconCut />
         </span>
         Cut
       </button>
-      <button type="button" className="paneCtxItem" role="menuitem" onClick={handleCopy}>
-        <span className="paneCtxIcon" aria-hidden>
+      <button type="button" className={CTX_ITEM} role="menuitem" onClick={handleCopy}>
+        <span className={CTX_ICON} aria-hidden>
           <IconCopy />
         </span>
         Copy
       </button>
-      <button type="button" className="paneCtxItem" role="menuitem" onClick={handleDuplicate}>
-        <span className="paneCtxIcon" aria-hidden>
+      <button type="button" className={CTX_ITEM} role="menuitem" onClick={handleDuplicate}>
+        <span className={CTX_ICON} aria-hidden>
           <IconDuplicate />
         </span>
         Duplicate
       </button>
-      <button type="button" className="paneCtxItem" role="menuitem" onClick={handleDelete}>
-        <span className="paneCtxIcon" aria-hidden>
+      <button type="button" className={CTX_ITEM} role="menuitem" onClick={handleDelete}>
+        <span className={CTX_ICON} aria-hidden>
           <IconTrash />
         </span>
         Delete
       </button>
-      <div className="paneCtxSep" role="separator" />
-      <button type="button" className="paneCtxItem" role="menuitem" onClick={handleSelectAll}>
-        <span className="paneCtxIcon" aria-hidden>
+      <div className={CTX_SEP} role="separator" />
+      <button type="button" className={CTX_ITEM} role="menuitem" onClick={handleSelectAll}>
+        <span className={CTX_ICON} aria-hidden>
           <IconSelectAllNode />
         </span>
         Select All
       </button>
-      <button type="button" className="paneCtxItem" role="menuitem" onClick={handleSelectConnected}>
-        <span className="paneCtxIcon" aria-hidden>
+      <button type="button" className={CTX_ITEM} role="menuitem" onClick={handleSelectConnected}>
+        <span className={CTX_ICON} aria-hidden>
           <IconSelectConnected />
         </span>
         Select Connected Objects
       </button>
-      <button type="button" className="paneCtxItem" role="menuitem" onClick={handleSelectSameType}>
-        <span className="paneCtxIcon" aria-hidden>
+      <button type="button" className={CTX_ITEM} role="menuitem" onClick={handleSelectSameType}>
+        <span className={CTX_ICON} aria-hidden>
           <IconSelectSameType />
         </span>
         Select Elements of Same Type
@@ -672,10 +834,157 @@ function NodeContextMenuInner({
 
 const NodeContextMenu = memo(NodeContextMenuInner);
 
+function EdgeContextMenuInner({
+  x,
+  y,
+  edgeId,
+  onClose,
+}: {
+  x: number;
+  y: number;
+  edgeId: string;
+  onClose: () => void;
+}) {
+  const removeEdge = useDocument((s) => s.removeEdge);
+  const updateEdge = useDocument((s) => s.updateEdge);
+  const edge = useDocument((s) => s.diagram.edges.find((e) => e.id === edgeId));
+
+  const handleDelete = useCallback(() => {
+    removeEdge(edgeId);
+    onClose();
+  }, [removeEdge, edgeId, onClose]);
+
+  const applyPreset = useCallback(
+    (idx: number) => {
+      const st = applyRelationshipPreset(idx);
+      updateEdge(edgeId, {
+        routing: st.routing,
+        dash: st.dash,
+        head: st.head,
+        tail: st.tail,
+        strokeWidth: st.strokeWidth,
+        relationshipPreset: st.relationshipPreset,
+      });
+    },
+    [updateEdge, edgeId],
+  );
+
+  const setRouting = useCallback(
+    (routing: EdgeRouting) => {
+      updateEdge(edgeId, { routing, relationshipPreset: undefined });
+    },
+    [updateEdge, edgeId],
+  );
+
+  const setDash = useCallback(
+    (dash: EdgeDash) => {
+      updateEdge(edgeId, { dash, relationshipPreset: undefined });
+    },
+    [updateEdge, edgeId],
+  );
+
+  const setWeight = useCallback(
+    (strokeWidth: number) => {
+      updateEdge(edgeId, { strokeWidth, relationshipPreset: undefined });
+    },
+    [updateEdge, edgeId],
+  );
+
+  if (!edge) return null;
+
+  const sw = edge.strokeWidth ?? 1;
+  const weightKey: "thin" | "medium" | "bold" = sw <= 1.15 ? "thin" : sw >= 2.2 ? "bold" : "medium";
+
+  return (
+    <div
+      className={EDGE_CTX_MENU}
+      role="menu"
+      style={{ left: x, top: y }}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <div className={EDGE_SECTION}>Relationship look</div>
+      <div className="max-h-[220px] overflow-y-auto overflow-x-hidden px-1">
+        <RelationshipPresetGrid
+          activePresetIndex={edge.relationshipPreset ?? undefined}
+          onPick={applyPreset}
+        />
+      </div>
+      <div className={CTX_SEP} role="separator" />
+      <div className={EDGE_SECTION}>Path</div>
+      <div className={EDGE_TOGGLE_ROW}>
+        {(["straight", "orthogonal", "curved"] as const).map((r) => (
+          <button
+            key={r}
+            type="button"
+            className={cn(EDGE_TOGGLE, edge.routing === r && "border-primary bg-accent")}
+            onClick={() => setRouting(r)}
+          >
+            {r === "straight" ? "Straight" : r === "orthogonal" ? "Right angle" : "Curved"}
+          </button>
+        ))}
+      </div>
+      <div className={EDGE_SECTION}>Line pattern</div>
+      <div className={EDGE_TOGGLE_ROW}>
+        {(["solid", "dashed", "dotted"] as const).map((d) => (
+          <button
+            key={d}
+            type="button"
+            className={cn(EDGE_TOGGLE, edge.dash === d && "border-primary bg-accent")}
+            onClick={() => setDash(d)}
+          >
+            {d === "solid" ? "Solid" : d === "dashed" ? "Dashed" : "Dotted"}
+          </button>
+        ))}
+      </div>
+      <div className={EDGE_SECTION}>Weight</div>
+      <div className={EDGE_TOGGLE_ROW}>
+        <button
+          type="button"
+          className={cn(EDGE_TOGGLE, weightKey === "thin" && "border-primary bg-accent")}
+          onClick={() => setWeight(1)}
+        >
+          Thin
+        </button>
+        <button
+          type="button"
+          className={cn(EDGE_TOGGLE, weightKey === "medium" && "border-primary bg-accent")}
+          onClick={() => setWeight(1.5)}
+        >
+          Medium
+        </button>
+        <button
+          type="button"
+          className={cn(EDGE_TOGGLE, weightKey === "bold" && "border-primary bg-accent")}
+          onClick={() => setWeight(2.5)}
+        >
+          Bold
+        </button>
+      </div>
+      <div className={CTX_SEP} role="separator" />
+      <button type="button" className={CTX_ITEM} role="menuitem" onClick={handleDelete}>
+        <span className={CTX_ICON} aria-hidden>
+          <IconTrash />
+        </span>
+        Delete
+      </button>
+    </div>
+  );
+}
+
+const EdgeContextMenu = memo(EdgeContextMenuInner);
+
 function IconAddNewElement() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect x="2.25" y="2.25" width="11.5" height="11.5" rx="1.75" stroke="currentColor" strokeWidth="1.25" />
+      <rect
+        x="2.25"
+        y="2.25"
+        width="11.5"
+        height="11.5"
+        rx="1.75"
+        stroke="currentColor"
+        strokeWidth="1.25"
+      />
       <path d="M8 5v6M5 8h6" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
     </svg>
   );
@@ -684,7 +993,15 @@ function IconAddNewElement() {
 function IconPaste() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect x="4.5" y="2.5" width="7" height="5" rx="0.75" stroke="currentColor" strokeWidth="1.2" />
+      <rect
+        x="4.5"
+        y="2.5"
+        width="7"
+        height="5"
+        rx="0.75"
+        stroke="currentColor"
+        strokeWidth="1.2"
+      />
       <rect x="2.5" y="5.5" width="11" height="8" rx="1" stroke="currentColor" strokeWidth="1.2" />
     </svg>
   );
@@ -708,7 +1025,12 @@ function IconZoomIn() {
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
       <circle cx="6.75" cy="6.75" r="4" stroke="currentColor" strokeWidth="1.25" />
       <path d="M10 10l3.25 3.25" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
-      <path d="M6.75 5v3.5M5 6.75h3.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+      <path
+        d="M6.75 5v3.5M5 6.75h3.5"
+        stroke="currentColor"
+        strokeWidth="1.1"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -728,7 +1050,15 @@ function IconZoom100() {
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
       <circle cx="6.75" cy="6.75" r="4" stroke="currentColor" strokeWidth="1.25" />
       <path d="M10 10l3.25 3.25" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
-      <text x="6.75" y="8.35" textAnchor="middle" fontSize="5.5" fill="currentColor" fontWeight="600" fontFamily="system-ui, sans-serif">
+      <text
+        x="6.75"
+        y="8.35"
+        textAnchor="middle"
+        fontSize="5.5"
+        fill="currentColor"
+        fontWeight="600"
+        fontFamily="system-ui, sans-serif"
+      >
         1
       </text>
     </svg>
@@ -746,10 +1076,42 @@ function IconSetType() {
 function IconRevealPalette() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect x="2.5" y="2.5" width="5" height="5" rx="0.75" stroke="currentColor" strokeWidth="1.1" />
-      <rect x="8.5" y="2.5" width="5" height="5" rx="0.75" stroke="currentColor" strokeWidth="1.1" />
-      <rect x="2.5" y="8.5" width="5" height="5" rx="0.75" stroke="currentColor" strokeWidth="1.1" />
-      <rect x="8.5" y="8.5" width="5" height="5" rx="0.75" stroke="currentColor" strokeWidth="1.1" />
+      <rect
+        x="2.5"
+        y="2.5"
+        width="5"
+        height="5"
+        rx="0.75"
+        stroke="currentColor"
+        strokeWidth="1.1"
+      />
+      <rect
+        x="8.5"
+        y="2.5"
+        width="5"
+        height="5"
+        rx="0.75"
+        stroke="currentColor"
+        strokeWidth="1.1"
+      />
+      <rect
+        x="2.5"
+        y="8.5"
+        width="5"
+        height="5"
+        rx="0.75"
+        stroke="currentColor"
+        strokeWidth="1.1"
+      />
+      <rect
+        x="8.5"
+        y="8.5"
+        width="5"
+        height="5"
+        rx="0.75"
+        stroke="currentColor"
+        strokeWidth="1.1"
+      />
     </svg>
   );
 }
@@ -768,7 +1130,12 @@ function IconCut() {
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
       <circle cx="5.25" cy="5.25" r="2" stroke="currentColor" strokeWidth="1.15" />
       <circle cx="10.75" cy="10.75" r="2" stroke="currentColor" strokeWidth="1.15" />
-      <path d="M6.5 6.5l7 7M9.5 9.5l-7-7" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" />
+      <path
+        d="M6.5 6.5l7 7M9.5 9.5l-7-7"
+        stroke="currentColor"
+        strokeWidth="1.15"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -777,7 +1144,12 @@ function IconCopy() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
       <rect x="5" y="5" width="8" height="9" rx="1" stroke="currentColor" strokeWidth="1.15" />
-      <path d="M4.5 11V4.5a1 1 0 011-1H11" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" />
+      <path
+        d="M4.5 11V4.5a1 1 0 011-1H11"
+        stroke="currentColor"
+        strokeWidth="1.15"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -786,8 +1158,18 @@ function IconDuplicate() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
       <rect x="4.5" y="5.5" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.1" />
-      <path d="M3.5 10.5V4.5a1 1 0 011-1h6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-      <path d="M10 3.5h2.5a1 1 0 011 1V7" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+      <path
+        d="M3.5 10.5V4.5a1 1 0 011-1h6"
+        stroke="currentColor"
+        strokeWidth="1.1"
+        strokeLinecap="round"
+      />
+      <path
+        d="M10 3.5h2.5a1 1 0 011 1V7"
+        stroke="currentColor"
+        strokeWidth="1.1"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -795,8 +1177,18 @@ function IconDuplicate() {
 function IconTrash() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path d="M3.5 4.5h9M6 4.5V3.5h4V4.5" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" />
-      <path d="M5 4.5v8a1 1 0 001 1h4a1 1 0 001-1v-8" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" />
+      <path
+        d="M3.5 4.5h9M6 4.5V3.5h4V4.5"
+        stroke="currentColor"
+        strokeWidth="1.15"
+        strokeLinecap="round"
+      />
+      <path
+        d="M5 4.5v8a1 1 0 001 1h4a1 1 0 001-1v-8"
+        stroke="currentColor"
+        strokeWidth="1.15"
+        strokeLinecap="round"
+      />
       <path d="M7 7v4M9 7v4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
     </svg>
   );

@@ -16,6 +16,7 @@
     "build": "tsc -p tsconfig.json && oclif manifest",
     "postpack": "oclif manifest",
     "lint": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
   "dependencies": {

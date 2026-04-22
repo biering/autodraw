@@ -1,4 +1,10 @@
-import { styleById, type DiagramV1, type EdgeRecord, type NodeRecord, type NodeStyleDefinition } from "@agentsdraw/core";
+import {
+  styleById,
+  type DiagramV1,
+  type EdgeRecord,
+  type NodeRecord,
+  type NodeStyleDefinition,
+} from "@agentsdraw/core";
 import type { Edge, Node } from "@xyflow/react";
 
 /** Precomputed at adapter time so custom nodes avoid subscribing to the full diagram store. */
@@ -17,16 +23,13 @@ export type DiagramNodeData = {
   resolvedStyle: DiagramNodeResolvedStyle;
 };
 
-function rgbaFromStyleChannels(
-  r: number,
-  g: number,
-  b: number,
-  a: number
-): string {
+function rgbaFromStyleChannels(r: number, g: number, b: number, a: number): string {
   return `rgba(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)},${a})`;
 }
 
-function resolvedStyleFromDefinition(styleDef: NodeStyleDefinition | undefined): DiagramNodeResolvedStyle {
+function resolvedStyleFromDefinition(
+  styleDef: NodeStyleDefinition | undefined,
+): DiagramNodeResolvedStyle {
   if (!styleDef) {
     return {
       fill: "#eee",
@@ -39,13 +42,13 @@ function resolvedStyleFromDefinition(styleDef: NodeStyleDefinition | undefined):
       styleDef.fillRed,
       styleDef.fillGreen,
       styleDef.fillBlue,
-      styleDef.fillAlpha
+      styleDef.fillAlpha,
     ),
     stroke: rgbaFromStyleChannels(
       styleDef.strokeRed,
       styleDef.strokeGreen,
       styleDef.strokeBlue,
-      styleDef.strokeAlpha
+      styleDef.strokeAlpha,
     ),
     defaultShape: styleDef.shape,
   };
@@ -58,6 +61,10 @@ export type DiagramFlowNode = Node<DiagramNodeData, "diagram">;
 
 /** React Flow edge type for custom `diagram` edges. */
 export type DiagramFlowEdge = Edge<DiagramEdgeData, "diagram">;
+
+/** Default ports when a legacy edge has no stored handles (original right→left layout). */
+export const DEFAULT_DIAGRAM_SOURCE_HANDLE = "src";
+export const DEFAULT_DIAGRAM_TARGET_HANDLE = "tgt";
 
 export function toFlowNodes(diagram: DiagramV1): DiagramFlowNode[] {
   return diagram.nodes.map((n) => ({
@@ -85,6 +92,8 @@ export function toFlowEdges(diagram: DiagramV1): DiagramFlowEdge[] {
     data: { ...e },
     selectable: true,
     focusable: true,
+    sourceHandle: e.sourceHandle ?? DEFAULT_DIAGRAM_SOURCE_HANDLE,
+    targetHandle: e.targetHandle ?? DEFAULT_DIAGRAM_TARGET_HANDLE,
   }));
 }
 

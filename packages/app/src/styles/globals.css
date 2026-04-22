@@ -5,6 +5,8 @@
 /* shadcn/ui-style tokens (zinc dark) — compatible with https://ui.shadcn.com / https://www.shadcn.io/ */
 @layer base {
   :root {
+    /* Canvas area (diagram background); shell UI uses shadcn tokens below. */
+    --canvas: #ffffff;
     --radius: 0.65rem;
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;

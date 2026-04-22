@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -36,8 +35,7 @@ export function AddElementPopover() {
       setOpen(true);
     };
     window.addEventListener("agentsdraw:open-add-element", onOpen as EventListener);
-    return () =>
-      window.removeEventListener("agentsdraw:open-add-element", onOpen as EventListener);
+    return () => window.removeEventListener("agentsdraw:open-add-element", onOpen as EventListener);
   }, []);
 
   const styles = useMemo(() => paletteStyles(diagram.palette), [diagram.palette]);
@@ -89,14 +87,6 @@ export function AddElementPopover() {
             </Button>
           ))}
         </div>
-        <DialogFooter className="gap-2 sm:justify-end">
-          <Button type="button" variant="ghost" disabled title="Coming soon">
-            Customize
-          </Button>
-          <Button type="button" variant="ghost" disabled title="Coming soon">
-            + New
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

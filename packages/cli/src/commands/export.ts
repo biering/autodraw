@@ -16,7 +16,12 @@ export default class Export extends Command {
     format: Flags.string({ description: "Output format", options: ["pdf", "png"], required: true }),
     output: Flags.string({ description: "Output file path", required: true }),
     showGrid: Flags.boolean({ description: "Render grid in output", default: true, allowNo: true }),
-    scale: Flags.integer({ description: "PNG scale multiplier (approx)", default: 2, min: 1, max: 8 }),
+    scale: Flags.integer({
+      description: "PNG scale multiplier (approx)",
+      default: 2,
+      min: 1,
+      max: 8,
+    }),
   };
 
   async run(): Promise<void> {

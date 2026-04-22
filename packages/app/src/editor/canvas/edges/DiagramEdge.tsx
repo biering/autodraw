@@ -1,15 +1,18 @@
 import type { EdgeRecord } from "@agentsdraw/core";
 import type { DiagramFlowEdge } from "../flowAdapter.js";
-import {
-  BaseEdge,
-  getSmoothStepPath,
-  getStraightPath,
-  Position,
-  type EdgeProps,
-} from "@xyflow/react";
+import { BaseEdge, getBezierPath, getStraightPath, type EdgeProps } from "@xyflow/react";
 import { memo, useMemo } from "react";
+import { DiagramEdgeMarkerDefs, diagramMarkerUrls } from "./edgeMarkerDefs.js";
 
-function diagramEdgePropsAreEqual(prev: EdgeProps<DiagramFlowEdge>, next: EdgeProps<DiagramFlowEdge>): boolean {
+/**
+ * React Flow attaches heads via `markerEnd` / `markerStart` on the edge path (see
+ * {@link https://reactflow.dev/learn/troubleshooting/migrate-to-v10#9-arrowheadtype---markertype MarkerType → EdgeMarker}).
+ * We supply custom `<marker>` SVGs for all {@link EdgeRecord} head/tail kinds.
+ */
+function diagramEdgePropsAreEqual(
+  prev: EdgeProps<DiagramFlowEdge>,
+  next: EdgeProps<DiagramFlowEdge>,
+): boolean {
   if (
     prev.id !== next.id ||
     prev.selected !== next.selected ||
@@ -30,106 +33,96 @@ function diagramEdgePropsAreEqual(prev: EdgeProps<DiagramFlowEdge>, next: EdgePr
     a.routing === b.routing &&
     a.dash === b.dash &&
     a.head === b.head &&
-    (a.strokeWidth ?? 1.5) === (b.strokeWidth ?? 1.5) &&
-    (a.label ?? "") === (b.label ?? "") &&
     (a.tail ?? "none") === (b.tail ?? "none") &&
-    (a.relationshipPreset ?? null) === (b.relationshipPreset ?? null)
+    (a.strokeWidth ?? 2) === (b.strokeWidth ?? 2) &&
+    (a.label ?? "") === (b.label ?? "") &&
+    (a.relationshipPreset ?? null) === (b.relationshipPreset ?? null) &&
+    (a.sourceHandle ?? null) === (b.sourceHandle ?? null) &&
+    (a.targetHandle ?? null) === (b.targetHandle ?? null)
   );
 }
 
-const EDGE_STROKE = "#6b6b70";
+/** Neutral graphite; selected edges pick up a cool accent. */
+const EDGE_STROKE = "#5a5d66";
+const EDGE_STROKE_SELECTED = "#3d5a8a";
 
 function DiagramEdgeInner(props: EdgeProps<DiagramFlowEdge>) {
   const { id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, selected, data } =
     props;
   const edge = data as EdgeRecord | undefined;
-  const strokeW = edge?.strokeWidth ?? 1.5;
-  const dash =
-    edge?.dash === "dashed" ? "6 4" : edge?.dash === "dotted" ? "2 4" : undefined;
+  const strokeW = edge?.strokeWidth ?? 2;
+  const dash = edge?.dash === "dashed" ? "7 5" : edge?.dash === "dotted" ? "2 5" : undefined;
 
   const routing = edge?.routing ?? "orthogonal";
-  const useStraight = routing === "straight";
 
   const [path, labelX, labelY] = useMemo(() => {
-    if (useStraight) {
+    if (routing === "straight") {
       return getStraightPath({ sourceX, sourceY, targetX, targetY });
     }
-    return getSmoothStepPath({
-      sourceX,
-      sourceY,
-      sourcePosition: sourcePosition ?? Position.Right,
-      targetX,
-      targetY,
-      targetPosition: targetPosition ?? Position.Left,
-      borderRadius: 10,
-    });
-  }, [useStraight, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition]);
+    if (routing === "curved") {
+      const [p, lx, ly] = getBezierPath({
+        sourceX,
+        sourceY,
+        targetX,
+        targetY,
+        sourcePosition,
+        targetPosition,
+      });
+      return [p, lx, ly] as const;
+    }
+    const centerX = (sourceX + targetX) / 2;
+    const stepPath = `M ${sourceX} ${sourceY} L ${centerX} ${sourceY} L ${centerX} ${targetY} L ${targetX} ${targetY}`;
+    const midX = centerX;
+    const midY = (sourceY + targetY) / 2;
+    return [stepPath, midX, midY] as const;
+  }, [routing, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition]);
 
-  const strokeOpacity = selected ? 1 : 0.8;
-  const markerStroke = selected ? EDGE_STROKE : "rgba(107, 107, 112, 0.8)";
+  const stroke = selected ? EDGE_STROKE_SELECTED : EDGE_STROKE;
+  const strokeOpacity = selected ? 1 : 0.88;
 
-  const openId = `open-arrow-${id}`;
-  const fillId = `fill-arrow-${id}`;
-  const sqId = `sq-arrow-${id}`;
+  const head = edge?.head ?? "arrowOpen";
+  const tail = edge?.tail;
 
-  const markerEnd =
-    edge?.head === "arrowOpen" || edge?.head === "arrowDouble"
-      ? `url(#${openId})`
-      : edge?.head === "arrowFilled"
-        ? `url(#${fillId})`
-        : edge?.head === "square"
-          ? `url(#${sqId})`
-          : undefined;
+  const { markerEnd, markerStart } = useMemo(
+    () => diagramMarkerUrls(id, head, tail),
+    [id, head, tail],
+  );
 
   return (
     <>
-      <svg style={{ position: "absolute", width: 0, height: 0 }}>
-        <defs>
-          <marker id={openId} markerWidth="10" markerHeight="8" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-            <path
-              d="M0,0 L0,6 L9,3 z"
-              fill="none"
-              stroke={markerStroke}
-              strokeWidth={strokeW}
-            />
-          </marker>
-          <marker id={fillId} markerWidth="10" markerHeight="8" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-            <path d="M0,0 L0,6 L9,3 z" fill={selected ? EDGE_STROKE : "rgba(107, 107, 112, 0.8)"} />
-          </marker>
-          <marker id={sqId} markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto" markerUnits="strokeWidth">
-            <rect
-              x="0"
-              y="1"
-              width="6"
-              height="6"
-              fill="none"
-              stroke={markerStroke}
-              strokeWidth={strokeW}
-            />
-          </marker>
-        </defs>
-      </svg>
+      <DiagramEdgeMarkerDefs
+        edgeId={id}
+        head={head}
+        tail={tail}
+        stroke={stroke}
+        strokeWidth={strokeW}
+      />
       <BaseEdge
         id={id}
         path={path}
         style={{
-          stroke: EDGE_STROKE,
+          stroke,
           strokeWidth: strokeW,
           strokeDasharray: dash,
           strokeOpacity,
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
         }}
         markerEnd={markerEnd}
-        interactionWidth={26}
+        markerStart={markerStart}
+        interactionWidth={22}
       />
       {edge?.label ? (
         <text
           x={labelX}
           y={labelY}
           fontSize={11}
-          fill="#333"
+          fontFamily="system-ui, -apple-system, sans-serif"
+          fill="#2e3038"
           fillOpacity={strokeOpacity}
           textAnchor="middle"
           dominantBaseline="middle"
+          style={{ paintOrder: "stroke fill", stroke: "rgba(255,255,255,0.92)", strokeWidth: 3 }}
         >
           {edge.label}
         </text>

@@ -4,7 +4,7 @@ function style(
   id: string,
   fill: [number, number, number, number],
   stroke: [number, number, number, number],
-  shape: NodeShape
+  shape: NodeShape,
 ): NodeStyleDefinition {
   return {
     id,
@@ -100,7 +100,7 @@ export const relationshipPresets = [
 export type RelationshipPresetId = (typeof relationshipPresets)[number];
 
 export function applyRelationshipPreset(
-  presetIndex: number
+  presetIndex: number,
 ): Pick<
   import("./schema.js").EdgeRecord,
   "routing" | "dash" | "head" | "tail" | "strokeWidth" | "relationshipPreset"
@@ -109,35 +109,96 @@ export function applyRelationshipPreset(
   const base = { relationshipPreset: idx };
   switch (idx) {
     case 0:
-      return { ...base, routing: "straight", dash: "solid", head: "arrowOpen", tail: "none", strokeWidth: 1 };
+      return {
+        ...base,
+        routing: "straight",
+        dash: "solid",
+        head: "arrowOpen",
+        tail: "none",
+        strokeWidth: 1,
+      };
     case 1:
-      return { ...base, routing: "orthogonal", dash: "solid", head: "arrowOpen", tail: "none", strokeWidth: 1 };
+      return {
+        ...base,
+        routing: "orthogonal",
+        dash: "solid",
+        head: "arrowOpen",
+        tail: "none",
+        strokeWidth: 1,
+      };
     case 2:
-      return { ...base, routing: "orthogonal", dash: "solid", head: "arrowOpen", tail: "none", strokeWidth: 2.5 };
+      return {
+        ...base,
+        routing: "orthogonal",
+        dash: "solid",
+        head: "arrowOpen",
+        tail: "none",
+        strokeWidth: 2.5,
+      };
     case 3:
-      return { ...base, routing: "orthogonal", dash: "solid", head: "arrowDouble", tail: "arrowOpen", strokeWidth: 1 };
+      return {
+        ...base,
+        routing: "orthogonal",
+        dash: "solid",
+        head: "arrowDouble",
+        tail: "arrowOpen",
+        strokeWidth: 1,
+      };
     case 4:
-      return { ...base, routing: "orthogonal", dash: "dashed", head: "arrowOpen", tail: "none", strokeWidth: 1 };
+      return {
+        ...base,
+        routing: "orthogonal",
+        dash: "dashed",
+        head: "arrowOpen",
+        tail: "none",
+        strokeWidth: 1,
+      };
     case 5:
-      return { ...base, routing: "orthogonal", dash: "dashed", head: "arrowOpen", tail: "square", strokeWidth: 1 };
+      return {
+        ...base,
+        routing: "orthogonal",
+        dash: "dashed",
+        head: "arrowOpen",
+        tail: "square",
+        strokeWidth: 1,
+      };
     case 6:
-      return { ...base, routing: "orthogonal", dash: "dashed", head: "square", tail: "none", strokeWidth: 1 };
+      return {
+        ...base,
+        routing: "orthogonal",
+        dash: "dashed",
+        head: "square",
+        tail: "none",
+        strokeWidth: 1,
+      };
     case 7:
-      return { ...base, routing: "orthogonal", dash: "dotted", head: "arrowOpen", tail: "none", strokeWidth: 1 };
+      return {
+        ...base,
+        routing: "orthogonal",
+        dash: "dotted",
+        head: "arrowOpen",
+        tail: "none",
+        strokeWidth: 1,
+      };
     default:
-      return { ...base, routing: "orthogonal", dash: "solid", head: "arrowOpen", tail: "none", strokeWidth: 1 };
+      return {
+        ...base,
+        routing: "orthogonal",
+        dash: "solid",
+        head: "arrowOpen",
+        tail: "none",
+        strokeWidth: 1,
+      };
   }
 }
 
-export function resolvedStyles(
-  diagram: import("./schema.js").DiagramV1
-): NodeStyleDefinition[] {
+export function resolvedStyles(diagram: import("./schema.js").DiagramV1): NodeStyleDefinition[] {
   return [...paletteStyles(diagram.palette), ...(diagram.customStyles ?? [])];
 }
 
 export function styleById(
   diagram: import("./schema.js").DiagramV1,
-  id: string
+  id: string,
 ): NodeStyleDefinition | undefined {
   return resolvedStyles(diagram).find((s) => s.id === id);
 }

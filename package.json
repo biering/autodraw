@@ -1,15 +1,19 @@
 {
   "name": "agentsdraw",
   "private": true,
-  "packageManager": "pnpm@9.15.0",
+  "packageManager": "pnpm@10.30.3",
   "scripts": {
     "build": "pnpm -r run build",
     "dev": "pnpm --filter @agentsdraw/app dev",
     "dev:tauri": "node scripts/dev-tauri.mjs",
     "lint": "pnpm -r run lint",
-    "test": "pnpm -r run test"
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "format": "biome format .",
+    "format:fix": "biome format --write ."
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.12",
     "typescript": "^5.7.3"
   }
 }

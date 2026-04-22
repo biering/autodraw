@@ -43,6 +43,11 @@ pub fn run() {
                 .accelerator("CmdOrCtrl+Shift+Z")
                 .build(app)?;
 
+            let view_reload = MenuItemBuilder::new("Reload")
+                .id("view:reload")
+                .accelerator("CmdOrCtrl+R")
+                .build(app)?;
+
             let app_submenu = SubmenuBuilder::new(handle, "agentsdraw")
                 .about(Some(AboutMetadata::default()))
                 .separator()
@@ -75,6 +80,10 @@ pub fn run() {
                 .select_all()
                 .build()?;
 
+            let view_submenu = SubmenuBuilder::new(handle, "View")
+                .item(&view_reload)
+                .build()?;
+
             let window_submenu = SubmenuBuilder::new(handle, "Window")
                 .minimize()
                 .maximize()
@@ -83,7 +92,13 @@ pub fn run() {
                 .build()?;
 
             let menu = MenuBuilder::new(handle)
-                .items(&[&app_submenu, &file_submenu, &edit_submenu, &window_submenu])
+                .items(&[
+                    &app_submenu,
+                    &file_submenu,
+                    &edit_submenu,
+                    &view_submenu,
+                    &window_submenu,
+                ])
                 .build()?;
             app.set_menu(menu)?;
 
@@ -113,6 +128,9 @@ pub fn run() {
             }
             "edit:redo" => {
                 let _ = app.emit("doc-redo", ());
+            }
+            "view:reload" => {
+                let _ = app.emit("view-reload", ());
             }
             _ => {}
         })

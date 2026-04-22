@@ -13,7 +13,6 @@ import {
 import { CliSkillHelp } from "./CliSkillHelp.js";
 import { DiagramCanvas } from "./canvas/DiagramCanvas.js";
 import { AddElementPopover } from "./popovers/AddElementPopover.js";
-import { AddRelationshipPopover } from "./popovers/AddRelationshipPopover.js";
 import { ExportSheet } from "./sheets/ExportSheet.js";
 import { NewDocumentSheet } from "./sheets/NewDocumentSheet.js";
 import { Toolbar } from "./Toolbar.js";
@@ -59,7 +58,7 @@ export function EditorShell() {
       e.preventDefault();
       setShowExport(true);
     },
-    [setShowExport]
+    [setShowExport],
   );
 
   useHotkeys(
@@ -78,7 +77,7 @@ export function EditorShell() {
         removeNode(id);
       }
     },
-    [removeNode, removeEdge]
+    [removeNode, removeEdge],
   );
 
   useEffect(() => {
@@ -86,7 +85,7 @@ export function EditorShell() {
     window.clearTimeout(autosaveTimer.current);
     autosaveTimer.current = window.setTimeout(() => {
       void import("@tauri-apps/plugin-fs").then(({ writeTextFile }) =>
-        writeTextFile(filePath, serializeDiagram(diagram)).then(() => markClean())
+        writeTextFile(filePath, serializeDiagram(diagram)).then(() => markClean()),
       );
     }, 900);
     return () => window.clearTimeout(autosaveTimer.current);
@@ -101,6 +100,7 @@ export function EditorShell() {
     let unFileOpen: (() => void) | undefined;
     let unFileSave: (() => void) | undefined;
     let unOpenPath: (() => void) | undefined;
+    let unViewReload: (() => void) | undefined;
     void (async () => {
       const { listen } = await import("@tauri-apps/api/event");
       unUndo = await listen("doc-undo", () => undoDocument());
@@ -113,6 +113,9 @@ export function EditorShell() {
         const p = typeof ev.payload === "string" ? ev.payload : String(ev.payload);
         void openDocumentFromPath(p);
       });
+      unViewReload = await listen("view-reload", () => {
+        window.location.reload();
+      });
     })();
     return () => {
       unUndo?.();
@@ -122,13 +125,17 @@ export function EditorShell() {
       unFileOpen?.();
       unFileSave?.();
       unOpenPath?.();
+      unViewReload?.();
     };
   }, [setShowExport]);
 
   return (
     <ReactFlowProvider>
-      <div className="editorRoot">
-        <div className="canvasWrap" data-canvas-theme={canvasTheme}>
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <div
+          className="min-h-0 flex-1 bg-[var(--canvas)] transition-colors duration-200 data-[canvas-theme=dark]:bg-[#131316] data-[canvas-theme=dark]:[color-scheme:dark]"
+          data-canvas-theme={canvasTheme}
+        >
           <DiagramCanvas />
         </div>
         <Toolbar />
@@ -137,7 +144,6 @@ export function EditorShell() {
         <NewDocumentSheet />
         <ExportSheet />
         <AddElementPopover />
-        <AddRelationshipPopover />
       </div>
     </ReactFlowProvider>
   );

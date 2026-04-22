@@ -4,7 +4,7 @@ import { isTauri } from "./isTauri.js";
 
 function warnDesktopOnly(action: string): void {
   console.warn(
-    `[agentsdraw] ${action} requires the Tauri desktop app. From the repo root run \`pnpm dev:tauri\` (needs Rust/Cargo on PATH). Use \`pnpm dev\` for Vite-only UI in the browser.`
+    `[agentsdraw] ${action} requires the Tauri desktop app. From the repo root run \`pnpm dev:tauri\` (needs Rust/Cargo on PATH). Use \`pnpm dev\` for Vite-only UI in the browser.`,
   );
 }
 

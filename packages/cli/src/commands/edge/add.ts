@@ -1,7 +1,14 @@
 import { Args, Command, Flags } from "@oclif/core";
 import { randomUUID } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
-import { applyRelationshipPreset, parseDiagram, serializeDiagram, type EdgeDash, type EdgeHead, type EdgeRouting } from "@agentsdraw/core";
+import {
+  applyRelationshipPreset,
+  parseDiagram,
+  serializeDiagram,
+  type EdgeDash,
+  type EdgeHead,
+  type EdgeRouting,
+} from "@agentsdraw/core";
 
 export default class EdgeAdd extends Command {
   static id = "edge:add";
@@ -14,8 +21,16 @@ export default class EdgeAdd extends Command {
   static flags = {
     from: Flags.string({ description: "Source node id", required: true }),
     to: Flags.string({ description: "Target node id", required: true }),
-    routing: Flags.string({ description: "Edge routing", options: ["straight", "orthogonal", "curved"], default: "orthogonal" }),
-    dash: Flags.string({ description: "Dash style", options: ["solid", "dashed", "dotted"], default: "solid" }),
+    routing: Flags.string({
+      description: "Edge routing",
+      options: ["straight", "orthogonal", "curved"],
+      default: "orthogonal",
+    }),
+    dash: Flags.string({
+      description: "Dash style",
+      options: ["solid", "dashed", "dotted"],
+      default: "solid",
+    }),
     head: Flags.string({
       description: "Arrow head",
       options: ["none", "arrowOpen", "arrowFilled", "arrowDouble", "square"],

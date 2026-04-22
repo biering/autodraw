@@ -2,8 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.js";
 import "./styles/globals.css";
-import "./styles/tokens.css";
-import "./styles/app.css";
 
 type RuntimeErrorBoundaryState = { err: Error | null };
 
@@ -63,10 +61,7 @@ function showBootError(message: string, stack?: string) {
 
 ${escape(message)}${stack ? "\n\n" + escape(stack) : ""}</pre>`;
   function escape(s: string) {
-    return s
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 }
 
@@ -76,8 +71,8 @@ window.addEventListener("error", (e) => {
 window.addEventListener("unhandledrejection", (e) => {
   const r = e.reason;
   showBootError(
-    typeof r === "string" ? r : r?.message ?? "Unhandled promise rejection",
-    r?.stack
+    typeof r === "string" ? r : (r?.message ?? "Unhandled promise rejection"),
+    r?.stack,
   );
 });
 
@@ -89,7 +84,7 @@ try {
       <RuntimeErrorBoundary>
         <App />
       </RuntimeErrorBoundary>
-    </React.StrictMode>
+    </React.StrictMode>,
   );
 } catch (err) {
   const e = err as Error;

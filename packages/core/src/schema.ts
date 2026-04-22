@@ -1,11 +1,6 @@
 import { z } from "zod";
 
-export const palettePresetSchema = z.enum([
-  "universal",
-  "grayscale",
-  "flowchart",
-  "empty",
-]);
+export const palettePresetSchema = z.enum(["universal", "grayscale", "flowchart", "empty"]);
 
 export const nodeShapeSchema = z.enum([
   "rectangle",
@@ -20,13 +15,7 @@ export const nodeShapeSchema = z.enum([
 
 export const edgeRoutingSchema = z.enum(["straight", "orthogonal", "curved"]);
 export const edgeDashSchema = z.enum(["solid", "dashed", "dotted"]);
-export const edgeHeadSchema = z.enum([
-  "none",
-  "arrowOpen",
-  "arrowFilled",
-  "arrowDouble",
-  "square",
-]);
+export const edgeHeadSchema = z.enum(["none", "arrowOpen", "arrowFilled", "arrowDouble", "square"]);
 
 export const nodeStyleDefinitionSchema = z.object({
   id: z.string(),
@@ -56,6 +45,10 @@ export const edgeSchema = z.object({
   id: z.string(),
   from: z.string(),
   to: z.string(),
+  /** React Flow handle id on the source node (e.g. `src`, `src-top`). */
+  sourceHandle: z.string().optional(),
+  /** React Flow handle id on the target node (e.g. `tgt`, `tgt-bottom`). */
+  targetHandle: z.string().optional(),
   routing: edgeRoutingSchema,
   dash: edgeDashSchema,
   head: edgeHeadSchema,

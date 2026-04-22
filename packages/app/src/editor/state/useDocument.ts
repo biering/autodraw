@@ -10,6 +10,10 @@ import {
 } from "@agentsdraw/core";
 import { temporal } from "zundo";
 import { create } from "zustand";
+import {
+  DEFAULT_DIAGRAM_SOURCE_HANDLE,
+  DEFAULT_DIAGRAM_TARGET_HANDLE,
+} from "../canvas/flowAdapter.js";
 
 /** Upper bound for canvas zoom (toolbar + React Flow viewport). */
 export const MAX_VIEW_ZOOM = 1.5;
@@ -23,6 +27,16 @@ function readStoredCanvasTheme(): CanvasTheme {
   return window.localStorage.getItem(CANVAS_THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
 }
 
+/** Transient UI: user is picking a relationship preset after drawing a link between two nodes. */
+export type RelationshipDraft = {
+  source: string;
+  target: string;
+  /** React Flow source handle id (`src` | `src-top` | `src-bottom`). */
+  sourceHandle?: string | null;
+  /** React Flow target handle id (`tgt` | `tgt-top` | `tgt-bottom`). */
+  targetHandle?: string | null;
+};
+
 export type AppState = {
   diagram: DiagramV1;
   filePath: string | null;
@@ -35,6 +49,8 @@ export type AppState = {
   pendingEdgeSource: string | null;
   pendingRelationshipPreset: number | null;
   editingNodeId: string | null;
+  /** Bottom inspector: new edge flow (pick preset to create the edge). */
+  relationshipDraft: RelationshipDraft | null;
   setDiagram: (d: DiagramV1, opts?: { filePath?: string | null; dirty?: boolean }) => void;
   setFilePath: (p: string | null) => void;
   markDirty: () => void;
@@ -47,15 +63,17 @@ export type AppState = {
   setPendingEdgeSource: (id: string | null) => void;
   setPendingRelationshipPreset: (n: number | null) => void;
   setEditingNodeId: (id: string | null) => void;
+  setRelationshipDraft: (d: RelationshipDraft | null) => void;
+  commitRelationshipDraft: (presetIndex: number) => void;
   newDocument: (palette: PalettePreset) => void;
   loadPaletteFrom: (source: DiagramV1) => void;
-  addNode: (
-    n: Omit<NodeRecord, "id"> & { id?: string },
-    opts?: { focusLabel?: boolean }
-  ) => string;
+  addNode: (n: Omit<NodeRecord, "id"> & { id?: string }, opts?: { focusLabel?: boolean }) => string;
   updateNode: (id: string, patch: Partial<NodeRecord>) => void;
   removeNode: (id: string) => void;
-  addEdge: (e: Omit<EdgeRecord, "id"> & { id?: string }) => string;
+  addEdge: (
+    e: Pick<EdgeRecord, "from" | "to"> &
+      Partial<Omit<EdgeRecord, "id" | "from" | "to">> & { id?: string },
+  ) => string;
   updateEdge: (id: string, patch: Partial<EdgeRecord>) => void;
   removeEdge: (id: string) => void;
 };
@@ -74,6 +92,8 @@ const initial = (): Omit<
   | "setPendingEdgeSource"
   | "setPendingRelationshipPreset"
   | "setEditingNodeId"
+  | "setRelationshipDraft"
+  | "commitRelationshipDraft"
   | "newDocument"
   | "loadPaletteFrom"
   | "addNode"
@@ -94,96 +114,115 @@ const initial = (): Omit<
   pendingEdgeSource: null,
   pendingRelationshipPreset: null,
   editingNodeId: null,
+  relationshipDraft: null,
 });
 
 export const useDocument = create<AppState>()(
   temporal(
     (set, get) => ({
-        ...initial(),
-        setDiagram: (d, opts) =>
-          set({
-            diagram: d,
-            filePath: opts?.filePath ?? get().filePath,
-            dirty: opts?.dirty ?? false,
-          }),
-        setFilePath: (p) => set({ filePath: p }),
-        markDirty: () => set({ dirty: true }),
-        markClean: () => set({ dirty: false }),
-        setSelection: (nodeIds, edgeIds = []) => {
-          const prev = get().selection;
-          const sameNodes =
-            prev.nodeIds.length === nodeIds.length &&
-            prev.nodeIds.every((id, i) => id === nodeIds[i]);
-          const sameEdges =
-            prev.edgeIds.length === edgeIds.length &&
-            prev.edgeIds.every((id, i) => id === edgeIds[i]);
-          if (sameNodes && sameEdges) return;
-          set({
-            selection: {
-              nodeIds: sameNodes ? prev.nodeIds : nodeIds,
-              edgeIds: sameEdges ? prev.edgeIds : edgeIds,
-            },
-          });
-        },
-        setZoom: (z) => set({ zoom: Math.min(MAX_VIEW_ZOOM, z) }),
-        setShowNewDocSheet: (v) => set({ showNewDocSheet: v }),
-        setShowExportSheet: (v) => set({ showExportSheet: v }),
-        setCanvasTheme: (canvasTheme) => {
-          if (typeof window !== "undefined") {
-            window.localStorage.setItem(CANVAS_THEME_STORAGE_KEY, canvasTheme);
-          }
-          set({ canvasTheme });
-        },
-        setPendingEdgeSource: (id) => set({ pendingEdgeSource: id }),
-        setPendingRelationshipPreset: (n) => set({ pendingRelationshipPreset: n }),
-        setEditingNodeId: (id) => set({ editingNodeId: id }),
-        newDocument: (palette) =>
-          set({
-            ...initial(),
-            diagram: emptyDiagram(palette),
-            showNewDocSheet: false,
-            dirty: false,
-            filePath: null,
-          }),
-        loadPaletteFrom: (source) =>
-          set((s) => ({
-            diagram: {
-              ...s.diagram,
-              palette: source.palette,
-              customStyles: source.customStyles ?? [],
-            },
-            dirty: true,
-          })),
-        addNode: (n, opts) => {
-          const id = n.id ?? crypto.randomUUID();
-          const node: NodeRecord = {
-            id,
-            text: n.text,
-            x: n.x,
-            y: n.y,
-            w: n.w,
-            h: n.h,
-            styleId: n.styleId,
-            shape: n.shape,
-          };
-          const focusLabel = opts?.focusLabel !== false;
-          set((s) => ({
-            diagram: { ...s.diagram, nodes: [...s.diagram.nodes, node] },
-            dirty: true,
-            ...(focusLabel ? { editingNodeId: id } : {}),
-          }));
-          return id;
-        },
-        updateNode: (id, patch) =>
-          set((s) => ({
-            diagram: {
-              ...s.diagram,
-              nodes: s.diagram.nodes.map((x) => (x.id === id ? { ...x, ...patch } : x)),
-            },
-            dirty: true,
-          })),
-        removeNode: (id) =>
-          set((s) => ({
+      ...initial(),
+      setDiagram: (d, opts) =>
+        set({
+          diagram: d,
+          filePath: opts?.filePath ?? get().filePath,
+          dirty: opts?.dirty ?? false,
+        }),
+      setFilePath: (p) => set({ filePath: p }),
+      markDirty: () => set({ dirty: true }),
+      markClean: () => set({ dirty: false }),
+      setSelection: (nodeIds, edgeIds = []) => {
+        const prev = get().selection;
+        const sameNodes =
+          prev.nodeIds.length === nodeIds.length &&
+          prev.nodeIds.every((id, i) => id === nodeIds[i]);
+        const sameEdges =
+          prev.edgeIds.length === edgeIds.length &&
+          prev.edgeIds.every((id, i) => id === edgeIds[i]);
+        if (sameNodes && sameEdges) return;
+        set({
+          selection: {
+            nodeIds: sameNodes ? prev.nodeIds : nodeIds,
+            edgeIds: sameEdges ? prev.edgeIds : edgeIds,
+          },
+        });
+      },
+      setZoom: (z) => set({ zoom: Math.min(MAX_VIEW_ZOOM, z) }),
+      setShowNewDocSheet: (v) => set({ showNewDocSheet: v }),
+      setShowExportSheet: (v) => set({ showExportSheet: v }),
+      setCanvasTheme: (canvasTheme) => {
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(CANVAS_THEME_STORAGE_KEY, canvasTheme);
+        }
+        set({ canvasTheme });
+      },
+      setPendingEdgeSource: (id) => set({ pendingEdgeSource: id }),
+      setPendingRelationshipPreset: (n) => set({ pendingRelationshipPreset: n }),
+      setEditingNodeId: (id) => set({ editingNodeId: id }),
+      setRelationshipDraft: (d) => set({ relationshipDraft: d }),
+      commitRelationshipDraft: (presetIndex) => {
+        const d = get().relationshipDraft;
+        if (!d?.source || !d?.target) return;
+        get().addEdge({
+          from: d.source,
+          to: d.target,
+          label: "",
+          relationshipPreset: presetIndex,
+          sourceHandle: d.sourceHandle ?? undefined,
+          targetHandle: d.targetHandle ?? undefined,
+        });
+        set({ relationshipDraft: null });
+      },
+      newDocument: (palette) =>
+        set({
+          ...initial(),
+          diagram: emptyDiagram(palette),
+          showNewDocSheet: false,
+          dirty: false,
+          filePath: null,
+        }),
+      loadPaletteFrom: (source) =>
+        set((s) => ({
+          diagram: {
+            ...s.diagram,
+            palette: source.palette,
+            customStyles: source.customStyles ?? [],
+          },
+          dirty: true,
+        })),
+      addNode: (n, opts) => {
+        const id = n.id ?? crypto.randomUUID();
+        const node: NodeRecord = {
+          id,
+          text: n.text,
+          x: n.x,
+          y: n.y,
+          w: n.w,
+          h: n.h,
+          styleId: n.styleId,
+          shape: n.shape,
+        };
+        const focusLabel = opts?.focusLabel !== false;
+        set((s) => ({
+          diagram: { ...s.diagram, nodes: [...s.diagram.nodes, node] },
+          dirty: true,
+          ...(focusLabel ? { editingNodeId: id } : {}),
+        }));
+        return id;
+      },
+      updateNode: (id, patch) =>
+        set((s) => ({
+          diagram: {
+            ...s.diagram,
+            nodes: s.diagram.nodes.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+          },
+          dirty: true,
+        })),
+      removeNode: (id) =>
+        set((s) => {
+          const rd = s.relationshipDraft;
+          const dropDraft =
+            rd && (rd.source === id || rd.target === id) ? { relationshipDraft: null } : {};
+          return {
             diagram: {
               ...s.diagram,
               nodes: s.diagram.nodes.filter((x) => x.id !== id),
@@ -195,49 +234,68 @@ export const useDocument = create<AppState>()(
               edgeIds: s.selection.edgeIds,
             },
             editingNodeId: s.editingNodeId === id ? null : s.editingNodeId,
-          })),
-        addEdge: (e) => {
-          const id = e.id ?? crypto.randomUUID();
-          const preset = e.relationshipPreset ?? 1;
-          const style = applyRelationshipPreset(preset);
-          const edge: EdgeRecord = {
-            id,
-            from: e.from,
-            to: e.to,
-            routing: style.routing,
-            dash: style.dash,
-            head: style.head,
-            tail: style.tail,
-            label: e.label ?? "",
-            strokeWidth: style.strokeWidth,
-            relationshipPreset: style.relationshipPreset,
+            ...dropDraft,
           };
-          set((s) => ({
-            diagram: { ...s.diagram, edges: [...s.diagram.edges, edge] },
-            dirty: true,
-          }));
-          return id;
-        },
-        updateEdge: (id, patch) =>
-          set((s) => ({
-            diagram: {
-              ...s.diagram,
-              edges: s.diagram.edges.map((x) => (x.id === id ? { ...x, ...patch } : x)),
-            },
-            dirty: true,
-          })),
-        removeEdge: (id) =>
-          set((s) => ({
-            diagram: { ...s.diagram, edges: s.diagram.edges.filter((x) => x.id !== id) },
-            dirty: true,
-            selection: { nodeIds: s.selection.nodeIds, edgeIds: s.selection.edgeIds.filter((x) => x !== id) },
-          })),
-      }),
+        }),
+      addEdge: (e) => {
+        const id = e.id ?? crypto.randomUUID();
+        const preset = e.relationshipPreset ?? 1;
+        const style = applyRelationshipPreset(preset);
+        const edge: EdgeRecord = {
+          id,
+          from: e.from,
+          to: e.to,
+          routing: style.routing,
+          dash: style.dash,
+          head: style.head,
+          tail: style.tail,
+          label: e.label ?? "",
+          strokeWidth: style.strokeWidth,
+          relationshipPreset: style.relationshipPreset,
+        };
+        if (
+          e.sourceHandle != null &&
+          e.sourceHandle !== "" &&
+          e.sourceHandle !== DEFAULT_DIAGRAM_SOURCE_HANDLE
+        ) {
+          edge.sourceHandle = e.sourceHandle;
+        }
+        if (
+          e.targetHandle != null &&
+          e.targetHandle !== "" &&
+          e.targetHandle !== DEFAULT_DIAGRAM_TARGET_HANDLE
+        ) {
+          edge.targetHandle = e.targetHandle;
+        }
+        set((s) => ({
+          diagram: { ...s.diagram, edges: [...s.diagram.edges, edge] },
+          dirty: true,
+        }));
+        return id;
+      },
+      updateEdge: (id, patch) =>
+        set((s) => ({
+          diagram: {
+            ...s.diagram,
+            edges: s.diagram.edges.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+          },
+          dirty: true,
+        })),
+      removeEdge: (id) =>
+        set((s) => ({
+          diagram: { ...s.diagram, edges: s.diagram.edges.filter((x) => x.id !== id) },
+          dirty: true,
+          selection: {
+            nodeIds: s.selection.nodeIds,
+            edgeIds: s.selection.edgeIds.filter((x) => x !== id),
+          },
+        })),
+    }),
     {
       limit: 200,
       partialize: (s) => ({ diagram: s.diagram }),
-    }
-  )
+    },
+  ),
 );
 
 export function undoDocument(): void {

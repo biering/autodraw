@@ -5,8 +5,12 @@ import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 
 import type { DiagramFlowNode } from "../flowAdapter.js";
 import { useDocument } from "../../state/useDocument.js";
 
-function diagramNodePropsAreEqual(prev: NodeProps<DiagramFlowNode>, next: NodeProps<DiagramFlowNode>): boolean {
-  if (prev.id !== next.id || prev.selected !== next.selected || prev.dragging !== next.dragging) return false;
+function diagramNodePropsAreEqual(
+  prev: NodeProps<DiagramFlowNode>,
+  next: NodeProps<DiagramFlowNode>,
+): boolean {
+  if (prev.id !== next.id || prev.selected !== next.selected || prev.dragging !== next.dragging)
+    return false;
   const a = prev.data;
   const b = next.data;
   return (
@@ -23,6 +27,25 @@ function diagramNodePropsAreEqual(prev: NodeProps<DiagramFlowNode>, next: NodePr
 
 const NODE_TITLE_PLACEHOLDER = "Untitled Element";
 
+/** Hollow port: clear inner + strong stroke + outer halo (no solid “dot” fill). */
+function handlePortStyle(role: "target" | "source"): CSSProperties {
+  return {
+    width: 11,
+    height: 11,
+    borderRadius: 9999,
+    zIndex: 3,
+    background: "rgba(255,255,255,0.94)",
+    border: "2px solid rgba(65, 68, 78, 0.88)",
+    // Outer light ring + soft depth so the port reads on any node fill
+    boxShadow:
+      "0 0 0 1px rgba(255,255,255,1), 0 0 0 2.5px rgba(90, 93, 102, 0.35), 0 1px 3px rgba(0,0,0,0.14)",
+    pointerEvents: role === "target" ? "none" : "auto",
+  };
+}
+
+const targetHandleStyle = handlePortStyle("target");
+const sourceHandleStyle = handlePortStyle("source");
+
 function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
   const data = props.data;
   const { id, selected, dragging } = props;
@@ -35,13 +58,13 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
       (c: ConnectionState) =>
         Boolean(
           c.inProgress &&
-          c.toNode != null &&
-          c.fromNode != null &&
-          c.toNode.id === id &&
-          c.fromNode.id !== id
+            c.toNode != null &&
+            c.fromNode != null &&
+            c.toNode.id === id &&
+            c.fromNode.id !== id,
         ),
-      [id]
-    )
+      [id],
+    ),
   );
 
   const shape = data.shape ?? data.resolvedStyle.defaultShape;
@@ -49,17 +72,16 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
   const stroke = data.resolvedStyle.stroke;
 
   const corner = Math.min(12, Math.min(data.w, data.h) * 0.2);
-  /** Magenta frame + soft periwinkle halo (matches desktop selection affordance). */
+  /** Soft ring + light lift when selected (keeps blur modest for drag performance). */
   const selectedChrome =
-    "0 1.5px 4px rgba(0,0,0,0.14), 0 0 0 6px rgba(165, 195, 255, 0.62), 0 0 40px 4px rgba(110, 165, 255, 0.38)";
+    "0 2px 8px rgba(0,0,0,0.08), 0 0 0 1px rgba(255,255,255,0.65) inset, 0 0 0 3px rgba(59, 130, 246, 0.35)";
   /** Large blurred shadows repaint badly in WebKit while the node transform-drags; strip them until drag ends. */
-  const elevation = "0 1.5px 3px rgba(0,0,0,0.12)";
+  const elevation = "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.06)";
   const common: CSSProperties = {
     width: data.w,
     height: data.h,
-    boxShadow:
-      dragging ? "none" : isEditing ? elevation : selected ? selectedChrome : elevation,
-    border: selected ? "3.5px solid #c41e6b" : `3px solid ${stroke}`,
+    boxShadow: dragging ? "none" : isEditing ? elevation : selected ? selectedChrome : elevation,
+    border: selected ? "2px solid rgba(59, 130, 246, 0.65)" : `1.5px solid ${stroke}`,
     background: fill,
     display: "flex",
     alignItems: "center",
@@ -71,8 +93,8 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
     fontFamily: "system-ui, -apple-system, SF Pro Text, sans-serif",
     ...(dragging && selected && !isEditing
       ? {
-          outline: "2.5px solid rgba(130, 175, 255, 0.85)",
-          outlineOffset: 5,
+          outline: "2px solid rgba(59, 130, 246, 0.55)",
+          outlineOffset: 4,
         }
       : {}),
   };
@@ -81,7 +103,14 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
     rectangle: { ...common, borderRadius: 0 },
     roundedRect: { ...common, borderRadius: corner },
     oval: { ...common, borderRadius: 9999 },
-    circle: { ...common, borderRadius: "50%", aspectRatio: "1", width: data.h, height: data.h, margin: "0 auto" },
+    circle: {
+      ...common,
+      borderRadius: "50%",
+      aspectRatio: "1",
+      width: data.h,
+      height: data.h,
+      margin: "0 auto",
+    },
     diamond: {
       ...common,
       borderRadius: 4,
@@ -90,8 +119,16 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
       height: data.h * 0.85,
       margin: "auto",
     },
-    hexagon: { ...common, borderRadius: 6, clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)" },
-    octagon: { ...common, borderRadius: 4, clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)" },
+    hexagon: {
+      ...common,
+      borderRadius: 6,
+      clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)",
+    },
+    octagon: {
+      ...common,
+      borderRadius: 4,
+      clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+    },
     parallelogram: { ...common, borderRadius: 4, transform: "skewX(-12deg)" },
   };
 
@@ -100,11 +137,7 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
   const startEditing = () => setEditingNodeId(id);
 
   const labelTransform =
-    shape === "diamond"
-      ? "rotate(-45deg)"
-      : shape === "parallelogram"
-        ? "skewX(12deg)"
-        : undefined;
+    shape === "diamond" ? "rotate(-45deg)" : shape === "parallelogram" ? "skewX(12deg)" : undefined;
 
   const hasTitle = data.label.trim().length > 0;
   const showPlaceholder = !hasTitle && !selected;
@@ -119,30 +152,18 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
         transform: dragging ? "translateZ(0)" : undefined,
         WebkitTransform: dragging ? "translateZ(0)" : undefined,
         borderRadius: 10,
-        outline: isConnectDropTarget ? "3px solid rgba(10, 132, 255, 0.95)" : undefined,
-        outlineOffset: isConnectDropTarget ? 2 : undefined,
+        outline: isConnectDropTarget ? "2px solid rgba(37, 99, 235, 0.85)" : undefined,
+        outlineOffset: isConnectDropTarget ? 3 : undefined,
       }}
       onDoubleClick={(e) => {
         e.stopPropagation();
         startEditing();
       }}
     >
-      {/* Target handle: pointer-events none so the left edge selects the node in one click.
-          Incoming links still land via loose connection mode + connectionRadius on the canvas. */}
-      <Handle
-        id="tgt"
-        type="target"
-        position={Position.Left}
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: 999,
-          background: "#111",
-          border: "2px solid #fff",
-          boxShadow: "0 0 0 1px rgba(0,0,0,0.12)",
-          pointerEvents: "none",
-        }}
-      />
+      {/* Targets: pointer-events none so clicks pass through to the body for selection. */}
+      <Handle id="tgt" type="target" position={Position.Left} style={targetHandleStyle} />
+      <Handle id="tgt-top" type="target" position={Position.Top} style={targetHandleStyle} />
+      <Handle id="tgt-bottom" type="target" position={Position.Bottom} style={targetHandleStyle} />
       <div style={sx}>
         {isEditing ? (
           <NodeLabelEditor
@@ -175,21 +196,27 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
           </span>
         )}
       </div>
+      {/* Sources rendered after the body so they sit on top and receive drags where they overlap. */}
+      <Handle
+        id="src-top"
+        type="source"
+        position={Position.Top}
+        title="Drag to connect"
+        style={sourceHandleStyle}
+      />
+      <Handle
+        id="src-bottom"
+        type="source"
+        position={Position.Bottom}
+        title="Drag to connect"
+        style={sourceHandleStyle}
+      />
       <Handle
         id="src"
         type="source"
         position={Position.Right}
         title="Drag to connect"
-        style={{
-          top: "50%",
-          right: -4,
-          width: 8,
-          height: 8,
-          borderRadius: 999,
-          background: "#111",
-          border: "2px solid #fff",
-          boxShadow: "0 0 0 1px rgba(0,0,0,0.12)",
-        }}
+        style={{ ...sourceHandleStyle, top: "50%", right: -3 }}
       />
     </div>
   );

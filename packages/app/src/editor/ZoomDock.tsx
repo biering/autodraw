@@ -4,6 +4,9 @@ import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useDocument } from "./state/useDocument.js";
 
+const zoomBtnClass =
+  "h-11 w-11 rounded-none border-0 border-b border-black/10 bg-transparent text-[#1d1d1f] shadow-none last:border-b-0 hover:bg-[#f2f2f7]";
+
 /** Bottom-left floating zoom control (must render under ReactFlowProvider). */
 export function ZoomDock() {
   const rf = useReactFlow();
@@ -29,11 +32,15 @@ export function ZoomDock() {
   }, [rf, syncZoomFromViewport]);
 
   return (
-    <div className="zoomDock" role="toolbar" aria-label="Zoom">
+    <div
+      className="fixed bottom-[max(16px,env(safe-area-inset-bottom,0px))] left-[max(16px,env(safe-area-inset-left,0px))] z-[75] flex flex-col overflow-hidden rounded-xl border border-black/10 bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_28px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)]"
+      role="toolbar"
+      aria-label="Zoom"
+    >
       <Button
         type="button"
         variant="ghost"
-        className="zoomDockBtn h-11 w-11 rounded-none border-0 bg-transparent text-[#1d1d1f] shadow-none hover:bg-[#f2f2f7]"
+        className={zoomBtnClass}
         title="Zoom in"
         aria-label="Zoom in"
         onClick={handleZoomIn}
@@ -43,7 +50,7 @@ export function ZoomDock() {
       <Button
         type="button"
         variant="ghost"
-        className="zoomDockBtn h-11 w-11 rounded-none border-0 bg-transparent text-[#1d1d1f] shadow-none hover:bg-[#f2f2f7]"
+        className={zoomBtnClass}
         title="Zoom out"
         aria-label="Zoom out"
         onClick={handleZoomOut}
@@ -53,7 +60,7 @@ export function ZoomDock() {
       <Button
         type="button"
         variant="ghost"
-        className="zoomDockBtn h-11 w-11 rounded-none border-0 bg-transparent text-[#1d1d1f] shadow-none hover:bg-[#f2f2f7]"
+        className={zoomBtnClass}
         title="Zoom to 100%"
         aria-label="Zoom to 100%"
         onClick={handleZoom100}

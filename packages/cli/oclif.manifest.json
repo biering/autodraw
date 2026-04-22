@@ -17,10 +17,7 @@
           "required": true,
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "pdf",
-            "png"
-          ],
+          "options": ["pdf", "png"],
           "type": "option"
         },
         "output": {
@@ -55,11 +52,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "export.js"
-      ]
+      "relativePath": ["dist", "commands", "export.js"]
     },
     "init": {
       "aliases": [],
@@ -78,12 +71,7 @@
           "default": "universal",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "universal",
-            "grayscale",
-            "flowchart",
-            "empty"
-          ],
+          "options": ["universal", "grayscale", "flowchart", "empty"],
           "type": "option"
         }
       },
@@ -96,11 +84,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "init.js"
-      ]
+      "relativePath": ["dist", "commands", "init.js"]
     },
     "open": {
       "aliases": [],
@@ -122,11 +106,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "open.js"
-      ]
+      "relativePath": ["dist", "commands", "open.js"]
     },
     "edge:add": {
       "aliases": [],
@@ -161,11 +141,7 @@
           "default": "orthogonal",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "straight",
-            "orthogonal",
-            "curved"
-          ],
+          "options": ["straight", "orthogonal", "curved"],
           "type": "option"
         },
         "dash": {
@@ -174,11 +150,7 @@
           "default": "solid",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "solid",
-            "dashed",
-            "dotted"
-          ],
+          "options": ["solid", "dashed", "dotted"],
           "type": "option"
         },
         "head": {
@@ -187,13 +159,7 @@
           "default": "arrowOpen",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "none",
-            "arrowOpen",
-            "arrowFilled",
-            "arrowDouble",
-            "square"
-          ],
+          "options": ["none", "arrowOpen", "arrowFilled", "arrowDouble", "square"],
           "type": "option"
         },
         "label": {
@@ -221,12 +187,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "edge",
-        "add.js"
-      ]
+      "relativePath": ["dist", "commands", "edge", "add.js"]
     },
     "edge:remove": {
       "aliases": [],
@@ -257,12 +218,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "edge",
-        "remove.js"
-      ]
+      "relativePath": ["dist", "commands", "edge", "remove.js"]
     },
     "node:add": {
       "aliases": [],
@@ -339,12 +295,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "node",
-        "add.js"
-      ]
+      "relativePath": ["dist", "commands", "node", "add.js"]
     },
     "node:list": {
       "aliases": [],
@@ -366,12 +317,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "node",
-        "list.js"
-      ]
+      "relativePath": ["dist", "commands", "node", "list.js"]
     },
     "node:move": {
       "aliases": [],
@@ -418,12 +364,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "node",
-        "move.js"
-      ]
+      "relativePath": ["dist", "commands", "node", "move.js"]
     },
     "node:remove": {
       "aliases": [],
@@ -454,12 +395,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "node",
-        "remove.js"
-      ]
+      "relativePath": ["dist", "commands", "node", "remove.js"]
     }
   },
   "version": "0.1.0"

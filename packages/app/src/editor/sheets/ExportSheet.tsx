@@ -32,7 +32,7 @@ export function ExportSheet() {
   const onExport = async () => {
     if (!isTauri()) {
       console.warn(
-        "[agentsdraw] PDF/PNG export uses the Rust backend. From the repo root run `pnpm dev:tauri` (install Rust from https://rustup.rs/ if `cargo` is missing)."
+        "[agentsdraw] PDF/PNG export uses the Rust backend. From the repo root run `pnpm dev:tauri` (install Rust from https://rustup.rs/ if `cargo` is missing).",
       );
       return;
     }

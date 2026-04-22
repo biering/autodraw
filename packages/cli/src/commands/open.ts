@@ -16,7 +16,11 @@ export default class Open extends Command {
       return;
     }
     if (process.platform === "win32") {
-      spawn("cmd", ["/c", "start", "", args.file], { stdio: "ignore", detached: true, windowsHide: true }).unref();
+      spawn("cmd", ["/c", "start", "", args.file], {
+        stdio: "ignore",
+        detached: true,
+        windowsHide: true,
+      }).unref();
       return;
     }
     spawn("xdg-open", [args.file], { stdio: "ignore", detached: true }).unref();

@@ -32,7 +32,10 @@ function nodeRect(n: NodeRecord): { x: number; y: number; w: number; h: number }
   return { x: n.x, y: n.y, w: n.w, h: n.h };
 }
 
-function contentBounds(diagram: DiagramV1, padding: number): { x: number; y: number; w: number; h: number } {
+function contentBounds(
+  diagram: DiagramV1,
+  padding: number,
+): { x: number; y: number; w: number; h: number } {
   if (diagram.nodes.length === 0) {
     return { x: 0, y: 0, w: 400, h: 300 };
   }
@@ -73,7 +76,8 @@ function markerDefs(edge: EdgeRecord, uid: string): string {
     return `<marker id="${id}" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" refX="${flip ? 2 : 6}" refY="4" orient="auto"><rect x="${ref}" y="1" width="6" height="6" fill="none" stroke="${stroke}" stroke-width="${sw}"/></marker>`;
   };
   const parts: string[] = [];
-  if (edge.head === "arrowOpen" || edge.head === "arrowDouble") parts.push(mkOpen(`mk_h_open_${uid}`, false));
+  if (edge.head === "arrowOpen" || edge.head === "arrowDouble")
+    parts.push(mkOpen(`mk_h_open_${uid}`, false));
   if (edge.head === "arrowDouble") parts.push(mkOpen(`mk_h_open_start_${uid}`, true));
   if (edge.head === "arrowFilled") parts.push(mkFill(`mk_h_fill_${uid}`));
   if (edge.head === "square") parts.push(mkSq(`mk_h_sq_${uid}`, false));
@@ -115,7 +119,14 @@ function markerStartUrl(edge: EdgeRecord, uid: string): string | undefined {
   }
 }
 
-function renderNodeShape(n: NodeRecord, shape: NodeShape, fill: string, fo: number, stroke: string, so: number): string {
+function renderNodeShape(
+  n: NodeRecord,
+  shape: NodeShape,
+  fill: string,
+  fo: number,
+  stroke: string,
+  so: number,
+): string {
   const x = n.x;
   const y = n.y;
   const w = n.w;
@@ -202,7 +213,7 @@ export function renderSVG(diagram: DiagramV1, opts: RenderSVGOptions = {}): stri
     const meAttr = me ? ` marker-end="${me}"` : "";
     const msAttr = ms ? ` marker-start="${ms}"` : "";
     body.push(
-      `<polyline fill="none" stroke="#262626" stroke-width="${strokeW}" stroke-dasharray="${dash}" points="${points}"${meAttr}${msAttr}/>`
+      `<polyline fill="none" stroke="#262626" stroke-width="${strokeW}" stroke-dasharray="${dash}" points="${points}"${meAttr}${msAttr}/>`,
     );
   }
 
@@ -216,7 +227,7 @@ export function renderSVG(diagram: DiagramV1, opts: RenderSVGOptions = {}): stri
     const so = st.strokeAlpha;
     body.push(renderNodeShape(n, shape, fill, fo, stroke, so));
     body.push(
-      `<text x="${n.x + n.w / 2}" y="${n.y + n.h / 2}" text-anchor="middle" dominant-baseline="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#111">${esc(n.text)}</text>`
+      `<text x="${n.x + n.w / 2}" y="${n.y + n.h / 2}" text-anchor="middle" dominant-baseline="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#111">${esc(n.text)}</text>`,
     );
   }
 
