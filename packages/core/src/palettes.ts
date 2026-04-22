@@ -20,14 +20,33 @@ function style(
   };
 }
 
+/** `#RRGGBB` → linear RGB channels 0–1. */
+function hexRgb(hex: string): [number, number, number] {
+  const h = hex.replace("#", "").trim();
+  const n = parseInt(h, 16);
+  return [(n >> 16) / 255, ((n >> 8) & 0xff) / 255, (n & 0xff) / 255];
+}
+
+function styleFromHex(
+  id: string,
+  fillHex: string,
+  _strokeDarken = 1,
+  shape: NodeShape = "roundedRect",
+): NodeStyleDefinition {
+  const [r, g, b] = hexRgb(fillHex);
+  return style(id, [r, g, b, 1], [r, g, b, 1], shape);
+}
+
+/**
+ * Primary node fills (editor + export): the five brand hexes on yellow/orange/green/blue/purple;
+ * `red` / `pink` reuse coral and purple so legacy `styleId`s stay valid. Strokes match fills.
+ */
 const universal: NodeStyleDefinition[] = [
-  style("yellow", [1, 0.95, 0.6, 0.85], [0.85, 0.65, 0, 1], "roundedRect"),
-  style("orange", [1, 0.85, 0.65, 0.9], [0.9, 0.45, 0.1, 1], "roundedRect"),
-  style("red", [1, 0.85, 0.85, 0.95], [0.85, 0.2, 0.2, 1], "roundedRect"),
-  style("pink", [1, 0.88, 0.95, 0.95], [0.9, 0.35, 0.65, 1], "roundedRect"),
-  style("purple", [0.92, 0.85, 1, 0.95], [0.45, 0.25, 0.75, 1], "roundedRect"),
-  style("blue", [0.85, 0.92, 1, 0.95], [0.2, 0.45, 0.85, 1], "roundedRect"),
-  style("green", [0.85, 0.95, 0.88, 0.95], [0.15, 0.55, 0.3, 1], "roundedRect"),
+  styleFromHex("yellow", "#F0EC57"),
+  styleFromHex("orange", "#E2856E"),
+  styleFromHex("pink", "#6A66A3"),
+  styleFromHex("blue", "#32908F"),
+  styleFromHex("green", "#26C485"),
   style("gray", [0.92, 0.92, 0.92, 1], [0.45, 0.45, 0.48, 1], "roundedRect"),
   style("shape_rect", [1, 1, 1, 1], [0.35, 0.35, 0.38, 1], "rectangle"),
   style("shape_rounded", [1, 1, 1, 1], [0.35, 0.35, 0.38, 1], "roundedRect"),
@@ -202,3 +221,6 @@ export function styleById(
 ): NodeStyleDefinition | undefined {
   return resolvedStyles(diagram).find((s) => s.id === id);
 }
+
+/** Fill opacity (0–1) for node bodies on canvas and in `renderSVG` exports. */
+export const NODE_BACKGROUND_FILL_OPACITY = 0.12;

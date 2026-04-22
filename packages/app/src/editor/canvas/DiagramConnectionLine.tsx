@@ -1,15 +1,44 @@
 import type { ConnectionLineComponentProps } from "@xyflow/react";
 import { memo, useMemo } from "react";
+import {
+  clampedInsetEndpoints,
+  computeEdgeInsetPx,
+  computeOrthogonalStubPx,
+  orthogonalStubPath,
+} from "./edges/edgeHandleInset.js";
+
+const CONNECTION_PREVIEW_INSET = computeEdgeInsetPx(2);
+const CONNECTION_PREVIEW_STUB = computeOrthogonalStubPx(2);
 
 /**
- * Connection preview uses the same sharp step routing as {@link DiagramEdge} (horizontal → vertical → horizontal).
+ * Connection preview uses the same sharp step routing as {@link DiagramEdge} (horizontal → vertical → horizontal),
+ * with the same handle outward inset when the target handle is known.
  */
 function DiagramConnectionLineInner(props: ConnectionLineComponentProps) {
-  const { fromX, fromY, toX, toY, connectionStatus } = props;
-  const path = useMemo(() => {
-    const centerX = (fromX + toX) / 2;
-    return `M ${fromX} ${fromY} L ${centerX} ${fromY} L ${centerX} ${toY} L ${toX} ${toY}`;
-  }, [fromX, fromY, toX, toY]);
+  const { fromX, fromY, toX, toY, connectionStatus, fromPosition, toPosition, toHandle } = props;
+  const { path, endX, endY } = useMemo(() => {
+    const targetInset = toHandle ? CONNECTION_PREVIEW_INSET : 0;
+    const { sx, sy, tx, ty } = clampedInsetEndpoints(
+      fromX,
+      fromY,
+      toX,
+      toY,
+      fromPosition,
+      toPosition,
+      CONNECTION_PREVIEW_INSET,
+      targetInset,
+    );
+    const { d } = orthogonalStubPath(
+      sx,
+      sy,
+      tx,
+      ty,
+      fromPosition,
+      toPosition,
+      CONNECTION_PREVIEW_STUB,
+    );
+    return { path: d, endX: tx, endY: ty };
+  }, [fromX, fromY, toX, toY, fromPosition, toPosition, toHandle]);
   const ok = connectionStatus !== "invalid";
   const stroke = ok ? "rgba(37, 99, 235, 0.88)" : "rgba(220, 38, 38, 0.88)";
   return (
@@ -22,7 +51,7 @@ function DiagramConnectionLineInner(props: ConnectionLineComponentProps) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx={toX} cy={toY} r={4} fill={stroke} stroke="#fff" strokeWidth={1.5} />
+      <circle cx={endX} cy={endY} r={4} fill={stroke} stroke="#fff" strokeWidth={1.5} />
     </g>
   );
 }

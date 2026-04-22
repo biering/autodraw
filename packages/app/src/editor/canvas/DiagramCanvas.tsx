@@ -191,8 +191,8 @@ export function DiagramCanvas() {
   const edgeSelSet = useMemo(() => new Set(selection.edgeIds), [selection.edgeIds]);
 
   const nodes = useMemo(
-    () => toFlowNodes(diagram).map((n) => ({ ...n, selected: nodeSelSet.has(n.id) })),
-    [diagram, nodeSelSet],
+    () => toFlowNodes(diagram, canvasTheme).map((n) => ({ ...n, selected: nodeSelSet.has(n.id) })),
+    [diagram, nodeSelSet, canvasTheme],
   );
   const edges = useMemo(
     () => toFlowEdges(diagram).map((e) => ({ ...e, selected: edgeSelSet.has(e.id) })),

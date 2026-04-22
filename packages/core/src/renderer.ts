@@ -1,6 +1,7 @@
 import type { DiagramV1, EdgeDash, EdgeHead, EdgeRecord, NodeRecord, NodeShape } from "./schema.js";
 import { pathPoints } from "./routing.js";
 import { resolvedStyles, styleById } from "./palettes.js";
+import { resolvedNodeSvgFillParts, resolvedNodeSvgStrokeParts } from "./nodeColors.js";
 
 export type RenderSVGOptions = {
   showGrid?: boolean;
@@ -132,7 +133,7 @@ function renderNodeShape(
   const w = n.w;
   const h = n.h;
   const corner = Math.min(12, Math.min(w, h) * 0.2);
-  const common = `fill="${fill}" fill-opacity="${fo}" stroke="${stroke}" stroke-opacity="${so}" stroke-width="1.5" filter="url(#shadow)"`;
+  const common = `fill="${fill}" fill-opacity="${fo}" stroke="${stroke}" stroke-opacity="${so}" stroke-width="2.5" filter="url(#shadow)"`;
   switch (shape) {
     case "rectangle":
       return `<rect x="${x}" y="${y}" width="${w}" height="${h}" ${common}/>`;
@@ -221,10 +222,8 @@ export function renderSVG(diagram: DiagramV1, opts: RenderSVGOptions = {}): stri
     const st = styleById(diagram, n.styleId) ?? styles[0];
     if (!st) continue;
     const shape = n.shape ?? st.shape;
-    const fill = `rgb(${Math.round(st.fillRed * 255)},${Math.round(st.fillGreen * 255)},${Math.round(st.fillBlue * 255)})`;
-    const fo = st.fillAlpha;
-    const stroke = `rgb(${Math.round(st.strokeRed * 255)},${Math.round(st.strokeGreen * 255)},${Math.round(st.strokeBlue * 255)})`;
-    const so = st.strokeAlpha;
+    const { fillRgb: fill, fillOpacity: fo } = resolvedNodeSvgFillParts(st);
+    const { strokeRgb: stroke, strokeOpacity: so } = resolvedNodeSvgStrokeParts(st);
     body.push(renderNodeShape(n, shape, fill, fo, stroke, so));
     body.push(
       `<text x="${n.x + n.w / 2}" y="${n.y + n.h / 2}" text-anchor="middle" dominant-baseline="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#111">${esc(n.text)}</text>`,

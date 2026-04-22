@@ -21,7 +21,8 @@ function diagramNodePropsAreEqual(
     (a.shape ?? null) === (b.shape ?? null) &&
     a.resolvedStyle.fill === b.resolvedStyle.fill &&
     a.resolvedStyle.stroke === b.resolvedStyle.stroke &&
-    a.resolvedStyle.defaultShape === b.resolvedStyle.defaultShape
+    a.resolvedStyle.defaultShape === b.resolvedStyle.defaultShape &&
+    a.canvasTheme === b.canvasTheme
   );
 }
 
@@ -30,15 +31,12 @@ const NODE_TITLE_PLACEHOLDER = "Untitled Element";
 /** Hollow port: clear inner + strong stroke + outer halo (no solid “dot” fill). */
 function handlePortStyle(role: "target" | "source"): CSSProperties {
   return {
-    width: 11,
-    height: 11,
+    width: 14,
+    height: 14,
     borderRadius: 9999,
     zIndex: 3,
     background: "rgba(255,255,255,0.94)",
-    border: "2px solid rgba(65, 68, 78, 0.88)",
-    // Outer light ring + soft depth so the port reads on any node fill
-    boxShadow:
-      "0 0 0 1px rgba(255,255,255,1), 0 0 0 2.5px rgba(90, 93, 102, 0.35), 0 1px 3px rgba(0,0,0,0.14)",
+    border: "1px solid rgba(65, 68, 78, 0.88)",
     pointerEvents: role === "target" ? "none" : "auto",
   };
 }
@@ -70,6 +68,9 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
   const shape = data.shape ?? data.resolvedStyle.defaultShape;
   const fill = data.resolvedStyle.fill;
   const stroke = data.resolvedStyle.stroke;
+  const isDarkCanvas = data.canvasTheme === "dark";
+  const labelColor = isDarkCanvas ? "#ffffff" : "#111";
+  const placeholderMuted = isDarkCanvas ? "rgba(255, 255, 255, 0.42)" : "rgba(17, 17, 17, 0.38)";
 
   const corner = Math.min(12, Math.min(data.w, data.h) * 0.2);
   /** Soft ring + light lift when selected (keeps blur modest for drag performance). */
@@ -81,14 +82,14 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
     width: data.w,
     height: data.h,
     boxShadow: dragging ? "none" : isEditing ? elevation : selected ? selectedChrome : elevation,
-    border: selected ? "2px solid rgba(59, 130, 246, 0.65)" : `1.5px solid ${stroke}`,
+    border: selected ? "2.5px solid rgba(59, 130, 246, 0.65)" : `2.5px solid ${stroke}`,
     background: fill,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     padding: 6,
     boxSizing: "border-box",
-    color: "#111",
+    color: labelColor,
     fontSize: 13,
     fontFamily: "system-ui, -apple-system, SF Pro Text, sans-serif",
     ...(dragging && selected && !isEditing
@@ -185,7 +186,7 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
               transform: labelTransform,
               ...(showPlaceholder
                 ? {
-                    color: "rgba(17, 17, 17, 0.38)",
+                    color: placeholderMuted,
                     fontStyle: "italic",
                     userSelect: "none",
                   }

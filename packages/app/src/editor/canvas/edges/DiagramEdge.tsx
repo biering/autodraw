@@ -2,6 +2,12 @@ import type { EdgeRecord } from "@agentsdraw/core";
 import type { DiagramFlowEdge } from "../flowAdapter.js";
 import { BaseEdge, getBezierPath, getStraightPath, type EdgeProps } from "@xyflow/react";
 import { memo, useMemo } from "react";
+import {
+  clampedInsetEndpoints,
+  computeEdgeInsetPx,
+  computeOrthogonalStubPx,
+  orthogonalStubPath,
+} from "./edgeHandleInset.js";
 import { DiagramEdgeMarkerDefs, diagramMarkerUrls } from "./edgeMarkerDefs.js";
 
 /**
@@ -56,26 +62,43 @@ function DiagramEdgeInner(props: EdgeProps<DiagramFlowEdge>) {
   const routing = edge?.routing ?? "orthogonal";
 
   const [path, labelX, labelY] = useMemo(() => {
+    const inset = computeEdgeInsetPx(strokeW);
+    const { sx, sy, tx, ty } = clampedInsetEndpoints(
+      sourceX,
+      sourceY,
+      targetX,
+      targetY,
+      sourcePosition,
+      targetPosition,
+      inset,
+      inset,
+    );
     if (routing === "straight") {
-      return getStraightPath({ sourceX, sourceY, targetX, targetY });
+      return getStraightPath({ sourceX: sx, sourceY: sy, targetX: tx, targetY: ty });
     }
     if (routing === "curved") {
       const [p, lx, ly] = getBezierPath({
-        sourceX,
-        sourceY,
-        targetX,
-        targetY,
+        sourceX: sx,
+        sourceY: sy,
+        targetX: tx,
+        targetY: ty,
         sourcePosition,
         targetPosition,
       });
       return [p, lx, ly] as const;
     }
-    const centerX = (sourceX + targetX) / 2;
-    const stepPath = `M ${sourceX} ${sourceY} L ${centerX} ${sourceY} L ${centerX} ${targetY} L ${targetX} ${targetY}`;
-    const midX = centerX;
-    const midY = (sourceY + targetY) / 2;
-    return [stepPath, midX, midY] as const;
-  }, [routing, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition]);
+    const stub = computeOrthogonalStubPx(strokeW);
+    const { d, labelX, labelY } = orthogonalStubPath(
+      sx,
+      sy,
+      tx,
+      ty,
+      sourcePosition,
+      targetPosition,
+      stub,
+    );
+    return [d, labelX, labelY] as const;
+  }, [routing, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, strokeW]);
 
   const stroke = selected ? EDGE_STROKE_SELECTED : EDGE_STROKE;
   const strokeOpacity = selected ? 1 : 0.88;

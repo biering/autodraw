@@ -1,4 +1,8 @@
 import {
+  FALLBACK_NODE_BODY_FILL_RGBA,
+  FALLBACK_NODE_BODY_STROKE_RGBA,
+  resolvedNodeBodyFillRgba,
+  resolvedNodeBodyStrokeRgba,
   styleById,
   type DiagramV1,
   type EdgeRecord,
@@ -14,6 +18,9 @@ export type DiagramNodeResolvedStyle = {
   defaultShape: NodeStyleDefinition["shape"];
 };
 
+/** Matches editor canvas background; included on node data so memoized nodes re-render on toggle. */
+export type DiagramCanvasTheme = "light" | "dark";
+
 export type DiagramNodeData = {
   label: string;
   w: number;
@@ -21,35 +28,22 @@ export type DiagramNodeData = {
   styleId: string;
   shape?: NodeRecord["shape"];
   resolvedStyle: DiagramNodeResolvedStyle;
+  canvasTheme: DiagramCanvasTheme;
 };
-
-function rgbaFromStyleChannels(r: number, g: number, b: number, a: number): string {
-  return `rgba(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)},${a})`;
-}
 
 function resolvedStyleFromDefinition(
   styleDef: NodeStyleDefinition | undefined,
 ): DiagramNodeResolvedStyle {
   if (!styleDef) {
     return {
-      fill: "#eee",
-      stroke: "#444",
+      fill: FALLBACK_NODE_BODY_FILL_RGBA,
+      stroke: FALLBACK_NODE_BODY_STROKE_RGBA,
       defaultShape: "roundedRect",
     };
   }
   return {
-    fill: rgbaFromStyleChannels(
-      styleDef.fillRed,
-      styleDef.fillGreen,
-      styleDef.fillBlue,
-      styleDef.fillAlpha,
-    ),
-    stroke: rgbaFromStyleChannels(
-      styleDef.strokeRed,
-      styleDef.strokeGreen,
-      styleDef.strokeBlue,
-      styleDef.strokeAlpha,
-    ),
+    fill: resolvedNodeBodyFillRgba(styleDef),
+    stroke: resolvedNodeBodyStrokeRgba(styleDef),
     defaultShape: styleDef.shape,
   };
 }
@@ -66,7 +60,10 @@ export type DiagramFlowEdge = Edge<DiagramEdgeData, "diagram">;
 export const DEFAULT_DIAGRAM_SOURCE_HANDLE = "src";
 export const DEFAULT_DIAGRAM_TARGET_HANDLE = "tgt";
 
-export function toFlowNodes(diagram: DiagramV1): DiagramFlowNode[] {
+export function toFlowNodes(
+  diagram: DiagramV1,
+  canvasTheme: DiagramCanvasTheme = "light",
+): DiagramFlowNode[] {
   return diagram.nodes.map((n) => ({
     id: n.id,
     type: "diagram",
@@ -78,6 +75,7 @@ export function toFlowNodes(diagram: DiagramV1): DiagramFlowNode[] {
       styleId: n.styleId,
       shape: n.shape,
       resolvedStyle: resolvedStyleFromDefinition(styleById(diagram, n.styleId)),
+      canvasTheme,
     },
     style: { width: n.w, height: n.h },
   }));
