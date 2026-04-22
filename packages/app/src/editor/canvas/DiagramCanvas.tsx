@@ -33,8 +33,7 @@ import {
 import type { FinalConnectionState } from "@xyflow/system";
 import {
   applyNodePositionChanges,
-  DEFAULT_DIAGRAM_SOURCE_HANDLE,
-  DEFAULT_DIAGRAM_TARGET_HANDLE,
+  normalizeDiagramConnectionHandle,
   type DiagramFlowEdge,
   type DiagramNodeData,
   toFlowEdges,
@@ -280,8 +279,8 @@ export function DiagramCanvas() {
       setRelationshipDraft({
         source,
         target,
-        sourceHandle: ports?.sourceHandle ?? DEFAULT_DIAGRAM_SOURCE_HANDLE,
-        targetHandle: ports?.targetHandle ?? DEFAULT_DIAGRAM_TARGET_HANDLE,
+        sourceHandle: normalizeDiagramConnectionHandle(ports?.sourceHandle, "source"),
+        targetHandle: normalizeDiagramConnectionHandle(ports?.targetHandle, "target"),
       });
     },
     [setRelationshipDraft],
@@ -292,8 +291,8 @@ export function DiagramCanvas() {
       if (!c.source || !c.target) return;
       connectHandledRef.current = true;
       openRelationshipDraft(c.source, c.target, {
-        sourceHandle: c.sourceHandle ?? DEFAULT_DIAGRAM_SOURCE_HANDLE,
-        targetHandle: c.targetHandle ?? DEFAULT_DIAGRAM_TARGET_HANDLE,
+        sourceHandle: normalizeDiagramConnectionHandle(c.sourceHandle, "source"),
+        targetHandle: normalizeDiagramConnectionHandle(c.targetHandle, "target"),
       });
     },
     [openRelationshipDraft],
@@ -354,15 +353,16 @@ export function DiagramCanvas() {
       ) {
         return;
       }
-      const sourceHandle =
+      const sourceHandleRaw =
         state.fromHandle?.id != null && state.fromHandle.id !== ""
           ? state.fromHandle.id
-          : DEFAULT_DIAGRAM_SOURCE_HANDLE;
-      const targetHandle =
-        state.toHandle?.id != null && state.toHandle.id !== ""
-          ? state.toHandle.id
-          : DEFAULT_DIAGRAM_TARGET_HANDLE;
-      openRelationshipDraft(sourceId, targetId, { sourceHandle, targetHandle });
+          : undefined;
+      const targetHandleRaw =
+        state.toHandle?.id != null && state.toHandle.id !== "" ? state.toHandle.id : undefined;
+      openRelationshipDraft(sourceId, targetId, {
+        sourceHandle: normalizeDiagramConnectionHandle(sourceHandleRaw, "source"),
+        targetHandle: normalizeDiagramConnectionHandle(targetHandleRaw, "target"),
+      });
     },
     [clearConnectPointerListeners, openRelationshipDraft, rf],
   );

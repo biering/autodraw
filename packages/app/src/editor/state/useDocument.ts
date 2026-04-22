@@ -13,6 +13,8 @@ import { create } from "zustand";
 import {
   DEFAULT_DIAGRAM_SOURCE_HANDLE,
   DEFAULT_DIAGRAM_TARGET_HANDLE,
+  DIAGRAM_BODY_SOURCE_HANDLE,
+  DIAGRAM_BODY_TARGET_HANDLE,
 } from "../canvas/flowAdapter.js";
 
 /** Upper bound for canvas zoom (toolbar + React Flow viewport). */
@@ -256,14 +258,16 @@ export const useDocument = create<AppState>()(
         if (
           e.sourceHandle != null &&
           e.sourceHandle !== "" &&
-          e.sourceHandle !== DEFAULT_DIAGRAM_SOURCE_HANDLE
+          e.sourceHandle !== DEFAULT_DIAGRAM_SOURCE_HANDLE &&
+          e.sourceHandle !== DIAGRAM_BODY_SOURCE_HANDLE
         ) {
           edge.sourceHandle = e.sourceHandle;
         }
         if (
           e.targetHandle != null &&
           e.targetHandle !== "" &&
-          e.targetHandle !== DEFAULT_DIAGRAM_TARGET_HANDLE
+          e.targetHandle !== DEFAULT_DIAGRAM_TARGET_HANDLE &&
+          e.targetHandle !== DIAGRAM_BODY_TARGET_HANDLE
         ) {
           edge.targetHandle = e.targetHandle;
         }

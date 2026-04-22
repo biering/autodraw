@@ -7,8 +7,9 @@ import {
 } from "@agentsdraw/core";
 import { describe, expect, it } from "vitest";
 import {
-  DEFAULT_DIAGRAM_SOURCE_HANDLE,
-  DEFAULT_DIAGRAM_TARGET_HANDLE,
+  DIAGRAM_BODY_SOURCE_HANDLE,
+  DIAGRAM_BODY_TARGET_HANDLE,
+  normalizeDiagramConnectionHandle,
   toFlowEdges,
 } from "./flowAdapter.js";
 
@@ -51,13 +52,55 @@ function diagramWith(edge: EdgeRecord): DiagramV1 {
   return d;
 }
 
+describe("normalizeDiagramConnectionHandle", () => {
+  it("maps null, undefined, and empty string to undefined", () => {
+    expect(normalizeDiagramConnectionHandle(undefined, "source")).toBeUndefined();
+    expect(normalizeDiagramConnectionHandle(undefined, "target")).toBeUndefined();
+    expect(normalizeDiagramConnectionHandle(null, "source")).toBeUndefined();
+    expect(normalizeDiagramConnectionHandle("", "target")).toBeUndefined();
+  });
+
+  it("strips full-body handle ids for the matching role", () => {
+    expect(normalizeDiagramConnectionHandle(DIAGRAM_BODY_SOURCE_HANDLE, "source")).toBeUndefined();
+    expect(normalizeDiagramConnectionHandle(DIAGRAM_BODY_TARGET_HANDLE, "target")).toBeUndefined();
+  });
+
+  it("does not strip body target id when passed as source (invalid RF combo)", () => {
+    expect(normalizeDiagramConnectionHandle(DIAGRAM_BODY_TARGET_HANDLE, "source")).toBe(
+      DIAGRAM_BODY_TARGET_HANDLE,
+    );
+  });
+
+  it("preserves legacy cardinal and side handle ids", () => {
+    expect(normalizeDiagramConnectionHandle("src", "source")).toBe("src");
+    expect(normalizeDiagramConnectionHandle("tgt", "target")).toBe("tgt");
+    expect(normalizeDiagramConnectionHandle("src-top", "source")).toBe("src-top");
+    expect(normalizeDiagramConnectionHandle("tgt-bottom", "target")).toBe("tgt-bottom");
+  });
+});
+
 describe("toFlowEdges", () => {
-  it("defaults missing ports to right→left (src → tgt)", () => {
+  it("omits React Flow handles when the diagram edge has no stored ports (floating geometry)", () => {
     const d = diagramWith(baseEdge({ id: "e1", from: "a", to: "b" }));
     const fe = toFlowEdges(d)[0];
     expect(fe).toBeDefined();
-    expect(fe!.sourceHandle).toBe(DEFAULT_DIAGRAM_SOURCE_HANDLE);
-    expect(fe!.targetHandle).toBe(DEFAULT_DIAGRAM_TARGET_HANDLE);
+    expect(fe!.sourceHandle).toBeUndefined();
+    expect(fe!.targetHandle).toBeUndefined();
+  });
+
+  it("omits flow handles when the record has empty-string ports", () => {
+    const d = diagramWith(
+      baseEdge({
+        id: "e1",
+        from: "a",
+        to: "b",
+        sourceHandle: "",
+        targetHandle: "",
+      }),
+    );
+    const fe = toFlowEdges(d)[0];
+    expect(fe!.sourceHandle).toBeUndefined();
+    expect(fe!.targetHandle).toBeUndefined();
   });
 
   it("passes through explicit source and target handles for React Flow geometry", () => {

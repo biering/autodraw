@@ -56,9 +56,24 @@ export type DiagramFlowNode = Node<DiagramNodeData, "diagram">;
 /** React Flow edge type for custom `diagram` edges. */
 export type DiagramFlowEdge = Edge<DiagramEdgeData, "diagram">;
 
-/** Default ports when a legacy edge has no stored handles (original right→left layout). */
+/** Default ports for legacy edges / tests (original right→left layout). Not applied in `toFlowEdges`. */
 export const DEFAULT_DIAGRAM_SOURCE_HANDLE = "src";
 export const DEFAULT_DIAGRAM_TARGET_HANDLE = "tgt";
+
+/** Full-node handles for floating edges; normalized away before persisting. */
+export const DIAGRAM_BODY_SOURCE_HANDLE = "body-src";
+export const DIAGRAM_BODY_TARGET_HANDLE = "body-tgt";
+
+/** Strip full-body floating handle ids so new edges omit `sourceHandle` / `targetHandle` on record. */
+export function normalizeDiagramConnectionHandle(
+  handleId: string | null | undefined,
+  role: "source" | "target",
+): string | undefined {
+  if (handleId == null || handleId === "") return undefined;
+  if (role === "source" && handleId === DIAGRAM_BODY_SOURCE_HANDLE) return undefined;
+  if (role === "target" && handleId === DIAGRAM_BODY_TARGET_HANDLE) return undefined;
+  return handleId;
+}
 
 export function toFlowNodes(
   diagram: DiagramV1,
@@ -82,17 +97,24 @@ export function toFlowNodes(
 }
 
 export function toFlowEdges(diagram: DiagramV1): DiagramFlowEdge[] {
-  return diagram.edges.map((e) => ({
-    id: e.id,
-    source: e.from,
-    target: e.to,
-    type: "diagram",
-    data: { ...e },
-    selectable: true,
-    focusable: true,
-    sourceHandle: e.sourceHandle ?? DEFAULT_DIAGRAM_SOURCE_HANDLE,
-    targetHandle: e.targetHandle ?? DEFAULT_DIAGRAM_TARGET_HANDLE,
-  }));
+  return diagram.edges.map((e) => {
+    const fe: DiagramFlowEdge = {
+      id: e.id,
+      source: e.from,
+      target: e.to,
+      type: "diagram",
+      data: { ...e },
+      selectable: true,
+      focusable: true,
+    };
+    if (e.sourceHandle != null && e.sourceHandle !== "") {
+      fe.sourceHandle = e.sourceHandle;
+    }
+    if (e.targetHandle != null && e.targetHandle !== "") {
+      fe.targetHandle = e.targetHandle;
+    }
+    return fe;
+  });
 }
 
 export function applyNodePositionChanges(diagram: DiagramV1, nodes: Node[]): DiagramV1 {

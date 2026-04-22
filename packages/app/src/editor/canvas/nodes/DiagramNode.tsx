@@ -1,8 +1,13 @@
 import { Handle, Position, type NodeProps, useConnection } from "@xyflow/react";
 import type { ConnectionState } from "@xyflow/system";
+import { Link2 } from "lucide-react";
 import type { CSSProperties } from "react";
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { DiagramFlowNode } from "../flowAdapter.js";
+import {
+  DIAGRAM_BODY_SOURCE_HANDLE,
+  DIAGRAM_BODY_TARGET_HANDLE,
+  type DiagramFlowNode,
+} from "../flowAdapter.js";
 import { useDocument } from "../../state/useDocument.js";
 
 function diagramNodePropsAreEqual(
@@ -28,21 +33,25 @@ function diagramNodePropsAreEqual(
 
 const NODE_TITLE_PLACEHOLDER = "Untitled Element";
 
-/** Hollow port: clear inner + strong stroke + outer halo (no solid “dot” fill). */
-function handlePortStyle(role: "target" | "source"): CSSProperties {
-  return {
-    width: 14,
-    height: 14,
-    borderRadius: 9999,
-    zIndex: 3,
-    background: "rgba(255,255,255,0.94)",
-    border: "1px solid rgba(65, 68, 78, 0.88)",
-    pointerEvents: role === "target" ? "none" : "auto",
-  };
-}
+/** Legacy diagrams: keep ids so stored `sourceHandle` / `targetHandle` resolve in React Flow. */
+const LEGACY_HIDDEN_HANDLE: CSSProperties = {
+  width: 0,
+  height: 0,
+  opacity: 0,
+  pointerEvents: "none",
+};
 
-const targetHandleStyle = handlePortStyle("target");
-const sourceHandleStyle = handlePortStyle("source");
+const BODY_HANDLE_BASE: CSSProperties = {
+  width: "100%",
+  height: "100%",
+  background: "transparent",
+  border: 0,
+  borderRadius: 10,
+  transform: "none",
+  top: 0,
+  left: 0,
+  position: "absolute",
+};
 
 function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
   const data = props.data;
@@ -92,6 +101,8 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
     color: labelColor,
     fontSize: 13,
     fontFamily: "system-ui, -apple-system, SF Pro Text, sans-serif",
+    position: "relative",
+    zIndex: 2,
     ...(dragging && selected && !isEditing
       ? {
           outline: "2px solid rgba(59, 130, 246, 0.55)",
@@ -161,10 +172,25 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
         startEditing();
       }}
     >
-      {/* Targets: pointer-events none so clicks pass through to the body for selection. */}
-      <Handle id="tgt" type="target" position={Position.Left} style={targetHandleStyle} />
-      <Handle id="tgt-top" type="target" position={Position.Top} style={targetHandleStyle} />
-      <Handle id="tgt-bottom" type="target" position={Position.Bottom} style={targetHandleStyle} />
+      {/* Legacy cardinal handles (zero-size) so old diagrams keep valid handle ids. */}
+      <Handle id="tgt" type="target" position={Position.Left} style={LEGACY_HIDDEN_HANDLE} />
+      <Handle id="tgt-top" type="target" position={Position.Top} style={LEGACY_HIDDEN_HANDLE} />
+      <Handle id="tgt-bottom" type="target" position={Position.Bottom} style={LEGACY_HIDDEN_HANDLE} />
+      <Handle id="src-top" type="source" position={Position.Top} style={LEGACY_HIDDEN_HANDLE} />
+      <Handle id="src-bottom" type="source" position={Position.Bottom} style={LEGACY_HIDDEN_HANDLE} />
+      <Handle id="src" type="source" position={Position.Right} style={LEGACY_HIDDEN_HANDLE} />
+
+      <Handle
+        id={DIAGRAM_BODY_TARGET_HANDLE}
+        type="target"
+        position={Position.Right}
+        style={{
+          ...BODY_HANDLE_BASE,
+          zIndex: 1,
+          pointerEvents: "none",
+        }}
+      />
+
       <div style={sx}>
         {isEditing ? (
           <NodeLabelEditor
@@ -197,28 +223,41 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
           </span>
         )}
       </div>
-      {/* Sources rendered after the body so they sit on top and receive drags where they overlap. */}
-      <Handle
-        id="src-top"
-        type="source"
-        position={Position.Top}
-        title="Drag to connect"
-        style={sourceHandleStyle}
-      />
-      <Handle
-        id="src-bottom"
-        type="source"
-        position={Position.Bottom}
-        title="Drag to connect"
-        style={sourceHandleStyle}
-      />
-      <Handle
-        id="src"
-        type="source"
-        position={Position.Right}
-        title="Drag to connect"
-        style={{ ...sourceHandleStyle, top: "50%", right: -3 }}
-      />
+
+      {selected && !isEditing ? (
+        <Handle
+          id={DIAGRAM_BODY_SOURCE_HANDLE}
+          type="source"
+          position={Position.Right}
+          title="Drag to connect"
+          aria-label="Connect to another element"
+          style={{
+            position: "absolute",
+            top: 5,
+            right: 5,
+            left: "auto",
+            transform: "none",
+            width: 26,
+            height: 26,
+            minWidth: 26,
+            minHeight: 26,
+            borderRadius: 8,
+            zIndex: 5,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: isDarkCanvas ? "rgba(40, 44, 52, 0.96)" : "rgba(255, 255, 255, 0.98)",
+            border: isDarkCanvas
+              ? "1px solid rgba(148, 163, 184, 0.45)"
+              : "1px solid rgba(15, 23, 42, 0.14)",
+            color: isDarkCanvas ? "#e2e8f0" : "#334155",
+            cursor: "crosshair",
+            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.12)",
+          }}
+        >
+          <Link2 size={13} strokeWidth={2.25} aria-hidden />
+        </Handle>
+      ) : null}
     </div>
   );
 }

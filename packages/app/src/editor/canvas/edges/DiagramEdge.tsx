@@ -1,7 +1,16 @@
 import type { EdgeRecord } from "@agentsdraw/core";
-import type { DiagramFlowEdge } from "../flowAdapter.js";
-import { BaseEdge, getBezierPath, getStraightPath, type EdgeProps } from "@xyflow/react";
-import { memo, useMemo } from "react";
+import type { InternalNode, Node } from "@xyflow/react";
+import {
+  BaseEdge,
+  getBezierPath,
+  getStraightPath,
+  useInternalNode,
+  useStore,
+  type EdgeProps,
+} from "@xyflow/react";
+import { memo, useCallback, useMemo } from "react";
+import { floatingEdgeGeometry } from "../floatingEndpoints.js";
+import type { DiagramFlowEdge, DiagramFlowNode } from "../flowAdapter.js";
 import {
   clampedInsetEndpoints,
   computeEdgeInsetPx,
@@ -10,11 +19,50 @@ import {
 } from "./edgeHandleInset.js";
 import { DiagramEdgeMarkerDefs, diagramMarkerUrls } from "./edgeMarkerDefs.js";
 
+function rectFromInternal(n: InternalNode<Node>): {
+  cx: number;
+  cy: number;
+  w: number;
+  h: number;
+} {
+  const u = n.internals.userNode as DiagramFlowNode;
+  const w =
+    n.measured.width ??
+    n.width ??
+    (typeof u.style?.width === "number" ? u.style.width : undefined) ??
+    u.data.w;
+  const h =
+    n.measured.height ??
+    n.height ??
+    (typeof u.style?.height === "number" ? u.style.height : undefined) ??
+    u.data.h;
+  const { x, y } = n.internals.positionAbsolute;
+  return { cx: x + w / 2, cy: y + h / 2, w, h };
+}
+
 /**
- * React Flow attaches heads via `markerEnd` / `markerStart` on the edge path (see
- * {@link https://reactflow.dev/learn/troubleshooting/migrate-to-v10#9-arrowheadtype---markertype MarkerType → EdgeMarker}).
- * We supply custom `<marker>` SVGs for all {@link EdgeRecord} head/tail kinds.
+ * Subscribe to node box changes so floating edges repaint while dragging; `useInternalNode` alone
+ * can miss in-place store updates, so this key is merged into `floating` memo deps.
  */
+function useFloatingNodeBoxKey(nodeId: string, enabled: boolean): string {
+  return useStore(
+    useCallback(
+      (s) => {
+        if (!enabled) return "";
+        const n = s.nodeLookup.get(nodeId);
+        if (!n) return "";
+        const p = n.internals.positionAbsolute;
+        const mw = n.measured.width ?? "";
+        const mh = n.measured.height ?? "";
+        const uw = n.width ?? "";
+        const uh = n.height ?? "";
+        return `${p.x},${p.y},${mw},${mh},${uw},${uh}`;
+      },
+      [nodeId, enabled],
+    ),
+  );
+}
+
 function diagramEdgePropsAreEqual(
   prev: EdgeProps<DiagramFlowEdge>,
   next: EdgeProps<DiagramFlowEdge>,
@@ -22,6 +70,10 @@ function diagramEdgePropsAreEqual(
   if (
     prev.id !== next.id ||
     prev.selected !== next.selected ||
+    prev.source !== next.source ||
+    prev.target !== next.target ||
+    (prev.sourceHandleId ?? null) !== (next.sourceHandleId ?? null) ||
+    (prev.targetHandleId ?? null) !== (next.targetHandleId ?? null) ||
     prev.sourceX !== next.sourceX ||
     prev.sourceY !== next.sourceY ||
     prev.targetX !== next.targetX ||
@@ -53,28 +105,61 @@ const EDGE_STROKE = "#5a5d66";
 const EDGE_STROKE_SELECTED = "#3d5a8a";
 
 function DiagramEdgeInner(props: EdgeProps<DiagramFlowEdge>) {
-  const { id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, selected, data } =
-    props;
+  const {
+    id,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    selected,
+    data,
+    source,
+    target,
+    sourceHandleId,
+    targetHandleId,
+  } = props;
   const edge = data as EdgeRecord | undefined;
   const strokeW = edge?.strokeWidth ?? 2;
   const dash = edge?.dash === "dashed" ? "7 5" : edge?.dash === "dotted" ? "2 5" : undefined;
 
   const routing = edge?.routing ?? "orthogonal";
 
+  const useFloating = !sourceHandleId && !targetHandleId;
+  const sourceInternal = useInternalNode(source);
+  const targetInternal = useInternalNode(target);
+  const srcKey = useFloatingNodeBoxKey(source, useFloating);
+  const tgtKey = useFloatingNodeBoxKey(target, useFloating);
+
+  const floating = useMemo(() => {
+    if (!useFloating || !sourceInternal || !targetInternal) return null;
+    if (srcKey.length === 0 || tgtKey.length === 0) return null;
+    return floatingEdgeGeometry(rectFromInternal(sourceInternal), rectFromInternal(targetInternal));
+  }, [useFloating, sourceInternal, targetInternal, srcKey, tgtKey]);
+
+  const sx0 = floating ? floating.sx : sourceX;
+  const sy0 = floating ? floating.sy : sourceY;
+  const tx0 = floating ? floating.tx : targetX;
+  const ty0 = floating ? floating.ty : targetY;
+  const sourcePos = floating ? floating.sourcePosition : sourcePosition;
+  const targetPos = floating ? floating.targetPosition : targetPosition;
+
   const [path, labelX, labelY] = useMemo(() => {
     const inset = computeEdgeInsetPx(strokeW);
     const { sx, sy, tx, ty } = clampedInsetEndpoints(
-      sourceX,
-      sourceY,
-      targetX,
-      targetY,
-      sourcePosition,
-      targetPosition,
+      sx0,
+      sy0,
+      tx0,
+      ty0,
+      sourcePos,
+      targetPos,
       inset,
       inset,
     );
     if (routing === "straight") {
-      return getStraightPath({ sourceX: sx, sourceY: sy, targetX: tx, targetY: ty });
+      const [p, lx, ly] = getStraightPath({ sourceX: sx, sourceY: sy, targetX: tx, targetY: ty });
+      return [p, lx, ly] as const;
     }
     if (routing === "curved") {
       const [p, lx, ly] = getBezierPath({
@@ -82,23 +167,15 @@ function DiagramEdgeInner(props: EdgeProps<DiagramFlowEdge>) {
         sourceY: sy,
         targetX: tx,
         targetY: ty,
-        sourcePosition,
-        targetPosition,
+        sourcePosition: sourcePos,
+        targetPosition: targetPos,
       });
       return [p, lx, ly] as const;
     }
     const stub = computeOrthogonalStubPx(strokeW);
-    const { d, labelX, labelY } = orthogonalStubPath(
-      sx,
-      sy,
-      tx,
-      ty,
-      sourcePosition,
-      targetPosition,
-      stub,
-    );
+    const { d, labelX, labelY } = orthogonalStubPath(sx, sy, tx, ty, sourcePos, targetPos, stub);
     return [d, labelX, labelY] as const;
-  }, [routing, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, strokeW]);
+  }, [routing, sx0, sy0, tx0, ty0, sourcePos, targetPos, strokeW]);
 
   const stroke = selected ? EDGE_STROKE_SELECTED : EDGE_STROKE;
   const strokeOpacity = selected ? 1 : 0.88;
