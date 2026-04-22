@@ -1,6 +1,7 @@
 import { applyRelationshipPreset, relationshipPresets } from "@agentsdraw/core";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { Button } from "@/components/ui/button";
 import { useDocument } from "../state/useDocument.js";
 
 /** Simple preset picker when an edge is selected (toolbar-adjacent UX). */
@@ -19,10 +20,12 @@ export function AddRelationshipPopover() {
       <div className="relationshipTitle">Relationship</div>
       <div className="presetRow">
         {relationshipPresets.map((_, idx) => (
-          <button
+          <Button
             key={idx}
             type="button"
-            className={`presetBtn ${edge.relationshipPreset === idx ? "active" : ""}`}
+            size="sm"
+            variant={edge.relationshipPreset === idx ? "default" : "outline"}
+            className="min-w-8 px-2"
             onClick={() => {
               const st = applyRelationshipPreset(idx);
               updateEdge(edge.id, {
@@ -34,10 +37,10 @@ export function AddRelationshipPopover() {
                 relationshipPreset: st.relationshipPreset,
               });
             }}
-            title={`Preset ${idx}`}
+            title={`Preset ${idx + 1}`}
           >
             {idx + 1}
-          </button>
+          </Button>
         ))}
       </div>
     </div>

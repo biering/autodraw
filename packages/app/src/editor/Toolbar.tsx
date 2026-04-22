@@ -1,26 +1,38 @@
-import { useReactFlow } from "@xyflow/react";
+import { Moon, Sun } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
-import { useShallow } from "zustand/react/shallow";
-import { defaultStyleId } from "@agentsdraw/core";
-import { MAX_VIEW_ZOOM, redoDocument, undoDocument, useDocument } from "./state/useDocument.js";
+import { Button } from "@/components/ui/button";
+import { redoDocument, undoDocument, useDocument } from "./state/useDocument.js";
 
-const ZOOM_PRESETS = [50, 75, 100, 125, 150] as const;
+function IconSpark() {
+  return (
+    <svg className="iosAppSpark" width="20" height="20" viewBox="0 0 20 20" aria-hidden>
+      <defs>
+        <linearGradient id="iosSparkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#a855f7" />
+          <stop offset="100%" stopColor="#ec4899" />
+        </linearGradient>
+      </defs>
+      <rect x="1.5" y="1.5" width="17" height="17" rx="5" fill="url(#iosSparkGrad)" />
+      <path
+        d="M10 5.5l.6 2.2 2.2.6-2.2.6L10 11l-.6-2.1-2.2-.6 2.2-.6L10 5.5z"
+        fill="white"
+        opacity="0.95"
+      />
+    </svg>
+  );
+}
+
+function IconPlus() {
+  return (
+    <svg className="iosTbIcon" width="18" height="18" viewBox="0 0 18 18" aria-hidden>
+      <path d="M9 4v10M4 9h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export function Toolbar() {
-  const selection = useDocument(useShallow((s) => s.selection));
-  const editorMode = useDocument((s) => s.editorMode);
-  const setEditorMode = useDocument((s) => s.setEditorMode);
-  const zoom = useDocument((s) => s.zoom);
-  const setZoom = useDocument((s) => s.setZoom);
-  const diagram = useDocument(useShallow((s) => s.diagram));
-  const addNode = useDocument((s) => s.addNode);
-  const setShowExport = useDocument((s) => s.setShowExportSheet);
-  const rf = useReactFlow();
-
-  const hasSelection = selection.nodeIds.length > 0;
-  const zoomPct = Math.round(zoom * 100);
-  const zoomSelectValue = String(zoomPct);
-  const hasCustomZoom = !(ZOOM_PRESETS as readonly number[]).includes(zoomPct);
+  const canvasTheme = useDocument((s) => s.canvasTheme);
+  const setCanvasTheme = useDocument((s) => s.setCanvasTheme);
 
   useHotkeys("mod+z", (e) => {
     e.preventDefault();
@@ -32,85 +44,43 @@ export function Toolbar() {
   });
 
   return (
-    <div className="toolbar">
-      <div className="toolbarCluster">
-        <button
-          type="button"
-          className="tbBtn"
-          onClick={() => window.dispatchEvent(new CustomEvent("agentsdraw:open-add-element"))}
-        >
-          <span className="tbIcon">+</span>
-          <span className="tbLabel">Add Element</span>
-        </button>
-        <div className="tbSeg" role="group" aria-label="Set type">
-          <button
-            type="button"
-            className={`tbSegBtn ${editorMode === "node" ? "active" : ""}`}
-            onClick={() => setEditorMode("node")}
-            title="Node"
-          >
-            <span className="tbIconSm">▭</span>
-          </button>
-          <button
-            type="button"
-            className={`tbSegBtn ${editorMode === "edge" ? "active" : ""}`}
-            onClick={() => setEditorMode("edge")}
-            title="Connector"
-          >
-            <span className="tbIconSm">↗</span>
-          </button>
+    <div className="toolbarOverlay">
+      <nav className="iosToolbar" data-tauri-drag-region aria-label="Editor toolbar">
+        <div className="iosToolbarLead">
+          <IconSpark />
+          <span className="iosToolbarAppName">Diagram</span>
         </div>
-        <button type="button" className="tbBtn" disabled={!hasSelection}>
-          <span className="tbIcon">Aa</span>
-          <span className="tbLabel">Rename</span>
-        </button>
-      </div>
-      <div className="toolbarCluster right">
-        <button
-          type="button"
-          className="tbBtn"
-          onClick={() => {
-            const sid = defaultStyleId(diagram.palette);
-            addNode({
-              text: "",
-              x: 320,
-              y: 240,
-              w: 160,
-              h: 72,
-              styleId: sid,
-            });
-          }}
-        >
-          <span className="tbIcon">▦</span>
-          <span className="tbLabel">Palette</span>
-        </button>
-        <label className="tbZoom">
-          <span className="tbLabel">Zoom</span>
-          <select
-            value={zoomSelectValue}
-            onChange={(e) => {
-              const next = Math.min(MAX_VIEW_ZOOM, Number(e.target.value) / 100);
-              setZoom(next);
-              void rf.zoomTo(next, { duration: 160 });
-            }}
+
+        <span className="iosToolbarRule" aria-hidden="true" />
+
+        <div className="iosToolbarActions">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="iosIconBtn h-9 w-9 rounded-full border-0 bg-transparent text-[#1d1d1f] shadow-none hover:bg-black/[0.06]"
+            title={canvasTheme === "light" ? "Use dark drawing background" : "Use light drawing background"}
+            aria-label={canvasTheme === "light" ? "Switch drawing area to dark" : "Switch drawing area to light"}
+            onClick={() => setCanvasTheme(canvasTheme === "light" ? "dark" : "light")}
           >
-            {ZOOM_PRESETS.map((z) => (
-              <option key={z} value={z}>
-                {z}%
-              </option>
-            ))}
-            {hasCustomZoom ? (
-              <option key="current" value={zoomPct}>
-                {zoomPct}%
-              </option>
-            ) : null}
-          </select>
-        </label>
-        <button type="button" className="tbBtn primary" onClick={() => setShowExport(true)}>
-          <span className="tbIcon">⇧</span>
-          <span className="tbLabel">Export</span>
-        </button>
-      </div>
+            {canvasTheme === "light" ? (
+              <Moon className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
+            ) : (
+              <Sun className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
+            )}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="iosIconBtn h-9 w-9 rounded-full border-0 bg-transparent text-[#1d1d1f] shadow-none hover:bg-black/[0.06]"
+            title="Add element"
+            onClick={() => window.dispatchEvent(new CustomEvent("agentsdraw:open-add-element"))}
+          >
+            <IconPlus />
+          </Button>
+        </div>
+      </nav>
     </div>
   );
 }

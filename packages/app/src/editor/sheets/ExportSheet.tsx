@@ -1,12 +1,24 @@
 import { renderSVG } from "@agentsdraw/core";
 import { useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { isTauri } from "../../platform/isTauri.js";
 import { useDocument } from "../state/useDocument.js";
 
 export function ExportSheet() {
+  const open = useDocument((s) => s.showExportSheet);
+  const setOpen = useDocument((s) => s.setShowExportSheet);
   const diagram = useDocument(useShallow((s) => s.diagram));
-  const setShow = useDocument((s) => s.setShowExportSheet);
   const [format, setFormat] = useState<"pdf" | "png">("pdf");
   const [showGrid, setShowGrid] = useState(diagram.canvas.showGrid);
   const [busy, setBusy] = useState(false);
@@ -40,49 +52,60 @@ export function ExportSheet() {
       } else {
         await invoke("export_diagram_png", { svg, path, scale: 2 });
       }
-      setShow(false);
+      setOpen(false);
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <div className="modalBackdrop">
-      <div className="sheet exportSheet" role="dialog" aria-label="Export">
-        <div className="exportFormats" role="tablist" aria-label="Format">
-          <button
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-md sm:max-w-md" aria-describedby="export-desc">
+        <DialogHeader>
+          <DialogTitle>Export diagram</DialogTitle>
+          <DialogDescription id="export-desc">{blurb}</DialogDescription>
+        </DialogHeader>
+        <div className="flex gap-2" role="tablist" aria-label="Format">
+          <Button
             type="button"
-            className={`formatCard ${format === "pdf" ? "selected" : ""}`}
+            variant={format === "pdf" ? "default" : "outline"}
+            className="flex-1"
             role="tab"
             aria-selected={format === "pdf"}
             onClick={() => setFormat("pdf")}
           >
             PDF
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className={`formatCard ${format === "png" ? "selected" : ""}`}
+            variant={format === "png" ? "default" : "outline"}
+            className="flex-1"
             role="tab"
             aria-selected={format === "png"}
             onClick={() => setFormat("png")}
           >
             Image
-          </button>
+          </Button>
         </div>
-        <p className="exportBlurb">{blurb}</p>
-        <label className="checkRow">
-          <input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} />
-          Show Grid
-        </label>
-        <div className="sheetFooter">
-          <button type="button" className="btnSecondary" onClick={() => setShow(false)} disabled={busy}>
+        <div className="flex items-center gap-2 pt-1">
+          <Checkbox
+            id="export-grid"
+            checked={showGrid}
+            onCheckedChange={(v) => setShowGrid(v === true)}
+          />
+          <Label htmlFor="export-grid" className="cursor-pointer font-normal text-muted-foreground">
+            Show grid in export
+          </Label>
+        </div>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={busy}>
             Cancel
-          </button>
-          <button type="button" className="btnPrimary" onClick={() => void onExport()} disabled={busy}>
-            Export
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+          <Button type="button" onClick={() => void onExport()} disabled={busy}>
+            {busy ? "Exporting…" : "Export"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

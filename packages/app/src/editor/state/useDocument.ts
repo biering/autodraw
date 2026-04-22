@@ -14,14 +14,21 @@ import { create } from "zustand";
 /** Upper bound for canvas zoom (toolbar + React Flow viewport). */
 export const MAX_VIEW_ZOOM = 1.5;
 
-export type EditorMode = "node" | "edge";
+const CANVAS_THEME_STORAGE_KEY = "agentsdraw:canvasTheme";
+
+export type CanvasTheme = "light" | "dark";
+
+function readStoredCanvasTheme(): CanvasTheme {
+  if (typeof window === "undefined") return "light";
+  return window.localStorage.getItem(CANVAS_THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
+}
 
 export type AppState = {
   diagram: DiagramV1;
   filePath: string | null;
   dirty: boolean;
+  canvasTheme: CanvasTheme;
   selection: { nodeIds: string[]; edgeIds: string[] };
-  editorMode: EditorMode;
   zoom: number;
   showNewDocSheet: boolean;
   showExportSheet: boolean;
@@ -33,10 +40,10 @@ export type AppState = {
   markDirty: () => void;
   markClean: () => void;
   setSelection: (nodeIds: string[], edgeIds?: string[]) => void;
-  setEditorMode: (m: EditorMode) => void;
   setZoom: (z: number) => void;
   setShowNewDocSheet: (v: boolean) => void;
   setShowExportSheet: (v: boolean) => void;
+  setCanvasTheme: (t: CanvasTheme) => void;
   setPendingEdgeSource: (id: string | null) => void;
   setPendingRelationshipPreset: (n: number | null) => void;
   setEditingNodeId: (id: string | null) => void;
@@ -60,10 +67,10 @@ const initial = (): Omit<
   | "markDirty"
   | "markClean"
   | "setSelection"
-  | "setEditorMode"
   | "setZoom"
   | "setShowNewDocSheet"
   | "setShowExportSheet"
+  | "setCanvasTheme"
   | "setPendingEdgeSource"
   | "setPendingRelationshipPreset"
   | "setEditingNodeId"
@@ -79,8 +86,8 @@ const initial = (): Omit<
   diagram: emptyDiagram("universal"),
   filePath: null,
   dirty: false,
+  canvasTheme: readStoredCanvasTheme(),
   selection: { nodeIds: [], edgeIds: [] },
-  editorMode: "node",
   zoom: 1,
   showNewDocSheet: true,
   showExportSheet: false,
@@ -118,10 +125,15 @@ export const useDocument = create<AppState>()(
             },
           });
         },
-        setEditorMode: (m) => set({ editorMode: m }),
         setZoom: (z) => set({ zoom: Math.min(MAX_VIEW_ZOOM, z) }),
         setShowNewDocSheet: (v) => set({ showNewDocSheet: v }),
         setShowExportSheet: (v) => set({ showExportSheet: v }),
+        setCanvasTheme: (canvasTheme) => {
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem(CANVAS_THEME_STORAGE_KEY, canvasTheme);
+          }
+          set({ canvasTheme });
+        },
         setPendingEdgeSource: (id) => set({ pendingEdgeSource: id }),
         setPendingRelationshipPreset: (n) => set({ pendingRelationshipPreset: n }),
         setEditingNodeId: (id) => set({ editingNodeId: id }),

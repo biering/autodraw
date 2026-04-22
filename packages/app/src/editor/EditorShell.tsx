@@ -10,12 +10,14 @@ import {
   openDocumentInteractive,
   saveDocumentInteractive,
 } from "../platform/files.js";
+import { CliSkillHelp } from "./CliSkillHelp.js";
 import { DiagramCanvas } from "./canvas/DiagramCanvas.js";
 import { AddElementPopover } from "./popovers/AddElementPopover.js";
 import { AddRelationshipPopover } from "./popovers/AddRelationshipPopover.js";
 import { ExportSheet } from "./sheets/ExportSheet.js";
 import { NewDocumentSheet } from "./sheets/NewDocumentSheet.js";
 import { Toolbar } from "./Toolbar.js";
+import { ZoomDock } from "./ZoomDock.js";
 import { redoDocument, undoDocument, useDocument } from "./state/useDocument.js";
 
 function isTypingInField(): boolean {
@@ -27,14 +29,14 @@ function isTypingInField(): boolean {
 }
 
 export function EditorShell() {
-  const showNew = useDocument((s) => s.showNewDocSheet);
-  const showExport = useDocument((s) => s.showExportSheet);
+  const canvasTheme = useDocument((s) => s.canvasTheme);
   const setShowExport = useDocument((s) => s.setShowExportSheet);
   const filePath = useDocument((s) => s.filePath);
   const dirty = useDocument((s) => s.dirty);
   const diagram = useDocument(useShallow((s) => s.diagram));
   const markClean = useDocument((s) => s.markClean);
   const removeNode = useDocument((s) => s.removeNode);
+  const removeEdge = useDocument((s) => s.removeEdge);
 
   const autosaveTimer = useRef<number | undefined>(undefined);
 
@@ -50,19 +52,33 @@ export function EditorShell() {
     e.preventDefault();
     void newDocumentInteractive();
   });
+  useHotkeys(
+    "mod+shift+e",
+    (e) => {
+      if (isTypingInField()) return;
+      e.preventDefault();
+      setShowExport(true);
+    },
+    [setShowExport]
+  );
 
   useHotkeys(
     ["backspace", "delete"],
     (e) => {
       if (isTypingInField()) return;
-      const ids = [...useDocument.getState().selection.nodeIds];
-      if (ids.length === 0) return;
+      const { selection } = useDocument.getState();
+      const nodeIds = [...selection.nodeIds];
+      const edgeIds = [...selection.edgeIds];
+      if (nodeIds.length === 0 && edgeIds.length === 0) return;
       e.preventDefault();
-      for (const id of ids) {
+      for (const id of edgeIds) {
+        removeEdge(id);
+      }
+      for (const id of nodeIds) {
         removeNode(id);
       }
     },
-    [removeNode]
+    [removeNode, removeEdge]
   );
 
   useEffect(() => {
@@ -112,13 +128,14 @@ export function EditorShell() {
   return (
     <ReactFlowProvider>
       <div className="editorRoot">
-        <div className="titleBarDrag" data-tauri-drag-region />
-        <Toolbar />
-        <div className="canvasWrap">
+        <div className="canvasWrap" data-canvas-theme={canvasTheme}>
           <DiagramCanvas />
         </div>
-        {showNew ? <NewDocumentSheet /> : null}
-        {showExport ? <ExportSheet /> : null}
+        <Toolbar />
+        <CliSkillHelp />
+        <ZoomDock />
+        <NewDocumentSheet />
+        <ExportSheet />
         <AddElementPopover />
         <AddRelationshipPopover />
       </div>

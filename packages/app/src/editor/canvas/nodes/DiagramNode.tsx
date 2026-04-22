@@ -1,31 +1,52 @@
-import { styleById } from "@agentsdraw/core";
-import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { Handle, Position, type NodeProps, useConnection } from "@xyflow/react";
+import type { ConnectionState } from "@xyflow/system";
 import type { CSSProperties } from "react";
-import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useShallow } from "zustand/react/shallow";
-import type { DiagramNodeData } from "../flowAdapter.js";
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { DiagramFlowNode } from "../flowAdapter.js";
 import { useDocument } from "../../state/useDocument.js";
+
+function diagramNodePropsAreEqual(prev: NodeProps<DiagramFlowNode>, next: NodeProps<DiagramFlowNode>): boolean {
+  if (prev.id !== next.id || prev.selected !== next.selected || prev.dragging !== next.dragging) return false;
+  const a = prev.data;
+  const b = next.data;
+  return (
+    a.label === b.label &&
+    a.w === b.w &&
+    a.h === b.h &&
+    a.styleId === b.styleId &&
+    (a.shape ?? null) === (b.shape ?? null) &&
+    a.resolvedStyle.fill === b.resolvedStyle.fill &&
+    a.resolvedStyle.stroke === b.resolvedStyle.stroke &&
+    a.resolvedStyle.defaultShape === b.resolvedStyle.defaultShape
+  );
+}
 
 const NODE_TITLE_PLACEHOLDER = "Untitled Element";
 
-function DiagramNodeInner(props: NodeProps) {
-  const data = props.data as DiagramNodeData;
+function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
+  const data = props.data;
   const { id, selected, dragging } = props;
-  const diagram = useDocument(useShallow((s) => s.diagram));
-  const editingNodeId = useDocument((s) => s.editingNodeId);
+  const isEditing = useDocument((s) => s.editingNodeId === id);
   const setEditingNodeId = useDocument((s) => s.setEditingNodeId);
   const updateNode = useDocument((s) => s.updateNode);
 
-  const styleDef = useMemo(() => styleById(diagram, data.styleId), [diagram, data.styleId]);
-  const shape = data.shape ?? styleDef?.shape ?? "roundedRect";
-  const fill = styleDef
-    ? `rgba(${Math.round(styleDef.fillRed * 255)},${Math.round(styleDef.fillGreen * 255)},${Math.round(styleDef.fillBlue * 255)},${styleDef.fillAlpha})`
-    : "#eee";
-  const stroke = styleDef
-    ? `rgba(${Math.round(styleDef.strokeRed * 255)},${Math.round(styleDef.strokeGreen * 255)},${Math.round(styleDef.strokeBlue * 255)},${styleDef.strokeAlpha})`
-    : "#444";
+  const isConnectDropTarget = useConnection(
+    useCallback(
+      (c: ConnectionState) =>
+        Boolean(
+          c.inProgress &&
+          c.toNode != null &&
+          c.fromNode != null &&
+          c.toNode.id === id &&
+          c.fromNode.id !== id
+        ),
+      [id]
+    )
+  );
 
-  const isEditing = editingNodeId === id;
+  const shape = data.shape ?? data.resolvedStyle.defaultShape;
+  const fill = data.resolvedStyle.fill;
+  const stroke = data.resolvedStyle.stroke;
 
   const corner = Math.min(12, Math.min(data.w, data.h) * 0.2);
   /** Magenta frame + soft periwinkle halo (matches desktop selection affordance). */
@@ -38,7 +59,7 @@ function DiagramNodeInner(props: NodeProps) {
     height: data.h,
     boxShadow:
       dragging ? "none" : isEditing ? elevation : selected ? selectedChrome : elevation,
-    border: selected ? "2px solid #c41e6b" : `1.5px solid ${stroke}`,
+    border: selected ? "3.5px solid #c41e6b" : `3px solid ${stroke}`,
     background: fill,
     display: "flex",
     alignItems: "center",
@@ -50,7 +71,7 @@ function DiagramNodeInner(props: NodeProps) {
     fontFamily: "system-ui, -apple-system, SF Pro Text, sans-serif",
     ...(dragging && selected && !isEditing
       ? {
-          outline: "2px solid rgba(130, 175, 255, 0.85)",
+          outline: "2.5px solid rgba(130, 175, 255, 0.85)",
           outlineOffset: 5,
         }
       : {}),
@@ -94,17 +115,34 @@ function DiagramNodeInner(props: NodeProps) {
         position: "relative",
         width: data.w,
         height: data.h,
-        zIndex: selected ? 2 : dragging ? 3 : 0,
+        zIndex: selected ? 2 : dragging ? 3 : isConnectDropTarget ? 2 : 0,
         transform: dragging ? "translateZ(0)" : undefined,
         WebkitTransform: dragging ? "translateZ(0)" : undefined,
+        borderRadius: 10,
+        outline: isConnectDropTarget ? "3px solid rgba(10, 132, 255, 0.95)" : undefined,
+        outlineOffset: isConnectDropTarget ? 2 : undefined,
       }}
       onDoubleClick={(e) => {
         e.stopPropagation();
         startEditing();
       }}
     >
-      <Handle id="src" type="source" position={Position.Right} style={{ opacity: 0.35 }} />
-      <Handle id="tgt" type="target" position={Position.Left} style={{ opacity: 0.35 }} />
+      {/* Target handle: pointer-events none so the left edge selects the node in one click.
+          Incoming links still land via loose connection mode + connectionRadius on the canvas. */}
+      <Handle
+        id="tgt"
+        type="target"
+        position={Position.Left}
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: 999,
+          background: "#111",
+          border: "2px solid #fff",
+          boxShadow: "0 0 0 1px rgba(0,0,0,0.12)",
+          pointerEvents: "none",
+        }}
+      />
       <div style={sx}>
         {isEditing ? (
           <NodeLabelEditor
@@ -138,19 +176,19 @@ function DiagramNodeInner(props: NodeProps) {
         )}
       </div>
       <Handle
-        id="edge-out"
+        id="src"
         type="source"
         position={Position.Right}
+        title="Drag to connect"
         style={{
           top: "50%",
-          right: -10,
-          background: "#0a84ff",
-          width: 10,
-          height: 10,
+          right: -4,
+          width: 8,
+          height: 8,
           borderRadius: 999,
-          opacity: selected ? 1 : 0,
-          pointerEvents: selected ? "auto" : "none",
-          transition: "opacity 120ms ease",
+          background: "#111",
+          border: "2px solid #fff",
+          boxShadow: "0 0 0 1px rgba(0,0,0,0.12)",
         }}
       />
     </div>
@@ -182,7 +220,7 @@ function NodeLabelEditor({
   // still ends the edit cleanly.
   useEffect(() => {
     const onDown = (e: PointerEvent) => {
-      if (inputRef.current && !inputRef.current.contains(e.target as Node)) {
+      if (inputRef.current && !inputRef.current.contains(e.target as globalThis.Node)) {
         onCommit(value);
       }
     };
@@ -226,4 +264,4 @@ function NodeLabelEditor({
   );
 }
 
-export const DiagramNode = memo(DiagramNodeInner);
+export const DiagramNode = memo(DiagramNodeInner, diagramNodePropsAreEqual);

@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { paletteStyles } from "@agentsdraw/core";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useDocument } from "../state/useDocument.js";
 
 /** Centered palette picker; opened via window event from toolbar or canvas context menu.
@@ -33,35 +42,26 @@ export function AddElementPopover() {
 
   const styles = useMemo(() => paletteStyles(diagram.palette), [diagram.palette]);
 
-  if (!open) return null;
-
   return (
-    <div
-      className="modalBackdrop"
-      role="presentation"
-      onMouseDown={() => {
-        setOpen(false);
-        setPos(null);
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) setPos(null);
       }}
     >
-      <div
-        className="popoverCenter"
-        role="dialog"
-        aria-label="Add New Element"
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <div className="popoverHeader">
-          <div className="popoverTitle">Add New Element</div>
-          <button type="button" className="popoverHelp" aria-label="Help">
-            ?
-          </button>
-        </div>
-        <div className="swatchGrid">
+      <DialogContent className="max-w-lg sm:max-w-lg" hideClose>
+        <DialogHeader>
+          <DialogTitle>Add new element</DialogTitle>
+          <DialogDescription>Pick a style from the current palette.</DialogDescription>
+        </DialogHeader>
+        <div className="grid max-h-[50vh] grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-2 overflow-y-auto pr-1">
           {styles.map((s) => (
-            <button
+            <Button
               key={s.id}
               type="button"
-              className="swatch"
+              variant="outline"
+              className="relative h-16 w-full overflow-hidden p-0"
               title={s.id}
               onClick={() => {
                 const w = 160;
@@ -80,22 +80,24 @@ export function AddElementPopover() {
               }}
               style={{
                 background: `rgba(${Math.round(s.fillRed * 255)},${Math.round(s.fillGreen * 255)},${Math.round(s.fillBlue * 255)},${s.fillAlpha})`,
-                border: `2px solid rgba(${Math.round(s.strokeRed * 255)},${Math.round(s.strokeGreen * 255)},${Math.round(s.strokeBlue * 255)},${s.strokeAlpha})`,
+                borderColor: `rgba(${Math.round(s.strokeRed * 255)},${Math.round(s.strokeGreen * 255)},${Math.round(s.strokeBlue * 255)},${s.strokeAlpha})`,
               }}
             >
-              <span className="swatchAa">Aa</span>
-            </button>
+              <span className="pointer-events-none text-xs font-semibold text-neutral-900 drop-shadow-sm">
+                Aa
+              </span>
+            </Button>
           ))}
         </div>
-        <div className="popoverFooter">
-          <button type="button" className="btnGhost">
+        <DialogFooter className="gap-2 sm:justify-end">
+          <Button type="button" variant="ghost" disabled title="Coming soon">
             Customize
-          </button>
-          <button type="button" className="btnGhost">
+          </Button>
+          <Button type="button" variant="ghost" disabled title="Coming soon">
             + New
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -9,7 +9,8 @@
   "files": [
     "bin",
     "dist",
-    "oclif.manifest.json"
+    "oclif.manifest.json",
+    "SKILL.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && oclif manifest",

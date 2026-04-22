@@ -1,30 +1,50 @@
 import {
   Background,
+  ConnectionMode,
   ReactFlow,
   applyNodeChanges,
   useReactFlow,
   type Connection,
+  type EdgeChange,
   type EdgeTypes,
+  type IsValidConnection,
   type NodeChange,
   type NodeTypes,
   type OnConnect,
+  type OnEdgesChange,
   type OnNodesChange,
+  type OnSelectionChangeFunc,
   type Node,
   type Viewport,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { applyRelationshipPreset } from "@agentsdraw/core";
 import type { DiagramV1, NodeRecord } from "@agentsdraw/core";
-import { applyNodePositionChanges, toFlowEdges, toFlowNodes } from "./flowAdapter.js";
+import type { FinalConnectionState } from "@xyflow/system";
+import {
+  applyNodePositionChanges,
+  type DiagramFlowEdge,
+  toFlowEdges,
+  toFlowNodes,
+} from "./flowAdapter.js";
+import { DiagramConnectionLine } from "./DiagramConnectionLine.js";
 import { DiagramEdge } from "./edges/DiagramEdge.js";
 import { DiagramNode } from "./nodes/DiagramNode.js";
+import { NEW_REL_POPOVER_H, NEW_REL_POPOVER_W, NewRelationshipPicker, type NewRelationshipDraft } from "./NewRelationshipPicker.js";
 import { MAX_VIEW_ZOOM, useDocument } from "../state/useDocument.js";
 
 const nodeTypes = { diagram: DiagramNode } as unknown as NodeTypes;
 const edgeTypes = { diagram: DiagramEdge } as unknown as EdgeTypes;
+
+/** Stable references for `<ReactFlow />` — new object/array literals each render force internal churn ([docs](https://reactflow.dev/learn/advanced-use/performance)). */
+const SNAP_GRID: [number, number] = [16, 16];
+const PRO_OPTIONS = { hideAttribution: true } as const;
+
+const isDiagramValidConnection: IsValidConnection<DiagramFlowEdge> = (edge) =>
+  Boolean(edge.source && edge.target && edge.source !== edge.target);
 
 const PANE_MENU_W = 248;
 const PANE_MENU_H = 300;
@@ -75,55 +95,79 @@ function shapeEqual(a: NodeRecord["shape"], b: NodeRecord["shape"]): boolean {
 
 export function DiagramCanvas() {
   const diagram = useDocument(useShallow((s) => s.diagram));
-  const editorMode = useDocument((s) => s.editorMode);
+  const canvasTheme = useDocument((s) => s.canvasTheme);
+  const selection = useDocument(useShallow((s) => s.selection));
   const setDiagram = useDocument((s) => s.setDiagram);
   const setSelection = useDocument((s) => s.setSelection);
   const setZoom = useDocument((s) => s.setZoom);
   const addEdge = useDocument((s) => s.addEdge);
+  const removeNode = useDocument((s) => s.removeNode);
+  const removeEdge = useDocument((s) => s.removeEdge);
   const rf = useReactFlow();
 
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [menu, setMenu] = useState<CanvasMenu | null>(null);
+  const [newEdgeDraft, setNewEdgeDraft] = useState<NewRelationshipDraft | null>(null);
+  const pointerDuringConnect = useRef({ x: 0, y: 0 });
+  const connectListenersRef = useRef<{ move: (e: PointerEvent) => void; up: () => void } | null>(null);
+  /** True after `onConnect` runs so `onConnectEnd` does not open the picker twice. */
+  const connectHandledRef = useRef(false);
 
-  // Do not merge `selected` into nodes/edges here — that recreates every element on each selection
-  // change and fights React Flow's internal store (StoreUpdater / setNodes loop). Mirror selection
-  // to Zustand via `onSelectionChange` → `setSelection` (toolbar/delete). Node chrome uses RF's
-  // `selected` prop — `onSelectionChange` runs in an effect, so store-only chrome lags one frame.
-  const nodes = useMemo(() => toFlowNodes(diagram), [diagram]);
-  const edges = useMemo(() => toFlowEdges(diagram), [diagram]);
+  // Controlled selection: merge Zustand `selection` into props so `<ReactFlow />` stays in sync with
+  // the [Adding Interactivity](https://reactflow.dev/learn/concepts/adding-interactivity) pattern
+  // (apply*Changes + controlled elements). `onSelectionChange` mirrors RF → store; `setSelection` skips no-ops.
+  const nodeSelSet = useMemo(() => new Set(selection.nodeIds), [selection.nodeIds]);
+  const edgeSelSet = useMemo(() => new Set(selection.edgeIds), [selection.edgeIds]);
+
+  const nodes = useMemo(
+    () => toFlowNodes(diagram).map((n) => ({ ...n, selected: nodeSelSet.has(n.id) })),
+    [diagram, nodeSelSet]
+  );
+  const edges = useMemo(
+    () => toFlowEdges(diagram).map((e) => ({ ...e, selected: edgeSelSet.has(e.id) })),
+    [diagram, edgeSelSet]
+  );
+
+  const dotGridColor = canvasTheme === "dark" ? "#4b4b52" : "#d9d9d9";
+
+  const diagramRef = useRef(diagram);
+  diagramRef.current = diagram;
+  const nodesRef = useRef(nodes);
+  nodesRef.current = nodes;
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes: NodeChange[]) => {
-      const hasPosition = changes.some((c) => c.type === "position");
-      if (hasPosition) {
-        const nextNodes = applyNodeChanges(changes, nodes);
-        setDiagram(applyNodePositionChanges(diagram, nextNodes), { dirty: true });
+      const nextNodes = applyNodeChanges(changes, nodesRef.current);
+      if (changes.some((c) => c.type === "position")) {
+        setDiagram(applyNodePositionChanges(diagramRef.current, nextNodes), { dirty: true });
+      }
+      for (const c of changes) {
+        if (c.type === "remove") removeNode(c.id);
       }
     },
-    [diagram, nodes, setDiagram]
+    [setDiagram, removeNode]
   );
 
-  const onConnect: OnConnect = useCallback(
-    (c: Connection) => {
-      if (!c.source || !c.target) return;
-      const preset = 4;
-      const st = applyRelationshipPreset(preset);
-      addEdge({
-        from: c.source,
-        to: c.target,
-        routing: st.routing,
-        dash: st.dash,
-        head: st.head,
-        tail: st.tail,
-        label: "",
-        strokeWidth: st.strokeWidth,
-        relationshipPreset: st.relationshipPreset,
-      });
+  const onEdgesChange: OnEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      for (const c of changes) {
+        if (c.type === "remove") removeEdge(c.id);
+      }
     },
-    [addEdge]
+    [removeEdge]
   );
 
-  const closeMenu = useCallback(() => setMenu(null), []);
+  const onSelectionChange = useCallback<OnSelectionChangeFunc>(
+    ({ nodes: ns, edges: es }) => {
+      setSelection(
+        ns.map((n) => n.id),
+        es.map((e) => e.id)
+      );
+    },
+    [setSelection]
+  );
+
+  const closeRelationshipDraft = useCallback(() => setNewEdgeDraft(null), []);
 
   const clampMenu = useCallback((clientX: number, clientY: number, mw: number, mh: number) => {
     const wrap = wrapRef.current;
@@ -136,6 +180,99 @@ export function DiagramCanvas() {
     if (h > 0) cy = Math.min(Math.max(4, cy), h - mh - 4);
     return { cx, cy };
   }, []);
+
+  const openRelationshipDraft = useCallback(
+    (source: string, target: string) => {
+      if (!source || !target || source === target) return;
+      const p = pointerDuringConnect.current;
+      const { cx, cy } = clampMenu(p.x, p.y, NEW_REL_POPOVER_W, NEW_REL_POPOVER_H);
+      setNewEdgeDraft({ source, target, cx, cy });
+    },
+    [clampMenu]
+  );
+
+  const onConnect: OnConnect = useCallback(
+    (c: Connection) => {
+      if (!c.source || !c.target) return;
+      connectHandledRef.current = true;
+      openRelationshipDraft(c.source, c.target);
+    },
+    [openRelationshipDraft]
+  );
+
+  const clearConnectPointerListeners = useCallback(() => {
+    const cur = connectListenersRef.current;
+    if (cur) {
+      window.removeEventListener("pointermove", cur.move, true);
+      window.removeEventListener("pointerup", cur.up, true);
+      window.removeEventListener("pointercancel", cur.up, true);
+      connectListenersRef.current = null;
+    }
+  }, []);
+
+  const onConnectStart = useCallback(() => {
+    connectHandledRef.current = false;
+    setNewEdgeDraft(null);
+    clearConnectPointerListeners();
+    const move = (e: PointerEvent) => {
+      pointerDuringConnect.current = { x: e.clientX, y: e.clientY };
+    };
+    const up = () => {
+      window.setTimeout(() => clearConnectPointerListeners(), 0);
+    };
+    connectListenersRef.current = { move, up };
+    window.addEventListener("pointermove", move, { capture: true });
+    window.addEventListener("pointerup", up, { capture: true });
+    window.addEventListener("pointercancel", up, { capture: true });
+  }, [clearConnectPointerListeners]);
+
+  const onConnectEnd = useCallback(
+    (_event: MouseEvent | TouchEvent, state: FinalConnectionState) => {
+      clearConnectPointerListeners();
+      if (connectHandledRef.current) {
+        connectHandledRef.current = false;
+        return;
+      }
+      if (state.isValid !== true || !state.fromHandle) return;
+      if (state.fromHandle.type !== "source") return;
+      const targetId = state.toHandle?.nodeId ?? state.toNode?.id;
+      const sourceId = state.fromHandle.nodeId;
+      if (!targetId || !sourceId || sourceId === targetId) return;
+      openRelationshipDraft(sourceId, targetId);
+    },
+    [clearConnectPointerListeners, openRelationshipDraft]
+  );
+
+  const closeMenu = useCallback(() => setMenu(null), []);
+
+  const dismissOverlays = useCallback(() => {
+    setMenu(null);
+    setNewEdgeDraft(null);
+  }, []);
+
+  const newEdgeDraftRef = useRef<NewRelationshipDraft | null>(null);
+  newEdgeDraftRef.current = newEdgeDraft;
+
+  const handleRelationshipPick = useCallback(
+    (presetIndex: number) => {
+      const draft = newEdgeDraftRef.current;
+      if (!draft?.source || !draft?.target) return;
+      const st = applyRelationshipPreset(presetIndex);
+      addEdge({
+        from: draft.source,
+        to: draft.target,
+        routing: st.routing,
+        dash: st.dash,
+        head: st.head,
+        tail: st.tail,
+        label: "",
+        strokeWidth: st.strokeWidth,
+        relationshipPreset: st.relationshipPreset,
+      });
+      setNewEdgeDraft(null);
+    },
+    [addEdge]
+  );
 
   const onPaneContextMenu = useCallback(
     (e: ReactMouseEvent<Element> | globalThis.MouseEvent) => {
@@ -203,13 +340,13 @@ export function DiagramCanvas() {
   }, [rf, closeMenu]);
 
   useEffect(() => {
-    if (!menu) return;
+    if (!menu && !newEdgeDraft) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeMenu();
+      if (e.key === "Escape") dismissOverlays();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [menu, closeMenu]);
+  }, [menu, newEdgeDraft, dismissOverlays]);
 
   return (
     <div ref={wrapRef} style={{ width: "100%", height: "100%", position: "relative" }}>
@@ -219,34 +356,45 @@ export function DiagramCanvas() {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         snapToGrid
-        snapGrid={[16, 16]}
-        nodesConnectable={editorMode === "edge"}
+        snapGrid={SNAP_GRID}
+        nodesConnectable
         elementsSelectable
+        edgesFocusable
+        elevateEdgesOnSelect
         selectNodesOnDrag
+        connectionMode={ConnectionMode.Loose}
+        connectionLineComponent={DiagramConnectionLine}
+        connectionRadius={200}
         onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnectStart={onConnectStart}
+        onConnectEnd={onConnectEnd}
         onConnect={onConnect}
-        onSelectionChange={({ nodes: ns, edges: es }) => {
-          setSelection(
-            ns.map((n) => n.id),
-            es.map((e) => e.id)
-          );
-        }}
+        isValidConnection={isDiagramValidConnection}
+        onSelectionChange={onSelectionChange}
         onPaneContextMenu={onPaneContextMenu}
         onNodeContextMenu={onNodeContextMenu}
-        onPaneClick={closeMenu}
-        onMoveStart={closeMenu}
+        onPaneClick={dismissOverlays}
+        onMoveStart={dismissOverlays}
         onMoveEnd={onMoveEnd}
         onInit={onFlowInit}
         maxZoom={MAX_VIEW_ZOOM}
-        proOptions={{ hideAttribution: true }}
+        proOptions={PRO_OPTIONS}
       >
-        <Background gap={16} size={1.5} color="#d9d9d9" />
+        <Background gap={16} size={1.5} color={dotGridColor} />
       </ReactFlow>
+      {newEdgeDraft ? (
+        <NewRelationshipPicker
+          draft={newEdgeDraft}
+          onPick={handleRelationshipPick}
+          onClose={closeRelationshipDraft}
+        />
+      ) : null}
       {menu ? (
         <div
           className="paneCtxBackdrop"
           role="presentation"
-          onMouseDown={closeMenu}
+          onMouseDown={dismissOverlays}
           onContextMenu={(e) => {
             e.preventDefault();
             closeMenu();
@@ -320,7 +468,7 @@ export function DiagramCanvas() {
   );
 }
 
-function NodeContextMenu({
+function NodeContextMenuInner({
   x,
   y,
   nodeId,
@@ -521,6 +669,8 @@ function NodeContextMenu({
     </div>
   );
 }
+
+const NodeContextMenu = memo(NodeContextMenuInner);
 
 function IconAddNewElement() {
   return (

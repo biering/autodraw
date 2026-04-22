@@ -1,18 +1,3 @@
-html,
-body {
-  height: 100%;
-  margin: 0;
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--text);
-}
-
-#root {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
 .srOnly {
   position: absolute;
   width: 1px;
@@ -28,104 +13,171 @@ body {
 .editorRoot {
   flex: 1 1 auto;
   min-height: 0;
-  display: grid;
-  grid-template-rows: 28px auto 1fr;
-}
-
-.titleBarDrag {
-  grid-row: 1;
-}
-
-.toolbar {
-  grid-row: 2;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bgElevated) 88%, transparent);
-  backdrop-filter: blur(30px) saturate(180%);
-}
-
-.toolbarCluster {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.toolbarCluster.right {
-  justify-content: flex-end;
-}
-
-.tbBtn {
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.tbBtn:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.tbBtn.primary {
-  border-color: rgba(10, 132, 255, 0.35);
-  background: rgba(10, 132, 255, 0.12);
-}
-
-.tbIcon {
-  font-size: 16px;
-  line-height: 1;
-}
-
-.tbIconSm {
-  font-size: 14px;
-  line-height: 1;
-}
-
-.tbLabel {
-  font-size: 10px;
-  color: var(--muted);
-}
-
-.tbSeg {
-  display: inline-flex;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.tbSegBtn {
-  padding: 6px 10px;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.tbSegBtn.active {
-  background: rgba(10, 132, 255, 0.18);
-}
-
-.tbZoom select {
-  margin-left: 6px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text);
-  padding: 4px 8px;
+  flex-direction: column;
+  position: relative;
 }
 
 .canvasWrap {
-  grid-row: 3;
+  flex: 1 1 auto;
   min-height: 0;
   background: var(--canvas);
+  transition: background-color 0.2s ease;
+}
+
+.canvasWrap[data-canvas-theme="dark"] {
+  background: #131316;
+  color-scheme: dark;
+}
+
+/* Floating iOS-style toolbar (no separate title bar; canvas is full height) */
+.toolbarOverlay {
+  position: fixed;
+  z-index: 80;
+  left: 0;
+  right: 0;
+  top: 0;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.iosToolbar {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(960px, calc(100vw - 32px));
+  padding: 6px 8px 6px 10px;
+  border-radius: 999px;
+  background: rgba(253, 253, 254, 0.94);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 8px 28px rgba(0, 0, 0, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-app-region: drag;
+  app-region: drag;
+  color: #1d1d1f;
+}
+
+.iosToolbar button,
+.iosToolbar select,
+.iosToolbar label {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+.iosToolbarLead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 0 2px;
+  flex-shrink: 0;
+}
+
+.iosAppSpark {
+  display: block;
+  flex-shrink: 0;
+}
+
+.iosToolbarAppName {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: #1d1d1f;
+  white-space: nowrap;
+}
+
+.iosToolbarRule {
+  width: 1px;
+  height: 26px;
+  background: rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.iosToolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.iosTbIcon {
+  display: block;
+  flex-shrink: 0;
+}
+
+.iosIconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: rgba(60, 60, 67, 0.75);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.iosIconBtn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1d1d1f;
+}
+
+.iosIconBtn:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+
+/* Bottom-left zoom stack (Lucide actions) */
+.zoomDock {
+  position: fixed;
+  z-index: 75;
+  left: max(16px, env(safe-area-inset-left, 0px));
+  bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 8px 28px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.zoomDockBtn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: #fff;
+  color: #1d1d1f;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.zoomDockBtn:last-child {
+  border-bottom: none;
+}
+
+.zoomDockBtn:hover {
+  background: #f2f2f7;
+}
+
+.zoomDockBtn:active {
+  background: #e5e5ea;
 }
 
 .paneCtxBackdrop {
@@ -438,4 +490,117 @@ body {
 
 .presetBtn.active {
   outline: 2px solid rgba(10, 132, 255, 0.95);
+}
+
+/* New relationship picker (after connect drag) */
+.newRelBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.newRelPopover {
+  position: absolute;
+  z-index: 50;
+  border-radius: 14px;
+  background: #2d2d30;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  padding: 14px 14px 12px;
+  color: #f5f5f7;
+}
+
+.newRelCaret {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 12px;
+  height: 12px;
+  background: #2d2d30;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.newRelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-top: 2px;
+}
+
+.newRelTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.newRelHelp {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  cursor: default;
+}
+
+.newRelGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.newRelCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #f6f6f7;
+  cursor: pointer;
+  padding: 4px;
+  transition: outline 0.12s ease, box-shadow 0.12s ease;
+}
+
+.newRelCell:hover {
+  box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.35);
+}
+
+.newRelCell:focus-visible {
+  outline: 2px solid rgba(10, 132, 255, 0.95);
+  outline-offset: 2px;
+}
+
+.newRelFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 0 -2px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+.newRelFooterBtn {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.newRelFooterBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
