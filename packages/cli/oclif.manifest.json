@@ -1,0 +1,466 @@
+{
+  "commands": {
+    "export": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Input .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Export a diagram to PDF or PNG",
+      "flags": {
+        "format": {
+          "description": "Output format",
+          "name": "format",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "pdf",
+            "png"
+          ],
+          "type": "option"
+        },
+        "output": {
+          "description": "Output file path",
+          "name": "output",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "showGrid": {
+          "description": "Render grid in output",
+          "name": "showGrid",
+          "allowNo": true,
+          "type": "boolean"
+        },
+        "scale": {
+          "description": "PNG scale multiplier (approx)",
+          "name": "scale",
+          "default": 2,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "export",
+      "pluginAlias": "@agentsdraw/cli",
+      "pluginName": "@agentsdraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "export.js"
+      ]
+    },
+    "init": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Output path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Create a new empty .adraw diagram file",
+      "flags": {
+        "palette": {
+          "description": "Palette preset",
+          "name": "palette",
+          "default": "universal",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "universal",
+            "grayscale",
+            "flowchart",
+            "empty"
+          ],
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "init",
+      "pluginAlias": "@agentsdraw/cli",
+      "pluginName": "@agentsdraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "init.js"
+      ]
+    },
+    "open": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Input .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Open a diagram with the default application",
+      "flags": {},
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "open",
+      "pluginAlias": "@agentsdraw/cli",
+      "pluginName": "@agentsdraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "open.js"
+      ]
+    },
+    "edge:add": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Add an edge between two nodes",
+      "flags": {
+        "from": {
+          "description": "Source node id",
+          "name": "from",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "to": {
+          "description": "Target node id",
+          "name": "to",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "routing": {
+          "description": "Edge routing",
+          "name": "routing",
+          "default": "orthogonal",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "straight",
+            "orthogonal",
+            "curved"
+          ],
+          "type": "option"
+        },
+        "dash": {
+          "description": "Dash style",
+          "name": "dash",
+          "default": "solid",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "solid",
+            "dashed",
+            "dotted"
+          ],
+          "type": "option"
+        },
+        "head": {
+          "description": "Arrow head",
+          "name": "head",
+          "default": "arrowOpen",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "none",
+            "arrowOpen",
+            "arrowFilled",
+            "arrowDouble",
+            "square"
+          ],
+          "type": "option"
+        },
+        "label": {
+          "description": "Edge label",
+          "name": "label",
+          "default": "",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "preset": {
+          "description": "Relationship preset index (0-7). Overrides routing/dash/head when set.",
+          "name": "preset",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "edge:add",
+      "pluginAlias": "@agentsdraw/cli",
+      "pluginName": "@agentsdraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "edge",
+        "add.js"
+      ]
+    },
+    "edge:remove": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Remove an edge",
+      "flags": {
+        "id": {
+          "description": "Edge id",
+          "name": "id",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "edge:remove",
+      "pluginAlias": "@agentsdraw/cli",
+      "pluginName": "@agentsdraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "edge",
+        "remove.js"
+      ]
+    },
+    "node:add": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Add a node to a diagram",
+      "flags": {
+        "text": {
+          "description": "Node text",
+          "name": "text",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "x": {
+          "description": "X position",
+          "name": "x",
+          "default": 240,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "y": {
+          "description": "Y position",
+          "name": "y",
+          "default": 240,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "w": {
+          "description": "Width",
+          "name": "w",
+          "default": 160,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "h": {
+          "description": "Height",
+          "name": "h",
+          "default": 72,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "style": {
+          "description": "Style id (e.g. red, yellow)",
+          "name": "style",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "id": {
+          "description": "Explicit node id",
+          "name": "id",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "node:add",
+      "pluginAlias": "@agentsdraw/cli",
+      "pluginName": "@agentsdraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "node",
+        "add.js"
+      ]
+    },
+    "node:list": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "List nodes in a diagram",
+      "flags": {},
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "node:list",
+      "pluginAlias": "@agentsdraw/cli",
+      "pluginName": "@agentsdraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "node",
+        "list.js"
+      ]
+    },
+    "node:move": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Move a node",
+      "flags": {
+        "id": {
+          "description": "Node id",
+          "name": "id",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "x": {
+          "description": "X",
+          "name": "x",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "y": {
+          "description": "Y",
+          "name": "y",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "node:move",
+      "pluginAlias": "@agentsdraw/cli",
+      "pluginName": "@agentsdraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "node",
+        "move.js"
+      ]
+    },
+    "node:remove": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Remove a node (and incident edges)",
+      "flags": {
+        "id": {
+          "description": "Node id",
+          "name": "id",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "node:remove",
+      "pluginAlias": "@agentsdraw/cli",
+      "pluginName": "@agentsdraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "node",
+        "remove.js"
+      ]
+    }
+  },
+  "version": "0.1.0"
+}

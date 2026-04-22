@@ -1,0 +1,38 @@
+{
+  "name": "@agentsdraw/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "agentsdraw": "./bin/run.mjs"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "oclif.manifest.json"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && oclif manifest",
+    "postpack": "oclif manifest",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@agentsdraw/core": "workspace:*",
+    "@oclif/core": "^4.2.10",
+    "@resvg/resvg-js": "^2.6.2",
+    "pdf-lib": "^1.17.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "oclif": "^4.22.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  },
+  "oclif": {
+    "bin": "agentsdraw",
+    "dirname": "agentsdraw",
+    "commands": "./dist/commands",
+    "topics": {}
+  }
+}
