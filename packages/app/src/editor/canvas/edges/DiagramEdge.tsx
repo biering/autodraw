@@ -3,6 +3,7 @@ import type { InternalNode, Node } from "@xyflow/react";
 import {
   BaseEdge,
   getBezierPath,
+  getSmoothStepPath,
   getStraightPath,
   useInternalNode,
   useStore,
@@ -11,12 +12,7 @@ import {
 import { memo, useCallback, useMemo } from "react";
 import { floatingEdgeGeometry } from "../floatingEndpoints.js";
 import type { DiagramFlowEdge, DiagramFlowNode } from "../flowAdapter.js";
-import {
-  clampedInsetEndpoints,
-  computeEdgeInsetPx,
-  computeOrthogonalStubPx,
-  orthogonalStubPath,
-} from "./edgeHandleInset.js";
+import { clampedInsetEndpoints, computeEdgeInsetPx } from "./edgeHandleInset.js";
 import { DiagramEdgeMarkerDefs, diagramMarkerUrls } from "./edgeMarkerDefs.js";
 
 function rectFromInternal(n: InternalNode<Node>): {
@@ -172,9 +168,17 @@ function DiagramEdgeInner(props: EdgeProps<DiagramFlowEdge>) {
       });
       return [p, lx, ly] as const;
     }
-    const stub = computeOrthogonalStubPx(strokeW);
-    const { d, labelX, labelY } = orthogonalStubPath(sx, sy, tx, ty, sourcePos, targetPos, stub);
-    return [d, labelX, labelY] as const;
+    const [p, lx, ly] = getSmoothStepPath({
+      sourceX: sx,
+      sourceY: sy,
+      sourcePosition: sourcePos,
+      targetX: tx,
+      targetY: ty,
+      targetPosition: targetPos,
+      borderRadius: 0,
+      offset: 0,
+    });
+    return [p, lx, ly] as const;
   }, [routing, sx0, sy0, tx0, ty0, sourcePos, targetPos, strokeW]);
 
   const stroke = selected ? EDGE_STROKE_SELECTED : EDGE_STROKE;

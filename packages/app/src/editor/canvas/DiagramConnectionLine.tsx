@@ -1,17 +1,12 @@
 import type { ConnectionLineComponentProps } from "@xyflow/react";
+import { getSmoothStepPath } from "@xyflow/react";
 import { memo, useMemo } from "react";
-import {
-  clampedInsetEndpoints,
-  computeEdgeInsetPx,
-  computeOrthogonalStubPx,
-  orthogonalStubPath,
-} from "./edges/edgeHandleInset.js";
+import { clampedInsetEndpoints, computeEdgeInsetPx } from "./edges/edgeHandleInset.js";
 
 const CONNECTION_PREVIEW_INSET = computeEdgeInsetPx(2);
-const CONNECTION_PREVIEW_STUB = computeOrthogonalStubPx(2);
 
 /**
- * Connection preview uses the same sharp step routing as {@link DiagramEdge} (horizontal → vertical → horizontal),
+ * Connection preview uses the same step routing as {@link DiagramEdge} (`getSmoothStepPath`, sharp corners),
  * with the same handle outward inset when the target handle is known.
  */
 function DiagramConnectionLineInner(props: ConnectionLineComponentProps) {
@@ -28,15 +23,16 @@ function DiagramConnectionLineInner(props: ConnectionLineComponentProps) {
       CONNECTION_PREVIEW_INSET,
       targetInset,
     );
-    const { d } = orthogonalStubPath(
-      sx,
-      sy,
-      tx,
-      ty,
-      fromPosition,
-      toPosition,
-      CONNECTION_PREVIEW_STUB,
-    );
+    const [d] = getSmoothStepPath({
+      sourceX: sx,
+      sourceY: sy,
+      sourcePosition: fromPosition,
+      targetX: tx,
+      targetY: ty,
+      targetPosition: toPosition,
+      borderRadius: 0,
+      offset: 0,
+    });
     return { path: d, endX: tx, endY: ty };
   }, [fromX, fromY, toX, toY, fromPosition, toPosition, toHandle]);
   const ok = connectionStatus !== "invalid";

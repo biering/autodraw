@@ -17,8 +17,8 @@ export function ZoomDock() {
       cn(
         "fixed bottom-[max(16px,env(safe-area-inset-bottom,0px))] left-[max(16px,env(safe-area-inset-left,0px))] z-[75] flex flex-col overflow-hidden rounded-xl",
         isDarkCanvas
-          ? "border border-white/[0.14] bg-[rgba(255,255,255,0.12)]"
-          : "border border-black/[0.12] bg-[rgba(0,0,0,0.12)]",
+          ? "border border-white/[0.14] bg-[rgba(255,255,255,0.08)]"
+          : "border border-black/[0.12] bg-[rgba(0,0,0,0.02)]",
       ),
     [isDarkCanvas],
   );
