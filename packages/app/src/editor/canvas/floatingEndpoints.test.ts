@@ -62,7 +62,7 @@ describe("rectFloatingEndpoint", () => {
   it("falls back when centers coincide", () => {
     const r = rectFloatingEndpoint(50, 50, 100, 100, 50, 50);
     expect(r.position).toBe(Position.Right);
-    expect(r.x).toBe(50);
+    expect(r.x).toBe(100);
     expect(r.y).toBe(50);
   });
 });
@@ -98,5 +98,7 @@ describe("floatingEdgeGeometry", () => {
     );
     expect(g.sourcePosition).toBe(Position.Right);
     expect(g.targetPosition).toBe(Position.Left);
+    expect(g.sy).toBe(0);
+    expect(g.ty).toBe(80);
   });
 });

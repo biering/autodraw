@@ -2,9 +2,33 @@ import { Position } from "@xyflow/react";
 
 const EPS = 1e-9;
 
+function faceMidpoint(
+  cx: number,
+  cy: number,
+  w: number,
+  h: number,
+  position: Position,
+): { x: number; y: number } {
+  const hw = w / 2;
+  const hh = h / 2;
+  switch (position) {
+    case Position.Right:
+      return { x: cx + hw, y: cy };
+    case Position.Left:
+      return { x: cx - hw, y: cy };
+    case Position.Top:
+      return { x: cx, y: cy - hh };
+    case Position.Bottom:
+      return { x: cx, y: cy + hh };
+    default:
+      return { x: cx, y: cy };
+  }
+}
+
 /**
- * Ray from the center of rectangle A toward point B, intersected with A's axis-aligned bounds.
- * `position` is the side hit (for existing stub / bezier routing).
+ * Picks which side of rectangle A faces point B using a center-to-center ray (same as intersecting
+ * the ray with A's bounds), then returns the **midpoint** of that side so edges attach centered on
+ * each face (not along the diagonal toward B).
  */
 export function rectFloatingEndpoint(
   aCx: number,
@@ -18,18 +42,13 @@ export function rectFloatingEndpoint(
   const dy = bCy - aCy;
 
   if (Math.abs(dx) < EPS && Math.abs(dy) < EPS) {
-    return { x: aCx, y: aCy, position: Position.Right };
+    return { ...faceMidpoint(aCx, aCy, aW, aH, Position.Right), position: Position.Right };
   }
 
   const halfW = aW / 2;
   const halfH = aH / 2;
   const scaleX = Math.abs(dx) < EPS ? Number.POSITIVE_INFINITY : halfW / Math.abs(dx);
   const scaleY = Math.abs(dy) < EPS ? Number.POSITIVE_INFINITY : halfH / Math.abs(dy);
-  const sRaw = Math.min(scaleX, scaleY);
-  const s = Math.min(1, sRaw * 0.999);
-
-  const x = aCx + dx * s;
-  const y = aCy + dy * s;
 
   let position: Position;
   if (scaleX < scaleY - EPS) {
@@ -45,7 +64,7 @@ export function rectFloatingEndpoint(
     }
   }
 
-  return { x, y, position };
+  return { ...faceMidpoint(aCx, aCy, aW, aH, position), position };
 }
 
 export function floatingEdgeGeometry(
