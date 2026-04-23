@@ -4,6 +4,7 @@ import { Link2 } from "lucide-react";
 import type { CSSProperties } from "react";
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
+  DIAGRAM_BODY_SOURCE_BUTTON_HANDLE,
   DIAGRAM_BODY_SOURCE_HANDLE,
   DIAGRAM_BODY_TARGET_HANDLE,
   type DiagramFlowNode,
@@ -33,14 +34,12 @@ function diagramNodePropsAreEqual(
 
 const NODE_TITLE_PLACEHOLDER = "Untitled Element";
 
-/** Legacy diagrams: keep ids so stored `sourceHandle` / `targetHandle` resolve in React Flow. */
-const LEGACY_HIDDEN_HANDLE: CSSProperties = {
-  width: 0,
-  height: 0,
-  opacity: 0,
-  pointerEvents: "none",
-};
-
+/**
+ * Full-body target handle sits **behind** the node body so pointerdowns on the visible body start
+ * a React Flow node drag; RF's drop hit-test still finds the target through the opaque body.
+ * A full-body **source** handle stays mounted for edge anchoring only (`pointerEvents: "none"` so it
+ * never steals drags). The visible Link2 button is a second source handle for drag-to-connect.
+ */
 const BODY_HANDLE_BASE: CSSProperties = {
   width: "100%",
   height: "100%",
@@ -51,6 +50,7 @@ const BODY_HANDLE_BASE: CSSProperties = {
   top: 0,
   left: 0,
   position: "absolute",
+  pointerEvents: "auto",
 };
 
 function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
@@ -172,23 +172,25 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
         startEditing();
       }}
     >
-      {/* Legacy cardinal handles (zero-size) so old diagrams keep valid handle ids. */}
-      <Handle id="tgt" type="target" position={Position.Left} style={LEGACY_HIDDEN_HANDLE} />
-      <Handle id="tgt-top" type="target" position={Position.Top} style={LEGACY_HIDDEN_HANDLE} />
-      <Handle id="tgt-bottom" type="target" position={Position.Bottom} style={LEGACY_HIDDEN_HANDLE} />
-      <Handle id="src-top" type="source" position={Position.Top} style={LEGACY_HIDDEN_HANDLE} />
-      <Handle id="src-bottom" type="source" position={Position.Bottom} style={LEGACY_HIDDEN_HANDLE} />
-      <Handle id="src" type="source" position={Position.Right} style={LEGACY_HIDDEN_HANDLE} />
-
+      {/*
+       * Target handle fills the node so dropping a connection anywhere on the node is accepted.
+       * React Flow's drop hit-test finds the handle through the opaque body above it.
+       */}
       <Handle
         id={DIAGRAM_BODY_TARGET_HANDLE}
         type="target"
+        position={Position.Left}
+        style={{ ...BODY_HANDLE_BASE, zIndex: 0 }}
+      />
+      {/*
+       * Always-mounted source anchor so edges render when this node is not selected (RF needs a
+       * source Handle in the DOM). Not interactive — Link2 is the connect affordance.
+       */}
+      <Handle
+        id={DIAGRAM_BODY_SOURCE_HANDLE}
+        type="source"
         position={Position.Right}
-        style={{
-          ...BODY_HANDLE_BASE,
-          zIndex: 1,
-          pointerEvents: "none",
-        }}
+        style={{ ...BODY_HANDLE_BASE, zIndex: 0, pointerEvents: "none" }}
       />
 
       <div style={sx}>
@@ -226,7 +228,7 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
 
       {selected && !isEditing ? (
         <Handle
-          id={DIAGRAM_BODY_SOURCE_HANDLE}
+          id={DIAGRAM_BODY_SOURCE_BUTTON_HANDLE}
           type="source"
           position={Position.Right}
           title="Drag to connect"

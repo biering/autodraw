@@ -156,10 +156,10 @@
         "head": {
           "description": "Arrow head",
           "name": "head",
-          "default": "arrowOpen",
+          "default": "lineArrow",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": ["none", "arrowOpen", "arrowFilled", "arrowDouble", "square"],
+          "options": ["none", "lineArrow", "triangleArrow", "triangleReversed", "circle", "diamond"],
           "type": "option"
         },
         "label": {

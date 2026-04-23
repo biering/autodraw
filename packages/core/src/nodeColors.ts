@@ -1,10 +1,8 @@
-import { NODE_BACKGROUND_FILL_OPACITY } from "./palettes.js";
 import type { NodeStyleDefinition } from "./schema.js";
 
 /**
- * Strokes at full alpha read much heavier than node bodies, which use
- * {@link NODE_BACKGROUND_FILL_OPACITY}. Canvas and SVG apply this factor to stroke alpha
- * so borders stay in the same visual weight class as the wash fill.
+ * Strokes at full alpha read much heavier than node bodies at full opacity.
+ * Canvas and SVG scale stroke alpha by this factor so borders stay visually balanced.
  */
 export const NODE_STROKE_ALPHA_MULTIPLIER = 0.5;
 
@@ -35,9 +33,64 @@ export type NodeBodyStrokeChannels = Pick<
   "strokeRed" | "strokeGreen" | "strokeBlue" | "strokeAlpha"
 >;
 
-/** Canvas / HTML: single `rgba()` string for the translucent node body. */
-export function resolvedNodeBodyFillRgba(style: NodeBodyFillChannels): string {
-  return rgbaFromLinearRgb(style.fillRed, style.fillGreen, style.fillBlue, NODE_BACKGROUND_FILL_OPACITY);
+/** Editor canvas background mode for node chrome (diagram surface only). */
+export type NodeCanvasTheme = "light" | "dark";
+
+/** Light canvas: mix body fill toward white so borders (same hue, ~50% alpha) read as edges, not duplicate fills. */
+const LIGHT_FILL_MIX = 0.46;
+
+const DARK_FILL_MIX = 0.56;
+const DARK_FILL_ANCHOR_R = 0.1;
+const DARK_FILL_ANCHOR_G = 0.1;
+const DARK_FILL_ANCHOR_B = 0.12;
+
+function blendFillForLightCanvas(r: number, g: number, b: number): { r: number; g: number; b: number } {
+  const w = LIGHT_FILL_MIX;
+  return {
+    r: r * (1 - w) + w,
+    g: g * (1 - w) + w,
+    b: b * (1 - w) + w,
+  };
+}
+
+function blendFillForDarkCanvas(r: number, g: number, b: number): { r: number; g: number; b: number } {
+  const w = DARK_FILL_MIX;
+  return {
+    r: r * (1 - w) + DARK_FILL_ANCHOR_R * w,
+    g: g * (1 - w) + DARK_FILL_ANCHOR_G * w,
+    b: b * (1 - w) + DARK_FILL_ANCHOR_B * w,
+  };
+}
+
+function liftStrokeForDarkCanvas(style: NodeBodyStrokeChannels): { r: number; g: number; b: number } {
+  const lift = 0.44;
+  return {
+    r: Math.min(1, style.strokeRed * (1 - lift) + lift),
+    g: Math.min(1, style.strokeGreen * (1 - lift) + lift),
+    b: Math.min(1, style.strokeBlue * (1 - lift) + lift),
+  };
+}
+
+/**
+ * Canvas / HTML: opaque CSS `rgb()` for the node body (no alpha channel).
+ * Ignores {@link NodeStyleDefinition.fillAlpha}; bodies are always fully opaque.
+ */
+export function resolvedNodeBodyFillRgba(style: NodeBodyFillChannels, _styleId?: string): string {
+  return rgbFromLinearRgb(style.fillRed, style.fillGreen, style.fillBlue);
+}
+
+/** Node body fill for the editor canvas; dark theme uses muted card fills. */
+export function resolvedNodeBodyFillForCanvas(
+  style: NodeBodyFillChannels,
+  styleId: string | undefined,
+  theme: NodeCanvasTheme,
+): string {
+  if (theme === "light") {
+    const m = blendFillForLightCanvas(style.fillRed, style.fillGreen, style.fillBlue);
+    return rgbFromLinearRgb(m.r, m.g, m.b);
+  }
+  const m = blendFillForDarkCanvas(style.fillRed, style.fillGreen, style.fillBlue);
+  return rgbFromLinearRgb(m.r, m.g, m.b);
 }
 
 /** Canvas / HTML: single `rgba()` string for the node border. */
@@ -50,14 +103,27 @@ export function resolvedNodeBodyStrokeRgba(style: NodeBodyStrokeChannels): strin
   );
 }
 
+/** Node border for the editor canvas; dark theme lifts stroke for contrast on dark fills. */
+export function resolvedNodeBodyStrokeForCanvas(
+  style: NodeBodyStrokeChannels,
+  theme: NodeCanvasTheme,
+): string {
+  if (theme === "light") {
+    return resolvedNodeBodyStrokeRgba(style);
+  }
+  const u = liftStrokeForDarkCanvas(style);
+  const a = Math.min(0.92, effectiveNodeStrokeAlpha(style.strokeAlpha) * 1.75);
+  return rgbaFromLinearRgb(u.r, u.g, u.b, a);
+}
+
 /** SVG uses `fill` + `fill-opacity` / `stroke` + `stroke-opacity` (no alpha in rgb()). */
-export function resolvedNodeSvgFillParts(style: NodeBodyFillChannels): {
+export function resolvedNodeSvgFillParts(style: NodeBodyFillChannels, _styleId?: string): {
   fillRgb: string;
   fillOpacity: number;
 } {
   return {
     fillRgb: rgbFromLinearRgb(style.fillRed, style.fillGreen, style.fillBlue),
-    fillOpacity: NODE_BACKGROUND_FILL_OPACITY,
+    fillOpacity: 1,
   };
 }
 
@@ -72,11 +138,10 @@ export function resolvedNodeSvgStrokeParts(style: NodeBodyStrokeChannels): {
 }
 
 /** When `styleId` does not resolve; matches previous `#eee` / `#444` fallbacks. */
-export const FALLBACK_NODE_BODY_FILL_RGBA = rgbaFromLinearRgb(
+export const FALLBACK_NODE_BODY_FILL_RGBA = rgbFromLinearRgb(
   238 / BYTE,
   238 / BYTE,
   238 / BYTE,
-  NODE_BACKGROUND_FILL_OPACITY,
 );
 
 export const FALLBACK_NODE_BODY_STROKE_RGBA = rgbaFromLinearRgb(
@@ -85,3 +150,7 @@ export const FALLBACK_NODE_BODY_STROKE_RGBA = rgbaFromLinearRgb(
   0x44 / BYTE,
   1,
 );
+
+export const FALLBACK_NODE_BODY_FILL_DARK = rgbFromLinearRgb(0.15, 0.15, 0.17);
+
+export const FALLBACK_NODE_BODY_STROKE_DARK = rgbaFromLinearRgb(0.58, 0.6, 0.66, 0.9);

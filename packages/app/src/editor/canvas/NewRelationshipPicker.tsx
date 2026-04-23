@@ -1,202 +1,173 @@
-import { relationshipPresets } from "@agentsdraw/core";
+import type { EdgeHead } from "@agentsdraw/core";
+import { ChevronDown } from "lucide-react";
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-function PresetThumb({ index }: { index: number }) {
+/** Options shown in the marker dropdown, in display order. `none` stays first for “no marker”. */
+export const EDGE_MARKER_OPTIONS: readonly EdgeHead[] = [
+  "none",
+  "lineArrow",
+  "triangleArrow",
+  "triangleReversed",
+  "circle",
+  "diamond",
+];
+
+/** Menu + button labels for each marker kind. */
+const EDGE_MARKER_LABELS: Record<EdgeHead, string> = {
+  none: "No marker",
+  lineArrow: "Line arrow",
+  triangleArrow: "Triangle arrow",
+  triangleReversed: "Reversed triangle",
+  circle: "Circle",
+  diamond: "Diamond",
+};
+
+type MarkerRole = "start" | "end";
+
+/**
+ * Short line + large marker preview. Mirrored for `role === "start"` so the head sits on the
+ * left-hand side, matching how the marker will render at the start of an edge.
+ */
+function MarkerGlyph({ kind, role }: { kind: EdgeHead; role: MarkerRole }) {
   const stroke = "currentColor";
-  const dash =
-    index === 4 || index === 5 || index === 6 ? "4 3" : index === 7 ? "1.5 3" : undefined;
-  const sw = index === 2 ? 2.2 : 1.2;
-  const headOpen = (
+  const sw = 1.75;
+  const cy = 14;
+  const tipX = role === "end" ? 44 : 8;
+  const flip = role === "start" ? -1 : 1;
+
+  const lineFrom = role === "end" ? 10 : 42;
+  const lineTo = role === "end" ? 30 : 22;
+  const line = (
     <path
-      d="M 52 28 L 46 24 M 52 28 L 46 32"
+      d={role === "end" ? `M ${lineFrom} ${cy} H ${lineTo}` : `M ${lineTo} ${cy} H ${lineFrom}`}
       fill="none"
       stroke={stroke}
-      strokeWidth={1.2}
+      strokeWidth={sw}
       strokeLinecap="round"
     />
   );
-  const headFilled = <path d="M 52 28 L 46 24 L 46 32 Z" fill={stroke} stroke="none" />;
-  const headSquare = (
-    <rect x="45" y="24" width="6" height="8" fill="none" stroke={stroke} strokeWidth={1.1} />
-  );
-  const tailSquare = (
-    <rect x="10" y="24" width="7" height="8" fill="none" stroke={stroke} strokeWidth={1.1} />
-  );
-  const pathElbow = (
+
+  const lineArrow = (
     <path
-      d="M 14 28 H 34 V 28 H 46"
+      d={`M ${tipX - 9 * flip} ${cy - 5.5} L ${tipX} ${cy} L ${tipX - 9 * flip} ${cy + 5.5}`}
       fill="none"
       stroke={stroke}
       strokeWidth={sw}
       strokeLinecap="round"
       strokeLinejoin="round"
-      strokeDasharray={dash}
     />
   );
-  const pathStraight = (
-    <path
-      d="M 14 28 H 50"
+
+  const triangleArrow = (
+    <polygon
+      points={`${tipX},${cy} ${tipX - 10 * flip},${cy - 6.5} ${tipX - 10 * flip},${cy + 6.5}`}
       fill="none"
       stroke={stroke}
       strokeWidth={sw}
-      strokeLinecap="round"
-      strokeDasharray={dash}
+      strokeLinejoin="round"
     />
   );
 
-  switch (index) {
-    case 0:
-      return (
-        <svg width="64" height="40" viewBox="0 0 64 40" aria-hidden>
-          {pathStraight}
-          {headOpen}
-          <text x="8" y="14" fontSize="7" fill="currentColor" opacity={0.55}>
-            Aa
-          </text>
-        </svg>
-      );
-    case 1:
-      return (
-        <svg width="64" height="40" viewBox="0 0 64 40" aria-hidden>
-          {pathElbow}
-          {headOpen}
-          <text x="8" y="14" fontSize="7" fill="currentColor" opacity={0.55}>
-            Aa
-          </text>
-        </svg>
-      );
-    case 2:
-      return (
-        <svg width="64" height="40" viewBox="0 0 64 40" aria-hidden>
-          {pathElbow}
-          {headOpen}
-          <text x="8" y="14" fontSize="7" fill="currentColor" opacity={0.55}>
-            Aa
-          </text>
-        </svg>
-      );
-    case 3:
-      return (
-        <svg width="64" height="40" viewBox="0 0 64 40" aria-hidden>
-          <path
-            d="M 14 28 H 34 V 28 H 44"
-            fill="none"
-            stroke={stroke}
-            strokeWidth={1.2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M 44 28 L 50 24 M 44 28 L 50 32"
-            fill="none"
-            stroke={stroke}
-            strokeWidth={1.2}
-            strokeLinecap="round"
-          />
-          <path
-            d="M 44 28 L 38 24 M 44 28 L 38 32"
-            fill="none"
-            stroke={stroke}
-            strokeWidth={1.2}
-            strokeLinecap="round"
-          />
-          <text x="8" y="14" fontSize="7" fill="currentColor" opacity={0.55}>
-            Aa
-          </text>
-        </svg>
-      );
-    case 4:
-      return (
-        <svg width="64" height="40" viewBox="0 0 64 40" aria-hidden>
-          {pathElbow}
-          {headOpen}
-          <text x="8" y="14" fontSize="7" fill="currentColor" opacity={0.55}>
-            Aa
-          </text>
-        </svg>
-      );
-    case 5:
-      return (
-        <svg width="64" height="40" viewBox="0 0 64 40" aria-hidden>
-          {tailSquare}
-          {pathElbow}
-          {headOpen}
-          <text x="8" y="14" fontSize="7" fill="currentColor" opacity={0.55}>
-            Aa
-          </text>
-        </svg>
-      );
-    case 6:
-      return (
-        <svg width="64" height="40" viewBox="0 0 64 40" aria-hidden>
-          {pathElbow}
-          {headSquare}
-          <text x="8" y="14" fontSize="7" fill="currentColor" opacity={0.55}>
-            Aa
-          </text>
-        </svg>
-      );
-    case 7:
-      return (
-        <svg width="64" height="40" viewBox="0 0 64 40" aria-hidden>
-          {pathElbow}
-          {headOpen}
-          <text x="8" y="14" fontSize="7" fill="currentColor" opacity={0.55}>
-            Aa
-          </text>
-        </svg>
-      );
-    default:
-      return (
-        <svg width="64" height="40" viewBox="0 0 64 40" aria-hidden>
-          {pathElbow}
-          {headFilled}
-        </svg>
-      );
-  }
+  const triangleReversed = (
+    <polygon
+      points={`${tipX - 10 * flip},${cy} ${tipX},${cy - 6.5} ${tipX},${cy + 6.5}`}
+      fill="none"
+      stroke={stroke}
+      strokeWidth={sw}
+      strokeLinejoin="round"
+    />
+  );
+
+  const circleR = 5;
+  const circleCx = tipX - circleR * flip;
+  const circleGlyph = (
+    <circle cx={circleCx} cy={cy} r={circleR} fill="none" stroke={stroke} strokeWidth={sw} />
+  );
+
+  const dSide = 5.5;
+  const diamondCx = tipX - dSide * flip;
+  const diamondGlyph = (
+    <polygon
+      points={`${tipX},${cy} ${diamondCx},${cy - dSide} ${diamondCx - dSide * flip},${cy} ${diamondCx},${cy + dSide}`}
+      fill="none"
+      stroke={stroke}
+      strokeWidth={sw}
+      strokeLinejoin="round"
+    />
+  );
+
+  return (
+    <svg width="52" height="26" viewBox="0 0 52 28" aria-hidden className="shrink-0">
+      {line}
+      {kind === "lineArrow" ? lineArrow : null}
+      {kind === "triangleArrow" ? triangleArrow : null}
+      {kind === "triangleReversed" ? triangleReversed : null}
+      {kind === "circle" ? circleGlyph : null}
+      {kind === "diamond" ? diamondGlyph : null}
+    </svg>
+  );
 }
 
-export type RelationshipPresetGridProps = {
-  onPick: (presetIndex: number) => void;
-  /** When set, highlights the active preset (e.g. selected edge). */
-  activePresetIndex?: number | null;
+export type EdgeMarkerDropdownProps = {
+  role: MarkerRole;
+  value: EdgeHead;
+  onChange: (next: EdgeHead) => void;
+  /** Optional short heading shown above the trigger (e.g. “Start marker”). */
+  label?: string;
 };
 
-/** Light tile so line previews stay visible (app `:root` tokens are dark). */
-const presetButtonClass = cn(
-  "min-h-14 min-w-[4.5rem] flex-col rounded-lg border-zinc-200/90 bg-zinc-50 px-1 py-2 font-normal text-zinc-900 shadow-sm",
-  "hover:bg-zinc-100 hover:text-zinc-950",
-  "[&_svg]:pointer-events-auto [&_svg]:size-auto [&_svg]:h-auto [&_svg]:w-auto [&_svg]:max-w-none [&_svg]:shrink-0",
-);
-
-/** Centered preset thumbnails for relationship styling (new edge or edit existing). */
-function RelationshipPresetGridInner({ onPick, activePresetIndex }: RelationshipPresetGridProps) {
+/**
+ * Single-column shadcn dropdown listing all marker options. The trigger displays the current
+ * marker's glyph + label with a caret, mirroring the “+ New”-style menu from the design.
+ */
+function EdgeMarkerDropdownInner({ role, value, onChange, label }: EdgeMarkerDropdownProps) {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2">
-      {relationshipPresets.map((presetId, idx) => {
-        const isActive = activePresetIndex != null && activePresetIndex === idx;
-        return (
+    <div className="flex flex-col gap-1 px-2 pb-2">
+      {label ? (
+        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </span>
+      ) : null}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button
-            key={presetId}
             type="button"
             variant="outline"
-            title={presetId}
-            aria-pressed={isActive}
-            className={cn(
-              presetButtonClass,
-              isActive &&
-                "border-primary bg-sky-50 text-zinc-950 ring-2 ring-primary/50 ring-offset-2 ring-offset-zinc-50",
-            )}
-            onClick={() => onPick(idx)}
+            className="h-9 w-full justify-between gap-2 px-2"
           >
-            <PresetThumb index={idx} />
+            <span className="flex items-center gap-2">
+              <MarkerGlyph kind={value} role={role} />
+              <span className="text-sm">{EDGE_MARKER_LABELS[value]}</span>
+            </span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </Button>
-        );
-      })}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="min-w-[14rem] p-1">
+          {EDGE_MARKER_OPTIONS.map((kind) => {
+            const active = value === kind;
+            return (
+              <DropdownMenuItem
+                key={kind}
+                onSelect={() => onChange(kind)}
+                className={cn("gap-2 px-2 py-1.5", active && "bg-accent")}
+              >
+                <MarkerGlyph kind={kind} role={role} />
+                <span>{EDGE_MARKER_LABELS[kind]}</span>
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
 
-export const RelationshipPresetGrid = memo(RelationshipPresetGridInner);
+export const EdgeMarkerDropdown = memo(EdgeMarkerDropdownInner);

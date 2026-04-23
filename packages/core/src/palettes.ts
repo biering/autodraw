@@ -39,7 +39,7 @@ function styleFromHex(
 
 /**
  * Primary node fills (editor + export): the five brand hexes on yellow/orange/green/blue/purple;
- * `red` / `pink` reuse coral and purple so legacy `styleId`s stay valid. Strokes match fills.
+ * `red` / `pink` reuse coral and purple for older `styleId` values. Strokes match fills.
  */
 const universal: NodeStyleDefinition[] = [
   styleFromHex("yellow", "#F0EC57"),
@@ -47,15 +47,7 @@ const universal: NodeStyleDefinition[] = [
   styleFromHex("pink", "#6A66A3"),
   styleFromHex("blue", "#32908F"),
   styleFromHex("green", "#26C485"),
-  style("gray", [0.92, 0.92, 0.92, 1], [0.45, 0.45, 0.48, 1], "roundedRect"),
-  style("shape_rect", [1, 1, 1, 1], [0.35, 0.35, 0.38, 1], "rectangle"),
-  style("shape_rounded", [1, 1, 1, 1], [0.35, 0.35, 0.38, 1], "roundedRect"),
-  style("shape_oval", [1, 1, 1, 1], [0.35, 0.35, 0.38, 1], "oval"),
-  style("shape_circle", [1, 1, 1, 1], [0.35, 0.35, 0.38, 1], "circle"),
-  style("shape_diamond", [1, 1, 1, 1], [0.35, 0.35, 0.38, 1], "diamond"),
-  style("shape_hex", [1, 1, 1, 1], [0.35, 0.35, 0.38, 1], "hexagon"),
-  style("shape_oct", [1, 1, 1, 1], [0.35, 0.35, 0.38, 1], "octagon"),
-  style("shape_para", [1, 1, 1, 1], [0.35, 0.35, 0.38, 1], "parallelogram"),
+  style("gray", [0.82, 0.82, 0.84, 1], [0.45, 0.45, 0.48, 1], "roundedRect"),
 ];
 
 function toGray(s: NodeStyleDefinition): NodeStyleDefinition {
@@ -132,7 +124,7 @@ export function applyRelationshipPreset(
         ...base,
         routing: "straight",
         dash: "solid",
-        head: "arrowOpen",
+        head: "lineArrow",
         tail: "none",
         strokeWidth: 1,
       };
@@ -141,7 +133,7 @@ export function applyRelationshipPreset(
         ...base,
         routing: "orthogonal",
         dash: "solid",
-        head: "arrowOpen",
+        head: "lineArrow",
         tail: "none",
         strokeWidth: 1,
       };
@@ -150,7 +142,7 @@ export function applyRelationshipPreset(
         ...base,
         routing: "orthogonal",
         dash: "solid",
-        head: "arrowOpen",
+        head: "lineArrow",
         tail: "none",
         strokeWidth: 2.5,
       };
@@ -159,8 +151,8 @@ export function applyRelationshipPreset(
         ...base,
         routing: "orthogonal",
         dash: "solid",
-        head: "arrowDouble",
-        tail: "arrowOpen",
+        head: "triangleArrow",
+        tail: "lineArrow",
         strokeWidth: 1,
       };
     case 4:
@@ -168,7 +160,7 @@ export function applyRelationshipPreset(
         ...base,
         routing: "orthogonal",
         dash: "dashed",
-        head: "arrowOpen",
+        head: "lineArrow",
         tail: "none",
         strokeWidth: 1,
       };
@@ -177,8 +169,8 @@ export function applyRelationshipPreset(
         ...base,
         routing: "orthogonal",
         dash: "dashed",
-        head: "arrowOpen",
-        tail: "square",
+        head: "lineArrow",
+        tail: "diamond",
         strokeWidth: 1,
       };
     case 6:
@@ -186,7 +178,7 @@ export function applyRelationshipPreset(
         ...base,
         routing: "orthogonal",
         dash: "dashed",
-        head: "square",
+        head: "diamond",
         tail: "none",
         strokeWidth: 1,
       };
@@ -195,7 +187,7 @@ export function applyRelationshipPreset(
         ...base,
         routing: "orthogonal",
         dash: "dotted",
-        head: "arrowOpen",
+        head: "lineArrow",
         tail: "none",
         strokeWidth: 1,
       };
@@ -204,7 +196,7 @@ export function applyRelationshipPreset(
         ...base,
         routing: "orthogonal",
         dash: "solid",
-        head: "arrowOpen",
+        head: "lineArrow",
         tail: "none",
         strokeWidth: 1,
       };
@@ -222,5 +214,3 @@ export function styleById(
   return resolvedStyles(diagram).find((s) => s.id === id);
 }
 
-/** Fill opacity (0–1) for node bodies on canvas and in `renderSVG` exports. */
-export const NODE_BACKGROUND_FILL_OPACITY = 0.12;

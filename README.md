@@ -26,7 +26,7 @@ JSON on disk:
       "from": "n1",
       "to": "n2",
       "routing": "orthogonal",
-      "head": "arrowOpen",
+      "head": "lineArrow",
       "dash": "solid",
       "tail": "none",
       "label": "",

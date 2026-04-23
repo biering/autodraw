@@ -1,15 +1,29 @@
 import type { EdgeHead } from "@agentsdraw/core";
+import { Position } from "@xyflow/react";
 import { memo } from "react";
 
 /**
  * Custom SVG markers for diagram edges. React Flow resolves built-in heads via
  * {@link https://reactflow.dev/api-reference/types/marker-type MarkerType} on {@link EdgeMarker};
- * we render equivalent (and extended) shapes here so `arrowDouble` and `square` match our domain model.
+ * we render our full marker vocabulary here so every {@link EdgeHead} variant has a matching symbol.
+ *
+ * Markers use explicit `orient` angles from handle sides (not `orient="auto"`), because step paths
+ * can end with degenerate segments that yield a wrong tangent.
  *
  * @see https://reactflow.dev/learn/troubleshooting/migrate-to-v10#9-arrowheadtype---markertype
  */
 
 const VB = "-10 -10 24 24";
+
+/** Degrees: outward normal from the node for this handle side; `role` flips for markerEnd (into node). */
+function markerAngle(side: Position, role: "start" | "end"): number {
+  const out =
+    side === Position.Right ? 0
+    : side === Position.Left ? 180
+    : side === Position.Top ? -90
+    : 90;
+  return role === "start" ? out : out + 180;
+}
 
 function safeMarkerFragment(edgeId: string): string {
   return edgeId.replace(/[^a-zA-Z0-9_-]/g, "_");
@@ -48,8 +62,17 @@ type Props = {
   stroke: string;
   /** Line width the edge path uses; marker strokes scale slightly with it. */
   strokeWidth: number;
+  /** Handle side at source (outward normal); drives markerStart away from source. */
+  startSide?: Position;
+  /** Handle side at target (outward normal); drives markerEnd into target. */
+  endSide?: Position;
 };
 
+/**
+ * Render-time marker symbols for the canvas (React Flow `<defs>`). All shapes are centered on
+ * the origin (viewBox `-10 -10 24 24`) with the tip at `x=0`, `y=0`, pointing to the right
+ * (i.e. into the target node for `markerEnd`).
+ */
 function HeadSymbol({
   kind,
   stroke,
@@ -61,7 +84,7 @@ function HeadSymbol({
 }) {
   const sw = Math.max(1, Math.min(2.25, strokeWidth * 0.65));
   switch (kind) {
-    case "arrowOpen":
+    case "lineArrow":
       return (
         <polyline
           points="-7,-4.25 0,0 -7,4.25"
@@ -72,32 +95,45 @@ function HeadSymbol({
           strokeLinejoin="round"
         />
       );
-    case "arrowFilled":
-      return <polygon points="1.25,0 -8.25,-5 -8.25,5" fill={stroke} stroke="none" />;
-    case "arrowDouble":
+    case "triangleArrow":
       return (
-        <g
+        <polygon
+          points="0,0 -8.25,-5 -8.25,5"
+          fill="none"
           stroke={stroke}
           strokeWidth={sw}
-          strokeLinecap="round"
           strokeLinejoin="round"
-          fill="none"
-        >
-          <polyline points="-11,-3.5 -5,0 -11,3.5" />
-          <polyline points="-5,-4.25 2,0 -5,4.25" />
-        </g>
+        />
       );
-    case "square":
+    case "triangleReversed":
       return (
-        <rect
-          x="-7.5"
-          y="-4.5"
-          width="9"
-          height="9"
-          rx="0.75"
+        <polygon
+          points="-8.25,0 0,-5 0,5"
           fill="none"
           stroke={stroke}
-          strokeWidth={sw * 0.95}
+          strokeWidth={sw}
+          strokeLinejoin="round"
+        />
+      );
+    case "circle":
+      return (
+        <circle
+          cx="-4.5"
+          cy="0"
+          r="3.75"
+          fill="none"
+          stroke={stroke}
+          strokeWidth={sw}
+        />
+      );
+    case "diamond":
+      return (
+        <polygon
+          points="0,0 -5,-4.25 -10,0 -5,4.25"
+          fill="none"
+          stroke={stroke}
+          strokeWidth={sw}
+          strokeLinejoin="round"
         />
       );
     default:
@@ -105,15 +141,17 @@ function HeadSymbol({
   }
 }
 
-function EdgeMarkerDefsInner({ edgeId, head, tail, stroke, strokeWidth }: Props) {
+function EdgeMarkerDefsInner({ edgeId, head, tail, stroke, strokeWidth, startSide, endSide }: Props) {
   const endId = diagramMarkerEndId(edgeId);
   const startId = diagramMarkerStartId(edgeId);
   const showEnd = head !== "none";
   const showStart = tail && tail !== "none";
   if (!showEnd && !showStart) return null;
 
-  const markerProps = {
-    orient: "auto" as const,
+  const endOrient = endSide !== undefined ? markerAngle(endSide, "end") : "auto";
+  const startOrient = startSide !== undefined ? markerAngle(startSide, "start") : "auto";
+
+  const markerPropsBase = {
     markerUnits: "userSpaceOnUse" as const,
     refX: 0,
     refY: 0,
@@ -126,12 +164,12 @@ function EdgeMarkerDefsInner({ edgeId, head, tail, stroke, strokeWidth }: Props)
     <svg style={{ position: "absolute", width: 0, height: 0 }} aria-hidden>
       <defs>
         {showEnd ? (
-          <marker id={endId} {...markerProps}>
+          <marker id={endId} {...markerPropsBase} orient={endOrient}>
             <HeadSymbol kind={head} stroke={stroke} strokeWidth={strokeWidth} />
           </marker>
         ) : null}
         {showStart && tail ? (
-          <marker id={startId} {...markerProps}>
+          <marker id={startId} {...markerPropsBase} orient={startOrient}>
             <HeadSymbol kind={tail} stroke={stroke} strokeWidth={strokeWidth} />
           </marker>
         ) : null}

@@ -34,7 +34,7 @@ function baseEdge(over: Partial<EdgeRecord> & Pick<EdgeRecord, "id" | "from" | "
     to,
     routing: "orthogonal",
     dash: "solid",
-    head: "arrowOpen",
+    head: "lineArrow",
     tail: "none",
     label: "",
     strokeWidth: 2,
@@ -53,29 +53,14 @@ function diagramWith(edge: EdgeRecord): DiagramV1 {
 }
 
 describe("normalizeDiagramConnectionHandle", () => {
-  it("maps null, undefined, and empty string to undefined", () => {
+  it("returns undefined for every handle id (edges always attach to the node body)", () => {
     expect(normalizeDiagramConnectionHandle(undefined, "source")).toBeUndefined();
-    expect(normalizeDiagramConnectionHandle(undefined, "target")).toBeUndefined();
-    expect(normalizeDiagramConnectionHandle(null, "source")).toBeUndefined();
-    expect(normalizeDiagramConnectionHandle("", "target")).toBeUndefined();
-  });
-
-  it("strips full-body handle ids for the matching role", () => {
+    expect(normalizeDiagramConnectionHandle(null, "target")).toBeUndefined();
+    expect(normalizeDiagramConnectionHandle("", "source")).toBeUndefined();
     expect(normalizeDiagramConnectionHandle(DIAGRAM_BODY_SOURCE_HANDLE, "source")).toBeUndefined();
     expect(normalizeDiagramConnectionHandle(DIAGRAM_BODY_TARGET_HANDLE, "target")).toBeUndefined();
-  });
-
-  it("does not strip body target id when passed as source (invalid RF combo)", () => {
-    expect(normalizeDiagramConnectionHandle(DIAGRAM_BODY_TARGET_HANDLE, "source")).toBe(
-      DIAGRAM_BODY_TARGET_HANDLE,
-    );
-  });
-
-  it("preserves legacy cardinal and side handle ids", () => {
-    expect(normalizeDiagramConnectionHandle("src", "source")).toBe("src");
-    expect(normalizeDiagramConnectionHandle("tgt", "target")).toBe("tgt");
-    expect(normalizeDiagramConnectionHandle("src-top", "source")).toBe("src-top");
-    expect(normalizeDiagramConnectionHandle("tgt-bottom", "target")).toBe("tgt-bottom");
+    expect(normalizeDiagramConnectionHandle("src-top", "source")).toBeUndefined();
+    expect(normalizeDiagramConnectionHandle("tgt-bottom", "target")).toBeUndefined();
   });
 });
 

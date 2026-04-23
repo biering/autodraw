@@ -33,8 +33,8 @@ export default class EdgeAdd extends Command {
     }),
     head: Flags.string({
       description: "Arrow head",
-      options: ["none", "arrowOpen", "arrowFilled", "arrowDouble", "square"],
-      default: "arrowOpen",
+      options: ["none", "lineArrow", "triangleArrow", "triangleReversed", "circle", "diamond"],
+      default: "lineArrow",
     }),
     label: Flags.string({ description: "Edge label", default: "" }),
     preset: Flags.integer({

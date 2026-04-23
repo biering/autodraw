@@ -24,11 +24,15 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { useShallow } from "zustand/react/shallow";
 import {
-  applyRelationshipPreset,
+  resolvedNodeBodyFillRgba,
+  resolvedNodeBodyStrokeRgba,
+  styleById,
   type DiagramV1,
   type EdgeDash,
+  type EdgeHead,
   type EdgeRouting,
   type NodeRecord,
+  type NodeShape,
 } from "@agentsdraw/core";
 import type { FinalConnectionState } from "@xyflow/system";
 import {
@@ -44,8 +48,9 @@ import { DiagramEdge } from "./edges/DiagramEdge.js";
 import { DiagramNode } from "./nodes/DiagramNode.js";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { creationMenuColors, creationMenuShapes } from "../creationMenuCatalog.js";
 import { MAX_VIEW_ZOOM, useDocument } from "../state/useDocument.js";
-import { RelationshipPresetGrid } from "./NewRelationshipPicker.js";
+import { EdgeMarkerDropdown } from "./NewRelationshipPicker.js";
 
 const nodeTypes = { diagram: DiagramNode } as unknown as NodeTypes;
 const edgeTypes = { diagram: DiagramEdge } as unknown as EdgeTypes;
@@ -118,6 +123,8 @@ const EDGE_SECTION =
   "px-2 pb-1 pt-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground";
 
 const EDGE_TOGGLE_ROW = "grid grid-cols-3 gap-1 px-2 pb-2";
+
+const NODE_SHAPE_TOGGLE_ROW = "grid grid-cols-2 gap-1 px-2 pb-2";
 
 const EDGE_TOGGLE =
   "rounded-md border border-border bg-background px-1.5 py-1.5 text-center text-[11px] font-medium text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -503,50 +510,10 @@ export function DiagramCanvas() {
         <Background gap={16} size={1.5} color={dotGridColor} />
       </ReactFlow>
       {relationshipDraft ? (
-        <>
-          <div
-            className="absolute inset-0 z-[55] bg-black/15 backdrop-blur-[1px]"
-            role="presentation"
-            aria-hidden
-            onMouseDown={() => setRelationshipDraft(null)}
-          />
-          <div
-            className="absolute left-1/2 top-1/2 z-[56] w-[min(520px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-popover p-4 text-popover-foreground shadow-lg"
-            role="dialog"
-            aria-labelledby="relationship-draft-title"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2
-                  id="relationship-draft-title"
-                  className="m-0 text-[15px] font-semibold tracking-tight"
-                >
-                  New relationship
-                </h2>
-                <p className="mt-1 max-w-xl text-xs leading-snug text-muted-foreground">
-                  Pick a line style. It is added between the two elements you connected.
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="shrink-0"
-                onClick={() => setRelationshipDraft(null)}
-              >
-                Cancel
-              </Button>
-            </div>
-            <div className="mt-3">
-              <RelationshipPresetGrid
-                onPick={(i) => {
-                  commitRelationshipDraft(i);
-                }}
-              />
-            </div>
-          </div>
-        </>
+        <RelationshipDraftDialog
+          onCancel={() => setRelationshipDraft(null)}
+          onCommit={(markers) => commitRelationshipDraft(markers)}
+        />
       ) : null}
       {menu ? (
         <div
@@ -628,6 +595,76 @@ export function DiagramCanvas() {
   );
 }
 
+function nodeEffectiveShape(diagram: DiagramV1, node: NodeRecord | undefined): NodeShape {
+  if (!node) return "roundedRect";
+  return node.shape ?? styleById(diagram, node.styleId)?.shape ?? "roundedRect";
+}
+
+/** Modal for a just-drawn connection: pick start/end markers before the edge is created. */
+function RelationshipDraftDialog({
+  onCancel,
+  onCommit,
+}: {
+  onCancel: () => void;
+  onCommit: (markers: { head: EdgeHead; tail: EdgeHead }) => void;
+}) {
+  const [tail, setTail] = useState<EdgeHead>("none");
+  const [head, setHead] = useState<EdgeHead>("lineArrow");
+
+  return (
+    <>
+      <div
+        className="absolute inset-0 z-[55] bg-black/15 backdrop-blur-[1px]"
+        role="presentation"
+        aria-hidden
+        onMouseDown={onCancel}
+      />
+      <div
+        className="absolute left-1/2 top-1/2 z-[56] w-[min(520px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-popover p-4 text-popover-foreground shadow-lg"
+        role="dialog"
+        aria-labelledby="relationship-draft-title"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2
+              id="relationship-draft-title"
+              className="m-0 text-[15px] font-semibold tracking-tight"
+            >
+              New relationship
+            </h2>
+            <p className="mt-1 max-w-xl text-xs leading-snug text-muted-foreground">
+              Pick start and end markers. The edge is added between the two elements you connected.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="shrink-0"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+        </div>
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:gap-4">
+          <div className="flex-1">
+            <EdgeMarkerDropdown role="start" value={tail} onChange={setTail} label="Start marker" />
+          </div>
+          <div className="flex-1">
+            <EdgeMarkerDropdown role="end" value={head} onChange={setHead} label="End marker" />
+          </div>
+        </div>
+        <div className="mt-3 flex justify-end">
+          <Button type="button" size="sm" onClick={() => onCommit({ head, tail })}>
+            Add relationship
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function NodeContextMenuInner({
   x,
   y,
@@ -640,9 +677,36 @@ function NodeContextMenuInner({
   onClose: () => void;
 }) {
   const rf = useReactFlow();
+  const diagram = useDocument(useShallow((s) => s.diagram));
+  const node = useDocument((s) => s.diagram.nodes.find((n) => n.id === nodeId));
+  const updateNode = useDocument((s) => s.updateNode);
   const removeNode = useDocument((s) => s.removeNode);
   const addNode = useDocument((s) => s.addNode);
   const setEditingNodeId = useDocument((s) => s.setEditingNodeId);
+
+  const colorStyles = useMemo(
+    () => creationMenuColors(diagram),
+    [diagram.palette, diagram.customStyles],
+  );
+
+  const effectiveShape = useMemo(
+    () => nodeEffectiveShape(diagram, node),
+    [diagram, node],
+  );
+
+  const setColor = useCallback(
+    (id: string) => {
+      updateNode(nodeId, { styleId: id });
+    },
+    [nodeId, updateNode],
+  );
+
+  const setShape = useCallback(
+    (sh: NodeShape) => {
+      updateNode(nodeId, { shape: sh });
+    },
+    [nodeId, updateNode],
+  );
 
   const clearFlowSelection = useCallback(() => {
     for (const n of rf.getNodes()) rf.updateNode(n.id, { selected: false });
@@ -765,18 +829,41 @@ function NodeContextMenuInner({
       style={{ left: x, top: y }}
       onMouseDown={(e) => e.stopPropagation()}
     >
-      <button type="button" className={CTX_ITEM} role="menuitem" disabled title="Coming soon">
-        <span className={CTX_ICON} aria-hidden>
-          <IconSetType />
-        </span>
-        Set Type…
-      </button>
-      <button type="button" className={CTX_ITEM} role="menuitem" disabled title="Coming soon">
-        <span className={CTX_ICON} aria-hidden>
-          <IconRevealPalette />
-        </span>
-        Reveal Type in Palette…
-      </button>
+      <div className={EDGE_SECTION}>Color</div>
+      <div className="grid grid-cols-6 gap-1 px-2 pb-2">
+        {colorStyles.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            title={s.id}
+            className={cn(
+              "h-7 rounded-md border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              node?.styleId === s.id && "ring-2 ring-primary",
+            )}
+            style={{
+              background: resolvedNodeBodyFillRgba(s, s.id),
+              borderColor: resolvedNodeBodyStrokeRgba(s),
+            }}
+            onClick={() => setColor(s.id)}
+          />
+        ))}
+      </div>
+      <div className={EDGE_SECTION}>Shape</div>
+      <div className={NODE_SHAPE_TOGGLE_ROW}>
+        {creationMenuShapes().map((sh) => (
+          <button
+            key={sh}
+            type="button"
+            className={cn(
+              EDGE_TOGGLE,
+              effectiveShape === sh && "border-primary bg-accent",
+            )}
+            onClick={() => setShape(sh)}
+          >
+            {sh === "roundedRect" ? "Rounded" : "Rectangle"}
+          </button>
+        ))}
+      </div>
       <div className={CTX_SEP} role="separator" />
       <button type="button" className={CTX_ITEM} role="menuitem" onClick={handleEditCaption}>
         <span className={CTX_ICON} aria-hidden>
@@ -854,21 +941,6 @@ function EdgeContextMenuInner({
     onClose();
   }, [removeEdge, edgeId, onClose]);
 
-  const applyPreset = useCallback(
-    (idx: number) => {
-      const st = applyRelationshipPreset(idx);
-      updateEdge(edgeId, {
-        routing: st.routing,
-        dash: st.dash,
-        head: st.head,
-        tail: st.tail,
-        strokeWidth: st.strokeWidth,
-        relationshipPreset: st.relationshipPreset,
-      });
-    },
-    [updateEdge, edgeId],
-  );
-
   const setRouting = useCallback(
     (routing: EdgeRouting) => {
       updateEdge(edgeId, { routing, relationshipPreset: undefined });
@@ -890,6 +962,20 @@ function EdgeContextMenuInner({
     [updateEdge, edgeId],
   );
 
+  const setHead = useCallback(
+    (head: EdgeHead) => {
+      updateEdge(edgeId, { head, relationshipPreset: undefined });
+    },
+    [updateEdge, edgeId],
+  );
+
+  const setTail = useCallback(
+    (tail: EdgeHead) => {
+      updateEdge(edgeId, { tail, relationshipPreset: undefined });
+    },
+    [updateEdge, edgeId],
+  );
+
   if (!edge) return null;
 
   const sw = edge.strokeWidth ?? 1;
@@ -902,13 +988,13 @@ function EdgeContextMenuInner({
       style={{ left: x, top: y }}
       onMouseDown={(e) => e.stopPropagation()}
     >
-      <div className={EDGE_SECTION}>Relationship look</div>
-      <div className="max-h-[220px] overflow-y-auto overflow-x-hidden px-1">
-        <RelationshipPresetGrid
-          activePresetIndex={edge.relationshipPreset ?? undefined}
-          onPick={applyPreset}
-        />
-      </div>
+      <EdgeMarkerDropdown
+        role="start"
+        value={edge.tail ?? "none"}
+        onChange={setTail}
+        label="Start marker"
+      />
+      <EdgeMarkerDropdown role="end" value={edge.head} onChange={setHead} label="End marker" />
       <div className={CTX_SEP} role="separator" />
       <div className={EDGE_SECTION}>Path</div>
       <div className={EDGE_TOGGLE_ROW}>
@@ -1061,57 +1147,6 @@ function IconZoom100() {
       >
         1
       </text>
-    </svg>
-  );
-}
-
-function IconSetType() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect x="3" y="3" width="10" height="10" rx="1" stroke="currentColor" strokeWidth="1.25" />
-    </svg>
-  );
-}
-
-function IconRevealPalette() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect
-        x="2.5"
-        y="2.5"
-        width="5"
-        height="5"
-        rx="0.75"
-        stroke="currentColor"
-        strokeWidth="1.1"
-      />
-      <rect
-        x="8.5"
-        y="2.5"
-        width="5"
-        height="5"
-        rx="0.75"
-        stroke="currentColor"
-        strokeWidth="1.1"
-      />
-      <rect
-        x="2.5"
-        y="8.5"
-        width="5"
-        height="5"
-        rx="0.75"
-        stroke="currentColor"
-        strokeWidth="1.1"
-      />
-      <rect
-        x="8.5"
-        y="8.5"
-        width="5"
-        height="5"
-        rx="0.75"
-        stroke="currentColor"
-        strokeWidth="1.1"
-      />
     </svg>
   );
 }

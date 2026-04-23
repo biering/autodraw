@@ -1,8 +1,10 @@
 import {
+  FALLBACK_NODE_BODY_FILL_DARK,
   FALLBACK_NODE_BODY_FILL_RGBA,
+  FALLBACK_NODE_BODY_STROKE_DARK,
   FALLBACK_NODE_BODY_STROKE_RGBA,
-  resolvedNodeBodyFillRgba,
-  resolvedNodeBodyStrokeRgba,
+  resolvedNodeBodyFillForCanvas,
+  resolvedNodeBodyStrokeForCanvas,
   styleById,
   type DiagramV1,
   type EdgeRecord,
@@ -33,17 +35,19 @@ export type DiagramNodeData = {
 
 function resolvedStyleFromDefinition(
   styleDef: NodeStyleDefinition | undefined,
+  canvasTheme: DiagramCanvasTheme,
 ): DiagramNodeResolvedStyle {
   if (!styleDef) {
+    const dark = canvasTheme === "dark";
     return {
-      fill: FALLBACK_NODE_BODY_FILL_RGBA,
-      stroke: FALLBACK_NODE_BODY_STROKE_RGBA,
+      fill: dark ? FALLBACK_NODE_BODY_FILL_DARK : FALLBACK_NODE_BODY_FILL_RGBA,
+      stroke: dark ? FALLBACK_NODE_BODY_STROKE_DARK : FALLBACK_NODE_BODY_STROKE_RGBA,
       defaultShape: "roundedRect",
     };
   }
   return {
-    fill: resolvedNodeBodyFillRgba(styleDef),
-    stroke: resolvedNodeBodyStrokeRgba(styleDef),
+    fill: resolvedNodeBodyFillForCanvas(styleDef, styleDef.id, canvasTheme),
+    stroke: resolvedNodeBodyStrokeForCanvas(styleDef, canvasTheme),
     defaultShape: styleDef.shape,
   };
 }
@@ -62,17 +66,20 @@ export const DEFAULT_DIAGRAM_TARGET_HANDLE = "tgt";
 
 /** Full-node handles for floating edges; normalized away before persisting. */
 export const DIAGRAM_BODY_SOURCE_HANDLE = "body-src";
+/** Visible drag-to-connect affordance (Link2 button) — distinct id so it coexists with the permanent anchor. */
+export const DIAGRAM_BODY_SOURCE_BUTTON_HANDLE = "body-src-btn";
 export const DIAGRAM_BODY_TARGET_HANDLE = "body-tgt";
 
-/** Strip full-body floating handle ids so new edges omit `sourceHandle` / `targetHandle` on record. */
+/**
+ * Always strips the handle id. Edges should attach to the node body (floating geometry chooses the
+ * side based on relative layout), never to a specific handle. Kept as a function so call-sites can
+ * later opt into per-handle pinning without refactoring every call site.
+ */
 export function normalizeDiagramConnectionHandle(
-  handleId: string | null | undefined,
-  role: "source" | "target",
+  _handleId: string | null | undefined,
+  _role: "source" | "target",
 ): string | undefined {
-  if (handleId == null || handleId === "") return undefined;
-  if (role === "source" && handleId === DIAGRAM_BODY_SOURCE_HANDLE) return undefined;
-  if (role === "target" && handleId === DIAGRAM_BODY_TARGET_HANDLE) return undefined;
-  return handleId;
+  return undefined;
 }
 
 export function toFlowNodes(
@@ -89,7 +96,7 @@ export function toFlowNodes(
       h: n.h,
       styleId: n.styleId,
       shape: n.shape,
-      resolvedStyle: resolvedStyleFromDefinition(styleById(diagram, n.styleId)),
+      resolvedStyle: resolvedStyleFromDefinition(styleById(diagram, n.styleId), canvasTheme),
       canvasTheme,
     },
     style: { width: n.w, height: n.h },

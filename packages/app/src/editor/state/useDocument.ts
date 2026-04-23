@@ -1,21 +1,16 @@
 import {
-  applyRelationshipPreset,
   defaultStyleId,
   emptyDiagram,
   parseDiagram,
   type DiagramV1,
+  type EdgeHead,
   type EdgeRecord,
   type NodeRecord,
   type PalettePreset,
 } from "@agentsdraw/core";
 import { temporal } from "zundo";
 import { create } from "zustand";
-import {
-  DEFAULT_DIAGRAM_SOURCE_HANDLE,
-  DEFAULT_DIAGRAM_TARGET_HANDLE,
-  DIAGRAM_BODY_SOURCE_HANDLE,
-  DIAGRAM_BODY_TARGET_HANDLE,
-} from "../canvas/flowAdapter.js";
+import { normalizeDiagramConnectionHandle } from "../canvas/flowAdapter.js";
 
 /** Upper bound for canvas zoom (toolbar + React Flow viewport). */
 export const MAX_VIEW_ZOOM = 1.5;
@@ -26,7 +21,13 @@ export type CanvasTheme = "light" | "dark";
 
 function readStoredCanvasTheme(): CanvasTheme {
   if (typeof window === "undefined") return "light";
-  return window.localStorage.getItem(CANVAS_THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
+  try {
+    const ls = window.localStorage;
+    if (ls == null || typeof ls.getItem !== "function") return "light";
+    return ls.getItem(CANVAS_THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
+  } catch {
+    return "light";
+  }
 }
 
 /** Transient UI: user is picking a relationship preset after drawing a link between two nodes. */
@@ -49,9 +50,8 @@ export type AppState = {
   showNewDocSheet: boolean;
   showExportSheet: boolean;
   pendingEdgeSource: string | null;
-  pendingRelationshipPreset: number | null;
   editingNodeId: string | null;
-  /** Bottom inspector: new edge flow (pick preset to create the edge). */
+  /** Bottom inspector: new edge flow (pick start/end markers to create the edge). */
   relationshipDraft: RelationshipDraft | null;
   setDiagram: (d: DiagramV1, opts?: { filePath?: string | null; dirty?: boolean }) => void;
   setFilePath: (p: string | null) => void;
@@ -63,10 +63,9 @@ export type AppState = {
   setShowExportSheet: (v: boolean) => void;
   setCanvasTheme: (t: CanvasTheme) => void;
   setPendingEdgeSource: (id: string | null) => void;
-  setPendingRelationshipPreset: (n: number | null) => void;
   setEditingNodeId: (id: string | null) => void;
   setRelationshipDraft: (d: RelationshipDraft | null) => void;
-  commitRelationshipDraft: (presetIndex: number) => void;
+  commitRelationshipDraft: (markers: { head: EdgeHead; tail: EdgeHead }) => void;
   newDocument: (palette: PalettePreset) => void;
   loadPaletteFrom: (source: DiagramV1) => void;
   addNode: (n: Omit<NodeRecord, "id"> & { id?: string }, opts?: { focusLabel?: boolean }) => string;
@@ -92,7 +91,6 @@ const initial = (): Omit<
   | "setShowExportSheet"
   | "setCanvasTheme"
   | "setPendingEdgeSource"
-  | "setPendingRelationshipPreset"
   | "setEditingNodeId"
   | "setRelationshipDraft"
   | "commitRelationshipDraft"
@@ -114,7 +112,6 @@ const initial = (): Omit<
   showNewDocSheet: true,
   showExportSheet: false,
   pendingEdgeSource: null,
-  pendingRelationshipPreset: null,
   editingNodeId: null,
   relationshipDraft: null,
 });
@@ -153,22 +150,29 @@ export const useDocument = create<AppState>()(
       setShowExportSheet: (v) => set({ showExportSheet: v }),
       setCanvasTheme: (canvasTheme) => {
         if (typeof window !== "undefined") {
-          window.localStorage.setItem(CANVAS_THEME_STORAGE_KEY, canvasTheme);
+          try {
+            const ls = window.localStorage;
+            if (ls != null && typeof ls.setItem === "function") {
+              ls.setItem(CANVAS_THEME_STORAGE_KEY, canvasTheme);
+            }
+          } catch {
+            /* ignore quota / private mode */
+          }
         }
         set({ canvasTheme });
       },
       setPendingEdgeSource: (id) => set({ pendingEdgeSource: id }),
-      setPendingRelationshipPreset: (n) => set({ pendingRelationshipPreset: n }),
       setEditingNodeId: (id) => set({ editingNodeId: id }),
       setRelationshipDraft: (d) => set({ relationshipDraft: d }),
-      commitRelationshipDraft: (presetIndex) => {
+      commitRelationshipDraft: ({ head, tail }) => {
         const d = get().relationshipDraft;
         if (!d?.source || !d?.target) return;
         get().addEdge({
           from: d.source,
           to: d.target,
           label: "",
-          relationshipPreset: presetIndex,
+          head,
+          tail,
           sourceHandle: d.sourceHandle ?? undefined,
           targetHandle: d.targetHandle ?? undefined,
         });
@@ -241,36 +245,21 @@ export const useDocument = create<AppState>()(
         }),
       addEdge: (e) => {
         const id = e.id ?? crypto.randomUUID();
-        const preset = e.relationshipPreset ?? 1;
-        const style = applyRelationshipPreset(preset);
         const edge: EdgeRecord = {
           id,
           from: e.from,
           to: e.to,
-          routing: style.routing,
-          dash: style.dash,
-          head: style.head,
-          tail: style.tail,
+          routing: e.routing ?? "orthogonal",
+          dash: e.dash ?? "solid",
+          head: e.head ?? "lineArrow",
+          tail: e.tail ?? "none",
           label: e.label ?? "",
-          strokeWidth: style.strokeWidth,
-          relationshipPreset: style.relationshipPreset,
+          strokeWidth: e.strokeWidth ?? 1,
         };
-        if (
-          e.sourceHandle != null &&
-          e.sourceHandle !== "" &&
-          e.sourceHandle !== DEFAULT_DIAGRAM_SOURCE_HANDLE &&
-          e.sourceHandle !== DIAGRAM_BODY_SOURCE_HANDLE
-        ) {
-          edge.sourceHandle = e.sourceHandle;
-        }
-        if (
-          e.targetHandle != null &&
-          e.targetHandle !== "" &&
-          e.targetHandle !== DEFAULT_DIAGRAM_TARGET_HANDLE &&
-          e.targetHandle !== DIAGRAM_BODY_TARGET_HANDLE
-        ) {
-          edge.targetHandle = e.targetHandle;
-        }
+        const sh = normalizeDiagramConnectionHandle(e.sourceHandle, "source");
+        if (sh != null) edge.sourceHandle = sh;
+        const th = normalizeDiagramConnectionHandle(e.targetHandle, "target");
+        if (th != null) edge.targetHandle = th;
         set((s) => ({
           diagram: { ...s.diagram, edges: [...s.diagram.edges, edge] },
           dirty: true,

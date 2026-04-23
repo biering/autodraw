@@ -89,7 +89,7 @@ Removes the node and **all edges** incident on it.
 ```bash
 agentsdraw edge:add <file.adraw> --from <nodeId> --to <nodeId> \
   [--routing straight|orthogonal|curved] [--dash solid|dashed|dotted] \
-  [--head none|arrowOpen|arrowFilled|arrowDouble|square] [--label ""] \
+  [--head none|lineArrow|triangleArrow|triangleReversed|circle|diamond] [--label ""] \
   [--preset 0-7]
 ```
 

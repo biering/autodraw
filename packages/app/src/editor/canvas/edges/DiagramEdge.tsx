@@ -184,7 +184,7 @@ function DiagramEdgeInner(props: EdgeProps<DiagramFlowEdge>) {
   const stroke = selected ? EDGE_STROKE_SELECTED : EDGE_STROKE;
   const strokeOpacity = selected ? 1 : 0.88;
 
-  const head = edge?.head ?? "arrowOpen";
+  const head = edge?.head ?? "lineArrow";
   const tail = edge?.tail;
 
   const { markerEnd, markerStart } = useMemo(
@@ -200,6 +200,8 @@ function DiagramEdgeInner(props: EdgeProps<DiagramFlowEdge>) {
         tail={tail}
         stroke={stroke}
         strokeWidth={strokeW}
+        startSide={sourcePos}
+        endSide={targetPos}
       />
       <BaseEdge
         id={id}

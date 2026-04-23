@@ -33,7 +33,7 @@ describe("edge connection ports", () => {
       targetHandle: "tgt-top",
       routing: "orthogonal",
       dash: "solid",
-      head: "arrowOpen",
+      head: "lineArrow",
       tail: "none",
       label: "",
       strokeWidth: 2,

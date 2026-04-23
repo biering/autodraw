@@ -62,62 +62,54 @@ function polylinePoints(pts: { x: number; y: number }[]): string {
   return pts.map((p) => `${p.x},${p.y}`).join(" ");
 }
 
+/**
+ * Per-marker SVG body. `role` picks orientation so the same geometry works at both ends;
+ * `refX` lands the tip (end) / base (start) right at the line endpoint.
+ */
+function markerBody(kind: Exclude<EdgeHead, "none">, role: "start" | "end", sw: number, stroke: string): string {
+  const strokeAttr = `stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round"`;
+  const tri = `markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="12" refY="4" orient="auto"`;
+  switch (kind) {
+    case "lineArrow":
+      return role === "end"
+        ? `markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="10" refX="10" refY="4" orient="auto"><path d="M1,0 L10,4 L1,8" fill="none" stroke-linecap="round" ${strokeAttr}/>`
+        : `markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="10" refX="2" refY="4" orient="auto"><path d="M10,0 L1,4 L10,8" fill="none" stroke-linecap="round" ${strokeAttr}/>`;
+    case "triangleArrow":
+      return role === "end"
+        ? `${tri} refX="10"><path d="M1,0 L10,4 L1,8 z" fill="none" ${strokeAttr}/>`
+        : `${tri} refX="2"><path d="M10,0 L1,4 L10,8 z" fill="none" ${strokeAttr}/>`;
+    case "triangleReversed":
+      return role === "end"
+        ? `${tri} refX="10"><path d="M10,0 L1,4 L10,8 z" fill="none" ${strokeAttr}/>`
+        : `${tri} refX="2"><path d="M1,0 L10,4 L1,8 z" fill="none" ${strokeAttr}/>`;
+    case "circle":
+      return `markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="${role === "end" ? 10 : 2}" refY="6" orient="auto"><circle cx="6" cy="6" r="3.5" fill="none" ${strokeAttr}/>`;
+    case "diamond":
+      return `markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="12" refX="${role === "end" ? 12 : 2}" refY="6" orient="auto"><path d="M7,1.5 L12,6 L7,10.5 L2,6 z" fill="none" ${strokeAttr}/>`;
+  }
+}
+
 function markerDefs(edge: EdgeRecord, uid: string): string {
   const sw = Math.max(1, edge.strokeWidth ?? 1);
   const stroke = "#262626";
-  const mkOpen = (id: string, flip: boolean) => {
-    const refX = flip ? 1 : 10;
-    const d = flip ? "M10,0 L10,6 L1,3 z" : "M0,0 L0,6 L9,3 z";
-    return `<marker id="${id}" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="8" refX="${refX}" refY="3" orient="auto"><path d="${d}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round"/></marker>`;
-  };
-  const mkFill = (id: string) =>
-    `<marker id="${id}" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="8" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="${stroke}" stroke="none"/></marker>`;
-  const mkSq = (id: string, flip: boolean) => {
-    const ref = flip ? 6 : 0;
-    return `<marker id="${id}" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" refX="${flip ? 2 : 6}" refY="4" orient="auto"><rect x="${ref}" y="1" width="6" height="6" fill="none" stroke="${stroke}" stroke-width="${sw}"/></marker>`;
-  };
   const parts: string[] = [];
-  if (edge.head === "arrowOpen" || edge.head === "arrowDouble")
-    parts.push(mkOpen(`mk_h_open_${uid}`, false));
-  if (edge.head === "arrowDouble") parts.push(mkOpen(`mk_h_open_start_${uid}`, true));
-  if (edge.head === "arrowFilled") parts.push(mkFill(`mk_h_fill_${uid}`));
-  if (edge.head === "square") parts.push(mkSq(`mk_h_sq_${uid}`, false));
+  if (edge.head !== "none") {
+    parts.push(`<marker id="mk_h_${uid}" ${markerBody(edge.head, "end", sw, stroke)}</marker>`);
+  }
   const tail = edge.tail ?? "none";
-  if (tail === "arrowOpen") parts.push(mkOpen(`mk_t_open_${uid}`, true));
-  if (tail === "square") parts.push(mkSq(`mk_t_sq_${uid}`, true));
+  if (tail !== "none") {
+    parts.push(`<marker id="mk_t_${uid}" ${markerBody(tail, "start", sw, stroke)}</marker>`);
+  }
   return parts.join("\n");
 }
 
 function markerEndUrl(edge: EdgeRecord, uid: string): string | undefined {
-  switch (edge.head) {
-    case "none":
-      return undefined;
-    case "arrowOpen":
-      return `url(#mk_h_open_${uid})`;
-    case "arrowDouble":
-      return `url(#mk_h_open_${uid})`;
-    case "arrowFilled":
-      return `url(#mk_h_fill_${uid})`;
-    case "square":
-      return `url(#mk_h_sq_${uid})`;
-    default:
-      return undefined;
-  }
+  return edge.head === "none" ? undefined : `url(#mk_h_${uid})`;
 }
 
 function markerStartUrl(edge: EdgeRecord, uid: string): string | undefined {
-  if (edge.head === "arrowDouble") {
-    return `url(#mk_h_open_start_${uid})`;
-  }
   const tail = edge.tail ?? "none";
-  switch (tail) {
-    case "arrowOpen":
-      return `url(#mk_t_open_${uid})`;
-    case "square":
-      return `url(#mk_t_sq_${uid})`;
-    default:
-      return undefined;
-  }
+  return tail === "none" ? undefined : `url(#mk_t_${uid})`;
 }
 
 function renderNodeShape(
@@ -222,7 +214,7 @@ export function renderSVG(diagram: DiagramV1, opts: RenderSVGOptions = {}): stri
     const st = styleById(diagram, n.styleId) ?? styles[0];
     if (!st) continue;
     const shape = n.shape ?? st.shape;
-    const { fillRgb: fill, fillOpacity: fo } = resolvedNodeSvgFillParts(st);
+    const { fillRgb: fill, fillOpacity: fo } = resolvedNodeSvgFillParts(st, n.styleId);
     const { strokeRgb: stroke, strokeOpacity: so } = resolvedNodeSvgStrokeParts(st);
     body.push(renderNodeShape(n, shape, fill, fo, stroke, so));
     body.push(
