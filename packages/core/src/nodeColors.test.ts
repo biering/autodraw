@@ -89,9 +89,7 @@ describe("resolvedNodeBodyFillRgba", () => {
 describe("resolvedNodeBodyStrokeRgba", () => {
   it("scales stroke alpha for visual balance with solid fills", () => {
     const s = { strokeRed: 0, strokeGreen: 0.2, strokeBlue: 0.4, strokeAlpha: 1 };
-    expect(resolvedNodeBodyStrokeRgba(s)).toBe(
-      `rgba(0,51,102,${effectiveNodeStrokeAlpha(1)})`,
-    );
+    expect(resolvedNodeBodyStrokeRgba(s)).toBe(`rgba(0,51,102,${effectiveNodeStrokeAlpha(1)})`);
   });
 });
 

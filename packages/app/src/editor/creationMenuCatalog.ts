@@ -1,4 +1,9 @@
-import { styleById, type DiagramV1, type NodeShape, type NodeStyleDefinition } from "@agentsdraw/core";
+import {
+  styleById,
+  type DiagramV1,
+  type NodeShape,
+  type NodeStyleDefinition,
+} from "@agentsdraw/core";
 
 /** Palette style ids shown in the “Color” row (add-element + node context menu), in order. */
 export const CREATION_MENU_COLOR_IDS: readonly string[] = [

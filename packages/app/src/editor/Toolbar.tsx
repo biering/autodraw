@@ -1,4 +1,5 @@
 import { Moon, Sun } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Button } from "@/components/ui/button";
 import { redoDocument, undoDocument, useDocument } from "./state/useDocument.js";
@@ -30,6 +31,79 @@ function IconPlus() {
   );
 }
 
+function ToolbarDiagramName() {
+  const name = useDocument((s) => s.diagram.name);
+  const setDiagramName = useDocument((s) => s.setDiagramName);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const skipBlurCommitRef = useRef(false);
+
+  useEffect(() => {
+    if (!editing) return;
+    const id = window.requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      el.select();
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [editing]);
+
+  const commit = () => {
+    setDiagramName(draft);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
+        value={draft}
+        maxLength={256}
+        aria-label="Diagram name"
+        className="min-w-[4ch] max-w-[220px] shrink rounded-md border border-black/[0.12] bg-white/90 px-1.5 py-0.5 text-[15px] font-semibold tracking-tight text-[#1d1d1f] shadow-sm outline-none [-webkit-app-region:no-drag] [app-region:no-drag] focus-visible:ring-2 focus-visible:ring-[#007aff]/35"
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            skipBlurCommitRef.current = false;
+            commit();
+          }
+          if (e.key === "Escape") {
+            e.preventDefault();
+            skipBlurCommitRef.current = true;
+            setDraft(name);
+            setEditing(false);
+          }
+        }}
+        onBlur={() => {
+          if (skipBlurCommitRef.current) {
+            skipBlurCommitRef.current = false;
+            return;
+          }
+          commit();
+        }}
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="max-w-[220px] shrink truncate rounded-md px-1 py-0.5 text-left text-[15px] font-semibold tracking-tight text-[#1d1d1f] [-webkit-app-region:no-drag] [app-region:no-drag] hover:bg-black/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007aff]/35"
+      title="Rename diagram"
+      onClick={() => {
+        setDraft(name);
+        setEditing(true);
+      }}
+    >
+      {name}
+    </button>
+  );
+}
+
 export function Toolbar() {
   const canvasTheme = useDocument((s) => s.canvasTheme);
   const setCanvasTheme = useDocument((s) => s.setCanvasTheme);
@@ -44,57 +118,66 @@ export function Toolbar() {
   });
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-[80] flex justify-center px-4 pt-[calc(10px+env(safe-area-inset-top,0px))]">
-      <nav
-        className="pointer-events-auto flex max-w-[min(960px,calc(100vw-32px))] items-center gap-2.5 rounded-full border border-black/[0.06] bg-[rgba(253,253,254,0.94)] py-1.5 pl-2.5 pr-2 text-[#1d1d1f] shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_8px_28px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.06)] backdrop-blur-xl backdrop-saturate-180 [-webkit-app-region:drag] [app-region:drag]"
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-[80]">
+      {/*
+       * Full-width transparent drag band (macOS overlay title bar): keeps window draggable and
+       * leaves traffic lights usable; canvas shows through above the pill. Nav sits on top.
+       */}
+      <div
+        className="pointer-events-auto absolute inset-x-0 top-0 h-[calc(52px+env(safe-area-inset-top,0px))] [-webkit-app-region:drag] [app-region:drag]"
         data-tauri-drag-region
-        aria-label="Editor toolbar"
-      >
-        <div className="flex shrink-0 items-center gap-2 pl-0.5 pr-1">
-          <IconSpark />
-          <span className="whitespace-nowrap text-[15px] font-semibold tracking-tight text-[#1d1d1f]">
-            Diagram
-          </span>
-        </div>
+        aria-hidden
+      />
+      <div className="pointer-events-none relative flex justify-center px-4 pt-[calc(10px+env(safe-area-inset-top,0px))]">
+        <nav
+          className="pointer-events-auto relative z-[1] flex max-w-[min(960px,calc(100vw-32px))] items-center gap-2.5 rounded-full border border-black/[0.06] bg-[rgba(253,253,254,0.94)] py-1.5 pl-2.5 pr-2 text-[#1d1d1f] shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_8px_28px_rgba(0,0,0,0.06)] backdrop-blur-xl backdrop-saturate-180 [-webkit-app-region:drag] [app-region:drag]"
+          data-tauri-drag-region
+          aria-label="Editor toolbar"
+        >
+          <div className="flex shrink-0 items-center gap-2 pl-0.5 pr-1">
+            <IconSpark />
+            <ToolbarDiagramName />
+          </div>
 
-        <span className="h-[26px] w-px shrink-0 bg-black/[0.08]" aria-hidden />
+          <span className="h-[26px] w-px shrink-0 bg-black/[0.08]" aria-hidden />
 
-        <div className="flex shrink-0 items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-full text-[#1d1d1f] hover:bg-black/[0.06] [-webkit-app-region:no-drag] [app-region:no-drag]"
-            title={
-              canvasTheme === "light"
-                ? "Use dark drawing background"
-                : "Use light drawing background"
-            }
-            aria-label={
-              canvasTheme === "light"
-                ? "Switch drawing area to dark"
-                : "Switch drawing area to light"
-            }
-            onClick={() => setCanvasTheme(canvasTheme === "light" ? "dark" : "light")}
-          >
-            {canvasTheme === "light" ? (
-              <Moon className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
-            ) : (
-              <Sun className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
-            )}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-full text-[#1d1d1f] hover:bg-black/[0.06] [-webkit-app-region:no-drag] [app-region:no-drag]"
-            title="Add element"
-            onClick={() => window.dispatchEvent(new CustomEvent("agentsdraw:open-add-element"))}
-          >
-            <IconPlus />
-          </Button>
-        </div>
-      </nav>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full text-[#1d1d1f] hover:bg-black/[0.06] [-webkit-app-region:no-drag] [app-region:no-drag]"
+              title={
+                canvasTheme === "light"
+                  ? "Use dark drawing background"
+                  : "Use light drawing background"
+              }
+              aria-label={
+                canvasTheme === "light"
+                  ? "Switch drawing area to dark"
+                  : "Switch drawing area to light"
+              }
+              onClick={() => setCanvasTheme(canvasTheme === "light" ? "dark" : "light")}
+            >
+              {canvasTheme === "light" ? (
+                <Moon className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
+              ) : (
+                <Sun className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full text-[#1d1d1f] hover:bg-black/[0.06] [-webkit-app-region:no-drag] [app-region:no-drag]"
+              title="Add element"
+              onClick={() => window.dispatchEvent(new CustomEvent("agentsdraw:open-add-element"))}
+            >
+              <IconPlus />
+            </Button>
+          </div>
+        </nav>
+      </div>
     </div>
   );
 }

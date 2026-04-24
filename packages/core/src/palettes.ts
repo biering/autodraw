@@ -213,4 +213,3 @@ export function styleById(
 ): NodeStyleDefinition | undefined {
   return resolvedStyles(diagram).find((s) => s.id === id);
 }
-

@@ -39,5 +39,11 @@ export default defineConfig({
     target: esTarget,
     minify: process.env.TAURI_ENV_DEBUG ? false : "esbuild",
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
+    rollupOptions: {
+      input: {
+        main: path.resolve(appDir, "index.html"),
+        license: path.resolve(appDir, "license.html"),
+      },
+    },
   },
 });

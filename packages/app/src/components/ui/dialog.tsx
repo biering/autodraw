@@ -25,19 +25,32 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
   hideClose?: boolean;
+  /** Edge-to-edge panel (e.g. dedicated license window); no centered card or dimmed scrim. */
+  fullscreen?: boolean;
 };
+
+const dialogContentMotion =
+  "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0";
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, hideClose, ...props }, ref) => (
+>(({ className, children, hideClose, fullscreen, ...props }, ref) => (
   <DialogPortal>
-    <DialogOverlay />
+    <DialogOverlay className={fullscreen ? "bg-[#1a1a1a] backdrop-blur-none" : undefined} />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-[101] grid w-[calc(100%-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-card p-6 text-card-foreground shadow-lg duration-200 sm:rounded-xl",
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+        fullscreen
+          ? cn(
+              "fixed inset-0 z-[101] flex h-dvh max-h-dvh w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden border-0 bg-[#1a1a1a] p-0 text-card-foreground shadow-none duration-200 outline-none sm:rounded-none",
+              dialogContentMotion,
+            )
+          : cn(
+              "fixed left-1/2 top-1/2 z-[101] grid w-[calc(100%-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-card p-6 text-card-foreground shadow-lg duration-200 sm:rounded-xl",
+              dialogContentMotion,
+              "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            ),
         className,
       )}
       {...props}

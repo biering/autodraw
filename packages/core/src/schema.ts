@@ -89,6 +89,8 @@ export const canvasSchema = z.object({
 
 export const diagramSchemaV1 = z.object({
   version: z.literal(1),
+  /** User-visible diagram title; persisted in .adraw JSON. */
+  name: z.string().max(256),
   palette: palettePresetSchema,
   canvas: canvasSchema,
   nodes: z.array(nodeSchema),
@@ -116,6 +118,7 @@ const looseEdgeSchema = edgeSchema.extend({
 const looseDiagram = z
   .object({
     version: z.number(),
+    name: z.string().optional(),
     palette: palettePresetSchema,
     canvas: canvasSchema.partial().optional(),
     nodes: z.array(nodeSchema),
@@ -123,6 +126,14 @@ const looseDiagram = z
     customStyles: z.array(nodeStyleDefinitionSchema).optional(),
   })
   .passthrough();
+
+const DEFAULT_DIAGRAM_NAME = "Diagram";
+
+export function normalizeDiagramName(raw: unknown): string {
+  if (typeof raw !== "string") return DEFAULT_DIAGRAM_NAME;
+  const t = raw.trim().slice(0, 256);
+  return t.length > 0 ? t : DEFAULT_DIAGRAM_NAME;
+}
 
 /** Parse and migrate unknown JSON to DiagramV1. */
 export function parseDiagram(raw: unknown): DiagramV1 {
@@ -137,6 +148,7 @@ export function parseDiagram(raw: unknown): DiagramV1 {
   };
   return diagramSchemaV1.parse({
     version: 1 as const,
+    name: normalizeDiagramName(parsed.name),
     palette: parsed.palette,
     canvas,
     nodes: parsed.nodes.map((n) => ({
@@ -160,6 +172,7 @@ export function serializeDiagram(d: DiagramV1): string {
 export function emptyDiagram(palette: PalettePreset = "universal"): DiagramV1 {
   return {
     version: 1,
+    name: DEFAULT_DIAGRAM_NAME,
     palette,
     canvas: { showGrid: true, gridSpacing: 16, zoom: 1 },
     nodes: [],

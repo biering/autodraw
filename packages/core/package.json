@@ -1,7 +1,7 @@
 {
   "name": "@agentsdraw/core",
   "version": "0.1.0",
-  "private": true,
+  "description": "Diagram v1 schema, palettes, routing, and SVG rendering for agentsdraw",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,8 +11,12 @@
       "import": "./dist/index.js"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "pnpm run build",
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
     "test": "vitest run",
     "lint": "tsc -p tsconfig.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -23,5 +27,18 @@
   "devDependencies": {
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/biering/agentsdraw.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/biering/agentsdraw#readme",
+  "bugs": {
+    "url": "https://github.com/biering/agentsdraw/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

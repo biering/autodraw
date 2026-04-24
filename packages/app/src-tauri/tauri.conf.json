@@ -12,10 +12,26 @@
   "app": {
     "windows": [
       {
+        "label": "license",
+        "title": "Activate agentsdraw",
+        "url": "license.html",
+        "width": 520,
+        "height": 700,
+        "resizable": true,
+        "visible": true,
+        "center": true,
+        "decorations": true
+      },
+      {
         "label": "main",
         "title": "Untitled Diagram",
+        "url": "index.html",
         "width": 1280,
-        "height": 820
+        "height": 820,
+        "visible": false,
+        "decorations": true,
+        "hiddenTitle": true,
+        "titleBarStyle": "Overlay"
       }
     ],
     "security": {

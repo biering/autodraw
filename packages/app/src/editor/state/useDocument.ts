@@ -1,6 +1,7 @@
 import {
   defaultStyleId,
   emptyDiagram,
+  normalizeDiagramName,
   parseDiagram,
   type DiagramV1,
   type EdgeHead,
@@ -47,19 +48,21 @@ export type AppState = {
   canvasTheme: CanvasTheme;
   selection: { nodeIds: string[]; edgeIds: string[] };
   zoom: number;
-  showNewDocSheet: boolean;
+  /** In-app welcome sheet (open vs new); not used on cold start — use File ▸ Open Diagram. */
+  showWelcomeGate: boolean;
   showExportSheet: boolean;
   pendingEdgeSource: string | null;
   editingNodeId: string | null;
   /** Bottom inspector: new edge flow (pick start/end markers to create the edge). */
   relationshipDraft: RelationshipDraft | null;
   setDiagram: (d: DiagramV1, opts?: { filePath?: string | null; dirty?: boolean }) => void;
+  setDiagramName: (name: string) => void;
   setFilePath: (p: string | null) => void;
   markDirty: () => void;
   markClean: () => void;
   setSelection: (nodeIds: string[], edgeIds?: string[]) => void;
   setZoom: (z: number) => void;
-  setShowNewDocSheet: (v: boolean) => void;
+  setShowWelcomeGate: (v: boolean) => void;
   setShowExportSheet: (v: boolean) => void;
   setCanvasTheme: (t: CanvasTheme) => void;
   setPendingEdgeSource: (id: string | null) => void;
@@ -82,12 +85,13 @@ export type AppState = {
 const initial = (): Omit<
   AppState,
   | "setDiagram"
+  | "setDiagramName"
   | "setFilePath"
   | "markDirty"
   | "markClean"
   | "setSelection"
   | "setZoom"
-  | "setShowNewDocSheet"
+  | "setShowWelcomeGate"
   | "setShowExportSheet"
   | "setCanvasTheme"
   | "setPendingEdgeSource"
@@ -109,7 +113,7 @@ const initial = (): Omit<
   canvasTheme: readStoredCanvasTheme(),
   selection: { nodeIds: [], edgeIds: [] },
   zoom: 1,
-  showNewDocSheet: true,
+  showWelcomeGate: false,
   showExportSheet: false,
   pendingEdgeSource: null,
   editingNodeId: null,
@@ -120,13 +124,31 @@ export const useDocument = create<AppState>()(
   temporal(
     (set, get) => ({
       ...initial(),
-      setDiagram: (d, opts) =>
+      setDiagram: (d, opts) => {
+        const nextPath = opts?.filePath ?? get().filePath;
         set({
           diagram: d,
-          filePath: opts?.filePath ?? get().filePath,
+          filePath: nextPath,
           dirty: opts?.dirty ?? false,
+          ...(typeof nextPath === "string" && nextPath.length > 0
+            ? { showWelcomeGate: false }
+            : {}),
+        });
+      },
+      setDiagramName: (raw) =>
+        set((s) => {
+          const name = normalizeDiagramName(raw);
+          if (name === s.diagram.name) return s;
+          return {
+            diagram: { ...s.diagram, name },
+            dirty: true,
+          };
         }),
-      setFilePath: (p) => set({ filePath: p }),
+      setFilePath: (p) =>
+        set({
+          filePath: p,
+          ...(p != null && p !== "" ? { showWelcomeGate: false } : {}),
+        }),
       markDirty: () => set({ dirty: true }),
       markClean: () => set({ dirty: false }),
       setSelection: (nodeIds, edgeIds = []) => {
@@ -146,7 +168,7 @@ export const useDocument = create<AppState>()(
         });
       },
       setZoom: (z) => set({ zoom: Math.min(MAX_VIEW_ZOOM, z) }),
-      setShowNewDocSheet: (v) => set({ showNewDocSheet: v }),
+      setShowWelcomeGate: (v) => set({ showWelcomeGate: v }),
       setShowExportSheet: (v) => set({ showExportSheet: v }),
       setCanvasTheme: (canvasTheme) => {
         if (typeof window !== "undefined") {
@@ -182,7 +204,7 @@ export const useDocument = create<AppState>()(
         set({
           ...initial(),
           diagram: emptyDiagram(palette),
-          showNewDocSheet: false,
+          showWelcomeGate: false,
           dirty: false,
           filePath: null,
         }),

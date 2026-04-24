@@ -9,6 +9,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .invoke_handler(tauri::generate_handler![
             commands::export_diagram_pdf,
             commands::export_diagram_png
@@ -21,7 +22,7 @@ pub fn run() {
                 .id("file:new")
                 .accelerator("CmdOrCtrl+N")
                 .build(app)?;
-            let file_open = MenuItemBuilder::new("Open…")
+            let file_open = MenuItemBuilder::new("Open Diagram…")
                 .id("file:open")
                 .accelerator("CmdOrCtrl+O")
                 .build(app)?;
@@ -104,8 +105,10 @@ pub fn run() {
 
             // Open devtools in debug builds so blank-screen issues are visible.
             #[cfg(debug_assertions)]
-            if let Some(w) = app.get_webview_window("main") {
-                w.open_devtools();
+            for label in ["license", "main"] {
+                if let Some(w) = app.get_webview_window(label) {
+                    w.open_devtools();
+                }
             }
 
             Ok(())

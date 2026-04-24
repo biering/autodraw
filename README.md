@@ -46,18 +46,30 @@ pnpm --filter @agentsdraw/cli build
 pnpm exec agentsdraw init ./example.adraw --palette universal
 
 # Add nodes + edge
-pnpm exec agentsdraw node:add ./example.adraw --text "A node" --x 200 --y 200
-pnpm exec agentsdraw node:add ./example.adraw --text "Another node" --x 520 --y 260
-pnpm exec agentsdraw node:list ./example.adraw
+pnpm exec agentsdraw add node ./example.adraw --text "A node" --x 200 --y 200
+pnpm exec agentsdraw add node ./example.adraw --text "Another node" --x 520 --y 260
+pnpm exec agentsdraw list nodes ./example.adraw
 
-pnpm exec agentsdraw edge:add ./example.adraw --from <id1> --to <id2> --preset 4
+pnpm exec agentsdraw add edge ./example.adraw --from <id1> --to <id2> --preset 4
 
 # Export (CLI uses Resvg for PNG; PDF embeds a high-res PNG for maximum headless compatibility)
 pnpm exec agentsdraw export ./example.adraw --format png --output ./out.png
 pnpm exec agentsdraw export ./example.adraw --format pdf --output ./out.pdf --no-show-grid
+pnpm exec agentsdraw export ./example.adraw --format svg --output ./out.svg
 ```
 
 The desktop app’s **Export** dialog uses Rust (`svg2pdf` + `resvg`) for **vector PDF** and PNG when you build the Tauri bundle.
+
+### Publishing to npm
+
+The CLI depends on `@agentsdraw/core`, so **publish core first**, then the CLI (from the repo root, with [`npm login`](https://docs.npmjs.com/cli/v10/commands/npm-login) or a granular token):
+
+```bash
+pnpm --filter @agentsdraw/core publish --access public
+pnpm --filter @agentsdraw/cli publish --access public
+```
+
+`prepublishOnly` runs `pnpm run build` in each package so the tarball includes `dist/`. Scoped packages use `publishConfig.access: "public"` in each `package.json`. After the first release, bump versions in both packages before publishing again.
 
 ## Desktop app (dev)
 

@@ -1,7 +1,27 @@
+import { listen } from "@tauri-apps/api/event";
 import React from "react";
 import ReactDOM from "react-dom/client";
+import type { Root } from "react-dom/client";
 import App from "./App.js";
+import { LICENSE_SYNC_EVENT } from "./licensing/licenseWindowOrchestration.js";
+import { useLicense, type LicenseSyncPayload } from "./licensing/useLicense.js";
+import { isTauri } from "./platform/isTauri.js";
 import "./styles/globals.css";
+
+type RootHost = HTMLElement & { __agentsdrawRoot?: Root };
+
+if (isTauri()) {
+  if (import.meta.hot) {
+    import.meta.hot.data.prevLicenseSyncUnlisten?.();
+  }
+  void listen<LicenseSyncPayload>(LICENSE_SYNC_EVENT, (ev) => {
+    useLicense.getState().applyLicenseSync(ev.payload);
+  }).then((unlisten) => {
+    if (import.meta.hot) {
+      import.meta.hot.data.prevLicenseSyncUnlisten = unlisten;
+    }
+  });
+}
 
 type RuntimeErrorBoundaryState = { err: Error | null };
 
@@ -77,9 +97,11 @@ window.addEventListener("unhandledrejection", (e) => {
 });
 
 try {
-  const container = document.getElementById("root");
+  const container = document.getElementById("root") as RootHost | null;
   if (!container) throw new Error("#root element missing from index.html");
-  ReactDOM.createRoot(container).render(
+  const root = container.__agentsdrawRoot ?? ReactDOM.createRoot(container);
+  container.__agentsdrawRoot = root;
+  root.render(
     <React.StrictMode>
       <RuntimeErrorBoundary>
         <App />

@@ -13,14 +13,18 @@ const STYLE = defaultStyleId(PALETTE);
 /** Reset the singleton store and seed two nodes to serve as edge endpoints. */
 function resetStoreWithTwoNodes(): { a: string; b: string } {
   useDocument.getState().newDocument(PALETTE);
-  const a = useDocument.getState().addNode(
-    { text: "", x: 0, y: 0, w: 120, h: 60, styleId: STYLE, shape: "roundedRect" },
-    { focusLabel: false },
-  );
-  const b = useDocument.getState().addNode(
-    { text: "", x: 300, y: 0, w: 120, h: 60, styleId: STYLE, shape: "roundedRect" },
-    { focusLabel: false },
-  );
+  const a = useDocument
+    .getState()
+    .addNode(
+      { text: "", x: 0, y: 0, w: 120, h: 60, styleId: STYLE, shape: "roundedRect" },
+      { focusLabel: false },
+    );
+  const b = useDocument
+    .getState()
+    .addNode(
+      { text: "", x: 300, y: 0, w: 120, h: 60, styleId: STYLE, shape: "roundedRect" },
+      { focusLabel: false },
+    );
   return { a, b };
 }
 

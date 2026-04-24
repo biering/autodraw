@@ -18,10 +18,7 @@ const VB = "-10 -10 24 24";
 /** Degrees: outward normal from the node for this handle side; `role` flips for markerEnd (into node). */
 function markerAngle(side: Position, role: "start" | "end"): number {
   const out =
-    side === Position.Right ? 0
-    : side === Position.Left ? 180
-    : side === Position.Top ? -90
-    : 90;
+    side === Position.Right ? 0 : side === Position.Left ? 180 : side === Position.Top ? -90 : 90;
   return role === "start" ? out : out + 180;
 }
 
@@ -116,16 +113,7 @@ function HeadSymbol({
         />
       );
     case "circle":
-      return (
-        <circle
-          cx="-4.5"
-          cy="0"
-          r="3.75"
-          fill="none"
-          stroke={stroke}
-          strokeWidth={sw}
-        />
-      );
+      return <circle cx="-4.5" cy="0" r="3.75" fill="none" stroke={stroke} strokeWidth={sw} />;
     case "diamond":
       return (
         <polygon
@@ -141,7 +129,15 @@ function HeadSymbol({
   }
 }
 
-function EdgeMarkerDefsInner({ edgeId, head, tail, stroke, strokeWidth, startSide, endSide }: Props) {
+function EdgeMarkerDefsInner({
+  edgeId,
+  head,
+  tail,
+  stroke,
+  strokeWidth,
+  startSide,
+  endSide,
+}: Props) {
   const endId = diagramMarkerEndId(edgeId);
   const startId = diagramMarkerStartId(edgeId);
   const showEnd = head !== "none";

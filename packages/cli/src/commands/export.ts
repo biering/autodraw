@@ -1,23 +1,28 @@
 import { Args, Command, Flags } from "@oclif/core";
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { PDFDocument } from "pdf-lib";
 import { Resvg } from "@resvg/resvg-js";
-import { parseDiagram, renderSVG } from "@agentsdraw/core";
+import { renderSVG } from "@agentsdraw/core";
+import { readDiagram } from "../internal/io.js";
 
 export default class Export extends Command {
   static id = "export";
-  static description = "Export a diagram to PDF or PNG";
+  static description = "Export a diagram to PNG, PDF, or SVG";
 
   static args = {
     file: Args.string({ description: "Input .adraw path", required: true }),
   };
 
   static flags = {
-    format: Flags.string({ description: "Output format", options: ["pdf", "png"], required: true }),
+    format: Flags.string({
+      description: "Output format",
+      options: ["pdf", "png", "svg"],
+      required: true,
+    }),
     output: Flags.string({ description: "Output file path", required: true }),
     showGrid: Flags.boolean({ description: "Render grid in output", default: true, allowNo: true }),
     scale: Flags.integer({
-      description: "PNG scale multiplier (approx)",
+      description: "PNG scale multiplier (approx); ignored for SVG",
       default: 2,
       min: 1,
       max: 8,
@@ -26,9 +31,17 @@ export default class Export extends Command {
 
   async run(): Promise<void> {
     const { args, flags } = await this.parse(Export);
-    const raw = JSON.parse(readFileSync(args.file, "utf8")) as unknown;
-    const diagram = parseDiagram(raw);
+    const diagram = readDiagram(args.file);
     const svg = renderSVG(diagram, { showGrid: flags.showGrid });
+
+    if (flags.format === "svg") {
+      if (flags.scale !== 2) {
+        this.warn("Note: --scale is ignored for SVG export");
+      }
+      writeFileSync(flags.output, svg, "utf8");
+      this.log(`Wrote SVG: ${flags.output}`);
+      return;
+    }
 
     if (flags.format === "png") {
       const resvg = new Resvg(svg, {

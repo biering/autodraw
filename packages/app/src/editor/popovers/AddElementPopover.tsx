@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { CreationShapeToggleInner, creationShapeToggleLabel } from "../CreationShapeChoice.js";
 import { creationMenuColors, creationMenuShapes } from "../creationMenuCatalog.js";
 import { useDocument } from "../state/useDocument.js";
 
@@ -88,8 +89,11 @@ export function AddElementPopover() {
                       styleId: s.id,
                       shape,
                     });
-                    setOpen(false);
-                    setPos(null);
+                    // Close after mount so the label input is not immediately unfocused by the dialog's restoreFocus.
+                    window.requestAnimationFrame(() => {
+                      setOpen(false);
+                      setPos(null);
+                    });
                   }}
                   style={{
                     background: resolvedNodeBodyFillRgba(s, s.id),
@@ -113,10 +117,15 @@ export function AddElementPopover() {
                   key={sh}
                   type="button"
                   variant="outline"
-                  className={cn("h-10", shape === sh && "border-primary bg-accent")}
+                  className={cn(
+                    "flex h-11 items-center justify-center",
+                    shape === sh && "border-primary bg-accent",
+                  )}
+                  aria-label={creationShapeToggleLabel(sh)}
+                  aria-pressed={shape === sh}
                   onClick={() => setShape(sh)}
                 >
-                  {sh === "roundedRect" ? "Rounded" : "Rectangle"}
+                  <CreationShapeToggleInner shape={sh} />
                 </Button>
               ))}
             </div>

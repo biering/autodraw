@@ -1,9 +1,8 @@
 import { Args, Command, Flags } from "@oclif/core";
-import { readFileSync, writeFileSync } from "node:fs";
-import { parseDiagram, serializeDiagram } from "@agentsdraw/core";
+import { readDiagram, writeDiagram } from "../../internal/io.js";
 
-export default class NodeRemove extends Command {
-  static id = "node:remove";
+export default class RemoveNode extends Command {
+  static id = "remove node";
   static description = "Remove a node (and incident edges)";
 
   static args = {
@@ -15,10 +14,10 @@ export default class NodeRemove extends Command {
   };
 
   async run(): Promise<void> {
-    const { args, flags } = await this.parse(NodeRemove);
-    const doc = parseDiagram(JSON.parse(readFileSync(args.file, "utf8")) as unknown);
+    const { args, flags } = await this.parse(RemoveNode);
+    const doc = readDiagram(args.file);
     doc.nodes = doc.nodes.filter((n) => n.id !== flags.id);
     doc.edges = doc.edges.filter((e) => e.from !== flags.id && e.to !== flags.id);
-    writeFileSync(args.file, serializeDiagram(doc), "utf8");
+    writeDiagram(args.file, doc);
   }
 }

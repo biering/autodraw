@@ -138,11 +138,7 @@ function EdgeMarkerDropdownInner({ role, value, onChange, label }: EdgeMarkerDro
       ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9 w-full justify-between gap-2 px-2"
-          >
+          <Button type="button" variant="outline" className="h-9 w-full justify-between gap-2 px-2">
             <span className="flex items-center gap-2">
               <MarkerGlyph kind={value} role={role} />
               <span className="text-sm">{EDGE_MARKER_LABELS[value]}</span>

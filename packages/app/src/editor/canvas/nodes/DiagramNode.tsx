@@ -279,10 +279,22 @@ function NodeLabelEditor({
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useLayoutEffect(() => {
-    const el = inputRef.current;
-    if (!el) return;
-    el.focus();
-    el.select();
+    let cancelled = false;
+    const focusInput = () => {
+      if (cancelled) return;
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus({ preventScroll: true });
+      el.select();
+    };
+    // Defer past Radix Dialog / other focus traps that close in the same gesture as node creation.
+    const id = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(focusInput);
+    });
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(id);
+    };
   }, []);
 
   // Commit on outside pointerdown so that clicking elsewhere on the canvas

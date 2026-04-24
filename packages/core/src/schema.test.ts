@@ -46,6 +46,27 @@ describe("edge connection ports", () => {
   });
 });
 
+describe("diagram name", () => {
+  it("defaults missing name to Diagram when parsing legacy JSON", () => {
+    const raw = {
+      version: 1,
+      palette: "universal",
+      canvas: { showGrid: true, gridSpacing: 16, zoom: 1 },
+      nodes: [],
+      edges: [],
+    };
+    const d = parseDiagram(raw);
+    expect(d.name).toBe("Diagram");
+  });
+
+  it("round-trips name in serialized files", () => {
+    const d = emptyDiagram("universal");
+    d.name = "My flow";
+    const back = parseDiagram(JSON.parse(serializeDiagram(d)) as unknown);
+    expect(back.name).toBe("My flow");
+  });
+});
+
 describe("diagram round-trip", () => {
   it("parses fixture and renders SVG", () => {
     const d = emptyDiagram("universal");

@@ -1,7 +1,7 @@
 {
   "name": "@agentsdraw/cli",
   "version": "0.1.0",
-  "private": true,
+  "description": "Command-line tool for creating, editing, and exporting agentsdraw .adraw diagrams",
   "type": "module",
   "bin": {
     "agentsdraw": "./bin/run.mjs"
@@ -13,7 +13,8 @@
     "SKILL.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json && oclif manifest",
+    "prepublishOnly": "pnpm run build",
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json && oclif manifest",
     "postpack": "oclif manifest",
     "lint": "tsc -p tsconfig.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -31,10 +32,52 @@
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"
   },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/biering/agentsdraw.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/biering/agentsdraw#readme",
+  "bugs": {
+    "url": "https://github.com/biering/agentsdraw/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "oclif": {
     "bin": "agentsdraw",
     "dirname": "agentsdraw",
     "commands": "./dist/commands",
-    "topics": {}
+    "topicSeparator": " ",
+    "topics": {
+      "add": {
+        "description": "Create nodes or edges"
+      },
+      "remove": {
+        "description": "Delete nodes or edges"
+      },
+      "move": {
+        "description": "Reposition nodes"
+      },
+      "list": {
+        "description": "List diagram elements"
+      },
+      "patch": {
+        "description": "Update nodes or edges in place"
+      },
+      "show": {
+        "description": "Inspect diagram metadata"
+      },
+      "rename": {
+        "description": "Rename diagram"
+      },
+      "set": {
+        "description": "Change diagram settings"
+      },
+      "copy": {
+        "description": "Copy data between diagrams"
+      }
+    }
   }
 }

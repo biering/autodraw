@@ -1,4 +1,4 @@
-import { emptyDiagram, parseDiagram, serializeDiagram } from "@agentsdraw/core";
+import { parseDiagram, serializeDiagram } from "@agentsdraw/core";
 import { useDocument } from "../editor/state/useDocument.js";
 import { isTauri } from "./isTauri.js";
 
@@ -8,22 +8,31 @@ function warnDesktopOnly(action: string): void {
   );
 }
 
+async function pickAdrawPath(title: string): Promise<string | null> {
+  const { open } = await import("@tauri-apps/plugin-dialog");
+  const path = await open({
+    title,
+    multiple: false,
+    filters: [{ name: "Agentsdraw diagram", extensions: ["adraw"] }],
+  });
+  return typeof path === "string" ? path : null;
+}
+
+async function loadDiagramFromAdrawPath(path: string): Promise<void> {
+  const { readTextFile } = await import("@tauri-apps/plugin-fs");
+  const text = await readTextFile(path);
+  const doc = parseDiagram(JSON.parse(text) as unknown);
+  useDocument.getState().setDiagram(doc, { filePath: path, dirty: false });
+}
+
 export async function openDocumentInteractive(): Promise<void> {
   if (!isTauri()) {
     warnDesktopOnly("Open");
     return;
   }
-  const { open } = await import("@tauri-apps/plugin-dialog");
-  const { readTextFile } = await import("@tauri-apps/plugin-fs");
-  const path = await open({
-    multiple: false,
-    filters: [{ name: "Agentsdraw", extensions: ["adraw"] }],
-  });
-  if (typeof path !== "string") return;
-  const text = await readTextFile(path);
-  const doc = parseDiagram(JSON.parse(text) as unknown);
-  useDocument.getState().setDiagram(doc, { filePath: path, dirty: false });
-  useDocument.getState().setShowNewDocSheet(false);
+  const path = await pickAdrawPath("Open diagram");
+  if (!path) return;
+  await loadDiagramFromAdrawPath(path);
 }
 
 export async function saveDocumentInteractive(): Promise<void> {
@@ -46,9 +55,9 @@ export async function saveDocumentInteractive(): Promise<void> {
   st.markClean();
 }
 
+/** File ▸ New: blank universal diagram, no path on disk yet. */
 export async function newDocumentInteractive(): Promise<void> {
-  useDocument.getState().setDiagram(emptyDiagram("universal"), { filePath: null, dirty: false });
-  useDocument.getState().setShowNewDocSheet(true);
+  useDocument.getState().newDocument("universal");
 }
 
 export async function openDocumentFromPath(path: string): Promise<void> {
@@ -56,9 +65,5 @@ export async function openDocumentFromPath(path: string): Promise<void> {
     warnDesktopOnly("Open from path");
     return;
   }
-  const { readTextFile } = await import("@tauri-apps/plugin-fs");
-  const text = await readTextFile(path);
-  const doc = parseDiagram(JSON.parse(text) as unknown);
-  useDocument.getState().setDiagram(doc, { filePath: path, dirty: false });
-  useDocument.getState().setShowNewDocSheet(false);
+  await loadDiagramFromAdrawPath(path);
 }

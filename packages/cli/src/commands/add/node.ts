@@ -1,10 +1,10 @@
 import { Args, Command, Flags } from "@oclif/core";
 import { randomUUID } from "node:crypto";
-import { readFileSync, writeFileSync } from "node:fs";
-import { defaultStyleId, parseDiagram, serializeDiagram } from "@agentsdraw/core";
+import { defaultStyleId, nodeShapeSchema, type NodeShape } from "@agentsdraw/core";
+import { readDiagram, writeDiagram } from "../../internal/io.js";
 
-export default class NodeAdd extends Command {
-  static id = "node:add";
+export default class AddNode extends Command {
+  static id = "add node";
   static description = "Add a node to a diagram";
 
   static args = {
@@ -19,13 +19,18 @@ export default class NodeAdd extends Command {
     h: Flags.integer({ description: "Height", default: 72 }),
     style: Flags.string({ description: "Style id (e.g. red, yellow)" }),
     id: Flags.string({ description: "Explicit node id" }),
+    shape: Flags.string({
+      description: "Node shape",
+      options: [...nodeShapeSchema.options],
+    }),
   };
 
   async run(): Promise<void> {
-    const { args, flags } = await this.parse(NodeAdd);
-    const doc = parseDiagram(JSON.parse(readFileSync(args.file, "utf8")) as unknown);
+    const { args, flags } = await this.parse(AddNode);
+    const doc = readDiagram(args.file);
     const id = flags.id ?? randomUUID();
     const styleId = flags.style ?? defaultStyleId(doc.palette);
+    const shape = flags.shape as NodeShape | undefined;
     doc.nodes.push({
       id,
       text: flags.text,
@@ -34,8 +39,9 @@ export default class NodeAdd extends Command {
       w: flags.w,
       h: flags.h,
       styleId,
+      ...(shape ? { shape } : {}),
     });
-    writeFileSync(args.file, serializeDiagram(doc), "utf8");
+    writeDiagram(args.file, doc);
     this.log(id);
   }
 }

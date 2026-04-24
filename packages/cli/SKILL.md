@@ -10,6 +10,8 @@ description: >-
 
 The CLI reads and writes **diagram v1** JSON files (extension `.adraw`). It uses `@agentsdraw/core` for validation, SVG rendering, and relationship presets.
 
+Commands use **verb-first, space-separated** topics (e.g. `agentsdraw add node …`).
+
 ## Installation
 
 From the **agentsdraw** monorepo root after building the CLI:
@@ -44,69 +46,139 @@ agentsdraw open <file.adraw>
 
 Uses the OS default application (`open` on macOS, `xdg-open` on Linux, `start` on Windows).
 
-### `export` — PNG or PDF
+### `validate` — parse (and optionally rewrite) JSON
+
+```bash
+agentsdraw validate <file.adraw> [--rewrite] [--quiet]
+```
+
+Runs `parseDiagram`. With `--rewrite`, writes migrated, pretty-printed JSON back to the file. Exit code `1` on invalid input.
+
+### `export` — PNG, PDF, or SVG
 
 ```bash
 agentsdraw export <file.adraw> --format png --output out.png [--scale 2] [--show-grid|--no-show-grid]
 agentsdraw export <file.adraw> --format pdf --output out.pdf [--show-grid|--no-show-grid]
+agentsdraw export <file.adraw> --format svg --output out.svg [--show-grid|--no-show-grid]
 ```
 
 - **PNG**: raster via Resvg; `--scale` affects export resolution (1–8, default `2`).
 - **PDF**: raster page embedded via `pdf-lib` (high-res render then single-page PDF).
+- **SVG**: writes `renderSVG` output as UTF-8; `--scale` is ignored (a warning is printed if set).
 
-### `node:list`
+### `add node`
 
 ```bash
-agentsdraw node:list <file.adraw>
+agentsdraw add node <file.adraw> --text "Label" [--shape roundedRect] [--x 240] [--y 240] [--w 160] [--h 72] [--style <styleId>] [--id <uuid>]
 ```
 
-Prints TSV lines: `id`, `text`, `x`, `y`, `w`, `h`, `styleId`.
+`--shape` is one of: `rectangle`, `roundedRect`, `oval`, `circle`, `diamond`, `hexagon`, `octagon`, `parallelogram`. If `--style` is omitted, uses `defaultStyleId` for the diagram palette. Prints the new node `id` on stdout.
 
-### `node:add`
+### `add edge`
 
 ```bash
-agentsdraw node:add <file.adraw> --text "Label" [--x 240] [--y 240] [--w 160] [--h 72] [--style <styleId>] [--id <uuid>]
+agentsdraw add edge <file.adraw> --from <nodeId> --to <nodeId> \
+  [--routing straight|orthogonal|curved] [--dash solid|dashed|dotted] \
+  [--head none|lineArrow|triangleArrow|triangleReversed|circle|diamond] \
+  [--tail none|lineArrow|...] [--label ""] [--stroke-width 1] \
+  [--source-handle src] [--target-handle tgt] \
+  [--preset 0-7]
 ```
 
-Appends a node. If `--style` is omitted, uses `defaultStyleId` for the diagram’s palette. Prints the new node `id` on stdout.
+- If `--preset` is set (0–7), routing/dash/head/tail/strokeWidth come from `applyRelationshipPreset` (same presets as the desktop app). `--source-handle` / `--target-handle` still apply.
+- Without `--preset`, `--tail` defaults to `none` and `--stroke-width` defaults to `1`.
+- Prints the new edge `id` on stdout.
 
-### `node:move`
-
-```bash
-agentsdraw node:move <file.adraw> --id <nodeId> --x <n> --y <n>
-```
-
-### `node:remove`
+### `remove node`
 
 ```bash
-agentsdraw node:remove <file.adraw> --id <nodeId>
+agentsdraw remove node <file.adraw> --id <nodeId>
 ```
 
 Removes the node and **all edges** incident on it.
 
-### `edge:add`
+### `remove edge`
 
 ```bash
-agentsdraw edge:add <file.adraw> --from <nodeId> --to <nodeId> \
-  [--routing straight|orthogonal|curved] [--dash solid|dashed|dotted] \
-  [--head none|lineArrow|triangleArrow|triangleReversed|circle|diamond] [--label ""] \
-  [--preset 0-7]
+agentsdraw remove edge <file.adraw> --id <edgeId>
 ```
 
-- If `--preset` is set (0–7), routing/dash/head/tail/stroke come from `applyRelationshipPreset` and override manual routing flags for styling.
-- Prints the new edge `id` on stdout.
-
-### `edge:remove`
+### `move node`
 
 ```bash
-agentsdraw edge:remove <file.adraw> --id <edgeId>
+agentsdraw move node <file.adraw> --id <nodeId> --x <n> --y <n>
 ```
+
+### `list nodes`
+
+```bash
+agentsdraw list nodes <file.adraw>
+```
+
+Prints a TSV header then rows: `id`, `text`, `x`, `y`, `w`, `h`, `styleId`, `shape` (shape column may be empty).
+
+### `list edges`
+
+```bash
+agentsdraw list edges <file.adraw>
+```
+
+TSV with columns: `id`, `from`, `to`, `routing`, `dash`, `head`, `tail`, `label`, `strokeWidth`, `sourceHandle`, `targetHandle`, `relationshipPreset`.
+
+### `patch node`
+
+```bash
+agentsdraw patch node <file.adraw> --id <nodeId> [--text ...] [--shape ...] [--x ...] [--y ...] [--w ...] [--h ...] [--style ...]
+```
+
+At least one optional field besides `--id` is required.
+
+### `patch edge`
+
+```bash
+agentsdraw patch edge <file.adraw> --id <edgeId> [--routing ...] [--dash ...] [--head ...] [--tail ...] [--label ...] \
+  [--stroke-width N] [--source-handle ...] [--target-handle ...] [--preset 0-7]
+```
+
+If `--preset` is set, preset styling is applied first, then any other flags you pass override those fields. Use `--source-handle ""` / `--target-handle ""` to clear handles.
+
+### `show diagram`
+
+```bash
+agentsdraw show diagram <file.adraw> [--json]
+```
+
+Without `--json`, prints a short summary (name, palette, counts, canvas). With `--json`, prints the full diagram JSON (pretty-printed).
+
+### `rename diagram`
+
+```bash
+agentsdraw rename diagram <file.adraw> --name "My title"
+```
+
+Uses `normalizeDiagramName` from core.
+
+### `set canvas`
+
+```bash
+agentsdraw set canvas <file.adraw> [--show-grid|--no-show-grid] [--grid-spacing N] [--zoom 1.25]
+```
+
+At least one flag is required. `--zoom` is a decimal string (e.g. `1`, `0.75`).
+
+### `copy palette`
+
+```bash
+agentsdraw copy palette <target.adraw> --from <source.adraw>
+```
+
+Copies `palette` and `customStyles` from the source diagram into the target file (same behavior as the app’s “load palette from”).
 
 ## Agent workflow tips
 
-1. **Discover node ids** with `node:list` before adding edges.
-2. **Prefer `edge:add --preset`** when you want consistent relationship styling (same presets as the desktop app).
-3. **Validate** by running `export --format png` in CI to catch corrupt JSON early.
+1. **Discover node ids** with `list nodes` before adding edges.
+2. **Prefer `add edge --preset`** when you want consistent relationship styling (same presets as the desktop app).
+3. **Validate in CI** with `agentsdraw validate <file.adraw>` (add `--rewrite` in migration pipelines).
 4. After scripted edits, **open** the file in the desktop app for visual review.
 
 ## Related packages

@@ -22,6 +22,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { useShallow } from "zustand/react/shallow";
 import {
   resolvedNodeBodyFillRgba,
@@ -48,7 +49,16 @@ import { DiagramEdge } from "./edges/DiagramEdge.js";
 import { DiagramNode } from "./nodes/DiagramNode.js";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { readClipboardText, writeClipboardText } from "../../platform/clipboard.js";
+import { CreationShapeToggleInner, creationShapeToggleLabel } from "../CreationShapeChoice.js";
 import { creationMenuColors, creationMenuShapes } from "../creationMenuCatalog.js";
+import { isTypingInField } from "../isTypingInField.js";
+import {
+  parseAgentsdrawNodesClipboard,
+  placementForMultiPaste,
+  serializeNodeForClip,
+  serializeNodesForClip,
+} from "../nodeClipboard.js";
 import { MAX_VIEW_ZOOM, useDocument } from "../state/useDocument.js";
 import { EdgeMarkerDropdown } from "./NewRelationshipPicker.js";
 
@@ -101,8 +111,6 @@ const NODE_MENU_H = 440;
 const EDGE_MENU_W = 400;
 const EDGE_MENU_H = 460;
 
-const NODE_CLIP_MARKER = "agentsdraw-node-clip-v1";
-
 const CTX_BACKDROP = "absolute inset-0 z-50";
 
 const CTX_MENU =
@@ -133,19 +141,6 @@ type CanvasMenu =
   | { kind: "pane"; cx: number; cy: number; fx: number; fy: number }
   | { kind: "node"; cx: number; cy: number; nodeId: string }
   | { kind: "edge"; cx: number; cy: number; edgeId: string };
-
-function serializeNodeForClip(n: NodeRecord): string {
-  return JSON.stringify({
-    $type: NODE_CLIP_MARKER,
-    text: n.text,
-    x: n.x,
-    y: n.y,
-    w: n.w,
-    h: n.h,
-    styleId: n.styleId,
-    shape: n.shape,
-  });
-}
 
 function connectedNodeIds(diagram: DiagramV1, startId: string): Set<string> {
   const ids = new Set<string>([startId]);
@@ -179,6 +174,7 @@ export function DiagramCanvas() {
   const setZoom = useDocument((s) => s.setZoom);
   const removeNode = useDocument((s) => s.removeNode);
   const removeEdge = useDocument((s) => s.removeEdge);
+  const addNode = useDocument((s) => s.addNode);
   const rf = useReactFlow();
 
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -463,6 +459,111 @@ export function DiagramCanvas() {
     closeMenu();
   }, [rf, closeMenu]);
 
+  const pasteAtFlowPosition = useCallback(
+    async (flowX: number, flowY: number) => {
+      let clip: string;
+      try {
+        clip = await readClipboardText();
+      } catch (err) {
+        console.warn("Paste: clipboard read failed", err);
+        return;
+      }
+      const payloads = parseAgentsdrawNodesClipboard(clip);
+      if (!payloads || payloads.length === 0) return;
+      const d = useDocument.getState().diagram;
+      const placed = placementForMultiPaste(payloads, flowX, flowY, d);
+      const newIds: string[] = [];
+      for (const p of placed) {
+        newIds.push(addNode(p, { focusLabel: false }));
+      }
+      if (newIds.length > 0) {
+        setSelection(newIds, []);
+      }
+    },
+    [addNode, setSelection],
+  );
+
+  const copySelectedNodesToClipboard = useCallback(async () => {
+    const { selection, diagram } = useDocument.getState();
+    const records: NodeRecord[] = [];
+    for (const id of selection.nodeIds) {
+      const n = diagram.nodes.find((x) => x.id === id);
+      if (n) records.push(n);
+    }
+    if (records.length === 0) return;
+    await writeClipboardText(serializeNodesForClip(records));
+  }, []);
+
+  const cutSelectedNodes = useCallback(async () => {
+    const ids = [...useDocument.getState().selection.nodeIds];
+    if (ids.length === 0) return;
+    try {
+      await copySelectedNodesToClipboard();
+    } catch (err) {
+      console.warn("Cut: copy failed", err);
+      return;
+    }
+    for (const id of ids) {
+      removeNode(id);
+    }
+  }, [copySelectedNodesToClipboard, removeNode]);
+
+  useHotkeys(
+    "mod+v",
+    (e) => {
+      if (isTypingInField()) return;
+      if (useDocument.getState().relationshipDraft) return;
+      e.preventDefault();
+      const el = wrapRef.current;
+      const r = el?.getBoundingClientRect();
+      const cx = (r?.left ?? 0) + (r?.width ?? 0) / 2;
+      const cy = (r?.top ?? 0) + (r?.height ?? 0) / 2;
+      const flow = rf.screenToFlowPosition({ x: cx, y: cy });
+      void pasteAtFlowPosition(flow.x, flow.y);
+      closeMenu();
+    },
+    [rf, pasteAtFlowPosition, closeMenu],
+  );
+
+  useHotkeys(
+    "mod+c",
+    (e) => {
+      if (isTypingInField()) return;
+      if (useDocument.getState().relationshipDraft) return;
+      if (useDocument.getState().selection.nodeIds.length === 0) return;
+      e.preventDefault();
+      void copySelectedNodesToClipboard().catch((err) => console.warn("Copy failed", err));
+      closeMenu();
+    },
+    [copySelectedNodesToClipboard, closeMenu],
+  );
+
+  useHotkeys(
+    "mod+x",
+    (e) => {
+      if (isTypingInField()) return;
+      if (useDocument.getState().relationshipDraft) return;
+      if (useDocument.getState().selection.nodeIds.length === 0) return;
+      e.preventDefault();
+      void cutSelectedNodes().catch((err) => console.warn("Cut failed", err));
+      closeMenu();
+    },
+    [cutSelectedNodes, closeMenu],
+  );
+
+  useHotkeys(
+    "mod+a",
+    (e) => {
+      if (isTypingInField()) return;
+      if (useDocument.getState().relationshipDraft) return;
+      e.preventDefault();
+      const ids = useDocument.getState().diagram.nodes.map((n) => n.id);
+      setSelection(ids, []);
+      closeMenu();
+    },
+    [setSelection, closeMenu],
+  );
+
   useEffect(() => {
     if (!menu && !relationshipDraft) return;
     const onKey = (e: KeyboardEvent) => {
@@ -551,7 +652,15 @@ export function DiagramCanvas() {
                 Add New Element…
               </button>
               <div className={CTX_SEP} role="separator" />
-              <button type="button" className={CTX_ITEM} role="menuitem" disabled>
+              <button
+                type="button"
+                className={CTX_ITEM}
+                role="menuitem"
+                onClick={() => {
+                  void pasteAtFlowPosition(menu.fx, menu.fy);
+                  closeMenu();
+                }}
+              >
                 <span className={CTX_ICON} aria-hidden>
                   <IconPaste />
                 </span>
@@ -637,13 +746,7 @@ function RelationshipDraftDialog({
               Pick start and end markers. The edge is added between the two elements you connected.
             </p>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="shrink-0"
-            onClick={onCancel}
-          >
+          <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={onCancel}>
             Cancel
           </Button>
         </div>
@@ -689,10 +792,7 @@ function NodeContextMenuInner({
     [diagram.palette, diagram.customStyles],
   );
 
-  const effectiveShape = useMemo(
-    () => nodeEffectiveShape(diagram, node),
-    [diagram, node],
-  );
+  const effectiveShape = useMemo(() => nodeEffectiveShape(diagram, node), [diagram, node]);
 
   const setColor = useCallback(
     (id: string) => {
@@ -720,7 +820,7 @@ function NodeContextMenuInner({
   const copyPayload = useCallback(async () => {
     const rec = getRecord();
     if (!rec) return;
-    await navigator.clipboard.writeText(serializeNodeForClip(rec));
+    await writeClipboardText(serializeNodeForClip(rec));
   }, [getRecord]);
 
   const handleEditCaption = useCallback(() => {
@@ -856,11 +956,14 @@ function NodeContextMenuInner({
             type="button"
             className={cn(
               EDGE_TOGGLE,
+              "flex items-center justify-center py-1.5",
               effectiveShape === sh && "border-primary bg-accent",
             )}
+            aria-label={creationShapeToggleLabel(sh)}
+            aria-pressed={effectiveShape === sh}
             onClick={() => setShape(sh)}
           >
-            {sh === "roundedRect" ? "Rounded" : "Rectangle"}
+            <CreationShapeToggleInner shape={sh} />
           </button>
         ))}
       </div>

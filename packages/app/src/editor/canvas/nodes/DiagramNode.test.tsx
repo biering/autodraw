@@ -72,7 +72,8 @@ function mountDiagramNode(selected: boolean): { container: HTMLDivElement; unmou
 describe("DiagramNode source handles", () => {
   beforeAll(() => {
     // React 19 + Vitest jsdom: silence "not configured to support act(...)" warnings.
-    (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT =
+      true;
     globalThis.ResizeObserver = class {
       observe(): void {}
       unobserve(): void {}

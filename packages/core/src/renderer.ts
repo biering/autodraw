@@ -66,7 +66,12 @@ function polylinePoints(pts: { x: number; y: number }[]): string {
  * Per-marker SVG body. `role` picks orientation so the same geometry works at both ends;
  * `refX` lands the tip (end) / base (start) right at the line endpoint.
  */
-function markerBody(kind: Exclude<EdgeHead, "none">, role: "start" | "end", sw: number, stroke: string): string {
+function markerBody(
+  kind: Exclude<EdgeHead, "none">,
+  role: "start" | "end",
+  sw: number,
+  stroke: string,
+): string {
   const strokeAttr = `stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round"`;
   const tri = `markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="12" refY="4" orient="auto"`;
   switch (kind) {

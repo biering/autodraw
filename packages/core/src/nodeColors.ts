@@ -44,7 +44,11 @@ const DARK_FILL_ANCHOR_R = 0.1;
 const DARK_FILL_ANCHOR_G = 0.1;
 const DARK_FILL_ANCHOR_B = 0.12;
 
-function blendFillForLightCanvas(r: number, g: number, b: number): { r: number; g: number; b: number } {
+function blendFillForLightCanvas(
+  r: number,
+  g: number,
+  b: number,
+): { r: number; g: number; b: number } {
   const w = LIGHT_FILL_MIX;
   return {
     r: r * (1 - w) + w,
@@ -53,7 +57,11 @@ function blendFillForLightCanvas(r: number, g: number, b: number): { r: number; 
   };
 }
 
-function blendFillForDarkCanvas(r: number, g: number, b: number): { r: number; g: number; b: number } {
+function blendFillForDarkCanvas(
+  r: number,
+  g: number,
+  b: number,
+): { r: number; g: number; b: number } {
   const w = DARK_FILL_MIX;
   return {
     r: r * (1 - w) + DARK_FILL_ANCHOR_R * w,
@@ -62,7 +70,11 @@ function blendFillForDarkCanvas(r: number, g: number, b: number): { r: number; g
   };
 }
 
-function liftStrokeForDarkCanvas(style: NodeBodyStrokeChannels): { r: number; g: number; b: number } {
+function liftStrokeForDarkCanvas(style: NodeBodyStrokeChannels): {
+  r: number;
+  g: number;
+  b: number;
+} {
   const lift = 0.44;
   return {
     r: Math.min(1, style.strokeRed * (1 - lift) + lift),
@@ -117,7 +129,10 @@ export function resolvedNodeBodyStrokeForCanvas(
 }
 
 /** SVG uses `fill` + `fill-opacity` / `stroke` + `stroke-opacity` (no alpha in rgb()). */
-export function resolvedNodeSvgFillParts(style: NodeBodyFillChannels, _styleId?: string): {
+export function resolvedNodeSvgFillParts(
+  style: NodeBodyFillChannels,
+  _styleId?: string,
+): {
   fillRgb: string;
   fillOpacity: number;
 } {
@@ -138,11 +153,7 @@ export function resolvedNodeSvgStrokeParts(style: NodeBodyStrokeChannels): {
 }
 
 /** When `styleId` does not resolve; matches previous `#eee` / `#444` fallbacks. */
-export const FALLBACK_NODE_BODY_FILL_RGBA = rgbFromLinearRgb(
-  238 / BYTE,
-  238 / BYTE,
-  238 / BYTE,
-);
+export const FALLBACK_NODE_BODY_FILL_RGBA = rgbFromLinearRgb(238 / BYTE, 238 / BYTE, 238 / BYTE);
 
 export const FALLBACK_NODE_BODY_STROKE_RGBA = rgbaFromLinearRgb(
   0x44 / BYTE,

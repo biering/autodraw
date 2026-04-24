@@ -1,7 +1,8 @@
 import { Sparkles } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import cliSkillMarkdown from "../../../cli/SKILL.md?raw";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -11,12 +12,27 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { isTauri } from "../platform/isTauri.js";
+import { useDocument } from "./state/useDocument.js";
 
 const DOWNLOAD_NAME = "agentsdraw-cli.SKILL.md";
 
 export function CliSkillHelp() {
+  const canvasTheme = useDocument((s) => s.canvasTheme);
+  const isDarkCanvas = canvasTheme === "dark";
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  /** Match {@link ZoomDock} shell so floating chrome reads as one family on the canvas. */
+  const triggerClass = useMemo(
+    () =>
+      cn(
+        "fixed right-4 top-[calc(10px+env(safe-area-inset-top,0px))] z-[85] h-10 w-10 rounded-full shadow-md [-webkit-app-region:no-drag] [app-region:no-drag]",
+        isDarkCanvas
+          ? "border border-white/[0.14] bg-[rgba(255,255,255,0.08)] hover:bg-white/12"
+          : "border border-black/[0.12] bg-[rgba(0,0,0,0.02)] hover:bg-black/10",
+      ),
+    [isDarkCanvas],
+  );
 
   const download = useCallback(async () => {
     setBusy(true);
@@ -51,14 +67,18 @@ export function CliSkillHelp() {
     <>
       <Button
         type="button"
-        variant="secondary"
+        variant="ghost"
         size="icon"
-        className="fixed right-4 top-[calc(10px+env(safe-area-inset-top,0px))] z-[85] h-10 w-10 rounded-full border border-border/80 bg-card/95 shadow-md backdrop-blur-md hover:bg-accent [-webkit-app-region:no-drag] [app-region:no-drag]"
+        className={triggerClass}
         aria-label="CLI skill for agents"
         title="Download CLI skill (SKILL.md)"
         onClick={() => setOpen(true)}
       >
-        <Sparkles className="h-5 w-5 text-primary" strokeWidth={1.75} aria-hidden />
+        <Sparkles
+          className={cn("h-5 w-5", isDarkCanvas ? "text-white" : "text-black")}
+          strokeWidth={1.75}
+          aria-hidden
+        />
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
