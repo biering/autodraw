@@ -4,7 +4,7 @@ import {
   type EdgeDash,
   type EdgeHead,
   type EdgeRouting,
-} from "@agentsdraw/core";
+} from "@autodraw/core";
 import { readDiagram, requireEdge, writeDiagram } from "../../internal/io.js";
 
 export default class PatchEdge extends Command {

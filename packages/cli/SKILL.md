@@ -1,31 +1,32 @@
 ---
-name: agentsdraw-cli
+name: autodraw-cli
 description: >-
-  Use the agentsdraw CLI (`agentsdraw`) to create, edit, export, and open `.adraw`
-  diagram JSON files from scripts or terminal workflows. Load when automating
-  diagrams, batch-editing nodes/edges, CI export, or integrating with agents.
+  Use the autodraw CLI (`autodraw`) or MCP server (`@autodraw/mcp`) to create, edit,
+  export, and open `.adraw` diagram JSON files from scripts, terminal workflows, or
+  MCP hosts. Load when automating diagrams, batch-editing nodes/edges, CI export, or
+  integrating with agents.
 ---
 
-# agentsdraw CLI
+# autodraw CLI
 
-The CLI reads and writes **diagram v1** JSON files (extension `.adraw`). It uses `@agentsdraw/core` for validation, SVG rendering, and relationship presets.
+The CLI reads and writes **diagram v1** JSON files (extension `.adraw`). It uses `@autodraw/core` for validation, SVG rendering, and relationship presets.
 
-Commands use **verb-first, space-separated** topics (e.g. `agentsdraw add node …`).
+Commands use **verb-first, space-separated** topics (e.g. `autodraw add node …`).
 
 ## Installation
 
-From the **agentsdraw** monorepo root after building the CLI:
+From the **autodraw** monorepo root after building the CLI:
 
 ```bash
-pnpm --filter @agentsdraw/cli build
-pnpm exec agentsdraw --help
+pnpm --filter @autodraw/cli build
+pnpm exec autodraw --help
 ```
 
-Globally (optional): link or publish the `@agentsdraw/cli` package and run `agentsdraw`.
+Globally (optional): link or publish the `@autodraw/cli` package and run `autodraw`.
 
 ## File format
 
-- Input/output paths are ordinary UTF-8 JSON files matching `diagramSchemaV1` from `@agentsdraw/core`.
+- Input/output paths are ordinary UTF-8 JSON files matching `diagramSchemaV1` from `@autodraw/core`.
 - Prefer extension `.adraw` for clarity.
 
 ## Commands
@@ -33,7 +34,7 @@ Globally (optional): link or publish the `@agentsdraw/cli` package and run `agen
 ### `init` — new empty diagram
 
 ```bash
-agentsdraw init <file.adraw> [--palette universal|grayscale|flowchart|empty]
+autodraw init <file.adraw> [--palette universal|grayscale|flowchart|empty]
 ```
 
 Creates a new diagram file. Default palette is `universal`.
@@ -41,7 +42,7 @@ Creates a new diagram file. Default palette is `universal`.
 ### `open` — open in default app
 
 ```bash
-agentsdraw open <file.adraw>
+autodraw open <file.adraw>
 ```
 
 Uses the OS default application (`open` on macOS, `xdg-open` on Linux, `start` on Windows).
@@ -49,7 +50,7 @@ Uses the OS default application (`open` on macOS, `xdg-open` on Linux, `start` o
 ### `validate` — parse (and optionally rewrite) JSON
 
 ```bash
-agentsdraw validate <file.adraw> [--rewrite] [--quiet]
+autodraw validate <file.adraw> [--rewrite] [--quiet]
 ```
 
 Runs `parseDiagram`. With `--rewrite`, writes migrated, pretty-printed JSON back to the file. Exit code `1` on invalid input.
@@ -57,9 +58,9 @@ Runs `parseDiagram`. With `--rewrite`, writes migrated, pretty-printed JSON back
 ### `export` — PNG, PDF, or SVG
 
 ```bash
-agentsdraw export <file.adraw> --format png --output out.png [--scale 2] [--show-grid|--no-show-grid]
-agentsdraw export <file.adraw> --format pdf --output out.pdf [--show-grid|--no-show-grid]
-agentsdraw export <file.adraw> --format svg --output out.svg [--show-grid|--no-show-grid]
+autodraw export <file.adraw> --format png --output out.png [--scale 2] [--show-grid|--no-show-grid]
+autodraw export <file.adraw> --format pdf --output out.pdf [--show-grid|--no-show-grid]
+autodraw export <file.adraw> --format svg --output out.svg [--show-grid|--no-show-grid]
 ```
 
 - **PNG**: raster via Resvg; `--scale` affects export resolution (1–8, default `2`).
@@ -69,7 +70,7 @@ agentsdraw export <file.adraw> --format svg --output out.svg [--show-grid|--no-s
 ### `add node`
 
 ```bash
-agentsdraw add node <file.adraw> --text "Label" [--shape roundedRect] [--x 240] [--y 240] [--w 160] [--h 72] [--style <styleId>] [--id <uuid>]
+autodraw add node <file.adraw> --text "Label" [--shape roundedRect] [--x 240] [--y 240] [--w 160] [--h 72] [--style <styleId>] [--id <uuid>]
 ```
 
 `--shape` is one of: `rectangle`, `roundedRect`, `oval`, `circle`, `diamond`, `hexagon`, `octagon`, `parallelogram`. If `--style` is omitted, uses `defaultStyleId` for the diagram palette. Prints the new node `id` on stdout.
@@ -77,7 +78,7 @@ agentsdraw add node <file.adraw> --text "Label" [--shape roundedRect] [--x 240] 
 ### `add edge`
 
 ```bash
-agentsdraw add edge <file.adraw> --from <nodeId> --to <nodeId> \
+autodraw add edge <file.adraw> --from <nodeId> --to <nodeId> \
   [--routing straight|orthogonal|curved] [--dash solid|dashed|dotted] \
   [--head none|lineArrow|triangleArrow|triangleReversed|circle|diamond] \
   [--tail none|lineArrow|...] [--label ""] [--stroke-width 1] \
@@ -92,7 +93,7 @@ agentsdraw add edge <file.adraw> --from <nodeId> --to <nodeId> \
 ### `remove node`
 
 ```bash
-agentsdraw remove node <file.adraw> --id <nodeId>
+autodraw remove node <file.adraw> --id <nodeId>
 ```
 
 Removes the node and **all edges** incident on it.
@@ -100,19 +101,19 @@ Removes the node and **all edges** incident on it.
 ### `remove edge`
 
 ```bash
-agentsdraw remove edge <file.adraw> --id <edgeId>
+autodraw remove edge <file.adraw> --id <edgeId>
 ```
 
 ### `move node`
 
 ```bash
-agentsdraw move node <file.adraw> --id <nodeId> --x <n> --y <n>
+autodraw move node <file.adraw> --id <nodeId> --x <n> --y <n>
 ```
 
 ### `list nodes`
 
 ```bash
-agentsdraw list nodes <file.adraw>
+autodraw list nodes <file.adraw>
 ```
 
 Prints a TSV header then rows: `id`, `text`, `x`, `y`, `w`, `h`, `styleId`, `shape` (shape column may be empty).
@@ -120,7 +121,7 @@ Prints a TSV header then rows: `id`, `text`, `x`, `y`, `w`, `h`, `styleId`, `sha
 ### `list edges`
 
 ```bash
-agentsdraw list edges <file.adraw>
+autodraw list edges <file.adraw>
 ```
 
 TSV with columns: `id`, `from`, `to`, `routing`, `dash`, `head`, `tail`, `label`, `strokeWidth`, `sourceHandle`, `targetHandle`, `relationshipPreset`.
@@ -128,7 +129,7 @@ TSV with columns: `id`, `from`, `to`, `routing`, `dash`, `head`, `tail`, `label`
 ### `patch node`
 
 ```bash
-agentsdraw patch node <file.adraw> --id <nodeId> [--text ...] [--shape ...] [--x ...] [--y ...] [--w ...] [--h ...] [--style ...]
+autodraw patch node <file.adraw> --id <nodeId> [--text ...] [--shape ...] [--x ...] [--y ...] [--w ...] [--h ...] [--style ...]
 ```
 
 At least one optional field besides `--id` is required.
@@ -136,7 +137,7 @@ At least one optional field besides `--id` is required.
 ### `patch edge`
 
 ```bash
-agentsdraw patch edge <file.adraw> --id <edgeId> [--routing ...] [--dash ...] [--head ...] [--tail ...] [--label ...] \
+autodraw patch edge <file.adraw> --id <edgeId> [--routing ...] [--dash ...] [--head ...] [--tail ...] [--label ...] \
   [--stroke-width N] [--source-handle ...] [--target-handle ...] [--preset 0-7]
 ```
 
@@ -145,7 +146,7 @@ If `--preset` is set, preset styling is applied first, then any other flags you 
 ### `show diagram`
 
 ```bash
-agentsdraw show diagram <file.adraw> [--json]
+autodraw show diagram <file.adraw> [--json]
 ```
 
 Without `--json`, prints a short summary (name, palette, counts, canvas). With `--json`, prints the full diagram JSON (pretty-printed).
@@ -153,7 +154,7 @@ Without `--json`, prints a short summary (name, palette, counts, canvas). With `
 ### `rename diagram`
 
 ```bash
-agentsdraw rename diagram <file.adraw> --name "My title"
+autodraw rename diagram <file.adraw> --name "My title"
 ```
 
 Uses `normalizeDiagramName` from core.
@@ -161,7 +162,7 @@ Uses `normalizeDiagramName` from core.
 ### `set canvas`
 
 ```bash
-agentsdraw set canvas <file.adraw> [--show-grid|--no-show-grid] [--grid-spacing N] [--zoom 1.25]
+autodraw set canvas <file.adraw> [--show-grid|--no-show-grid] [--grid-spacing N] [--zoom 1.25]
 ```
 
 At least one flag is required. `--zoom` is a decimal string (e.g. `1`, `0.75`).
@@ -169,7 +170,7 @@ At least one flag is required. `--zoom` is a decimal string (e.g. `1`, `0.75`).
 ### `copy palette`
 
 ```bash
-agentsdraw copy palette <target.adraw> --from <source.adraw>
+autodraw copy palette <target.adraw> --from <source.adraw>
 ```
 
 Copies `palette` and `customStyles` from the source diagram into the target file (same behavior as the app’s “load palette from”).
@@ -178,10 +179,36 @@ Copies `palette` and `customStyles` from the source diagram into the target file
 
 1. **Discover node ids** with `list nodes` before adding edges.
 2. **Prefer `add edge --preset`** when you want consistent relationship styling (same presets as the desktop app).
-3. **Validate in CI** with `agentsdraw validate <file.adraw>` (add `--rewrite` in migration pipelines).
+3. **Validate in CI** with `autodraw validate <file.adraw>` (add `--rewrite` in migration pipelines).
 4. After scripted edits, **open** the file in the desktop app for visual review.
+
+## MCP equivalents (`@autodraw/mcp`)
+
+If the host supports **Model Context Protocol** (stdio) instead of shelling out to the CLI, use the **`@autodraw/mcp`** server. After `pnpm --filter @autodraw/mcp build`, point the MCP client at `packages/mcp/bin/run.mjs` (see [`packages/mcp/README.md`](../mcp/README.md)).
+
+| CLI | MCP tool |
+|-----|----------|
+| `autodraw init …` | `autodraw_init` |
+| `autodraw add node …` | `autodraw_add_node` |
+| `autodraw add edge …` | `autodraw_add_edge` |
+| `autodraw remove node …` | `autodraw_remove_node` |
+| `autodraw remove edge …` | `autodraw_remove_edge` |
+| `autodraw move node …` | `autodraw_move_node` |
+| `autodraw patch node …` | `autodraw_patch_node` |
+| `autodraw patch edge …` | `autodraw_patch_edge` |
+| `autodraw list nodes …` | `autodraw_list_nodes` (returns JSON array) |
+| `autodraw list edges …` | `autodraw_list_edges` (returns JSON array) |
+| `autodraw validate …` | `autodraw_validate` |
+| `autodraw export …` | `autodraw_export` |
+| `autodraw show diagram …` | `autodraw_show_diagram` |
+| `autodraw rename diagram …` | `autodraw_rename_diagram` |
+| `autodraw set canvas …` | `autodraw_set_canvas` |
+| `autodraw copy palette …` | `autodraw_copy_palette` |
+
+MCP tools take the same filesystem paths and fields as the CLI (snake_case / camelCase as documented in each tool’s JSON schema).
 
 ## Related packages
 
-- **`@agentsdraw/core`**: `parseDiagram`, `serializeDiagram`, `emptyDiagram`, `renderSVG`, palette and relationship helpers.
-- **Desktop app (Tauri)**: interactive editing; CLI is for automation and headless pipelines.
+- **`@autodraw/core`**: `parseDiagram`, `serializeDiagram`, `emptyDiagram`, `renderSVG`, palette and relationship helpers.
+- **`@autodraw/mcp`**: MCP stdio server mirroring CLI operations for agent hosts that prefer MCP over subprocesses.
+- **Desktop app (Tauri)**: interactive editing; CLI / MCP are for automation and headless pipelines.

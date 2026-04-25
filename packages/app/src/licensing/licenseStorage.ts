@@ -1,4 +1,5 @@
-export const LICENSE_STORAGE_KEY = "agentsdraw:license:v1";
+export const LICENSE_STORAGE_KEY = "autodraw:license:v1";
+const LEGACY_LICENSE_STORAGE_KEY = "agentsdraw:license:v1";
 
 export type StoredLicenseV1 = {
   version: 1;
@@ -39,16 +40,8 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
-export function readStoredLicense(): StoredLicenseV1 | null {
-  const ls = getLocalStorage();
-  if (!ls) return null;
-  let raw: string | null;
-  try {
-    raw = ls.getItem(LICENSE_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-  if (raw == null || raw.trim() === "") return null;
+function parseStoredLicenseRaw(raw: string): StoredLicenseV1 | null {
+  if (raw.trim() === "") return null;
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw) as unknown;
@@ -71,6 +64,36 @@ export function readStoredLicense(): StoredLicenseV1 | null {
   };
 }
 
+export function readStoredLicense(): StoredLicenseV1 | null {
+  const ls = getLocalStorage();
+  if (!ls) return null;
+  let raw: string | null;
+  try {
+    raw = ls.getItem(LICENSE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+  if (raw == null || raw.trim() === "") {
+    try {
+      raw = ls.getItem(LEGACY_LICENSE_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+    if (raw == null || raw.trim() === "") return null;
+    const migrated = parseStoredLicenseRaw(raw);
+    if (migrated) {
+      try {
+        writeStoredLicense(migrated);
+        ls.removeItem(LEGACY_LICENSE_STORAGE_KEY);
+      } catch {
+        /* ignore */
+      }
+    }
+    return migrated;
+  }
+  return parseStoredLicenseRaw(raw);
+}
+
 export function writeStoredLicense(data: StoredLicenseV1): void {
   const ls = getLocalStorage();
   if (!ls || typeof ls.setItem !== "function") {
@@ -85,6 +108,11 @@ export function writeStoredLicense(data: StoredLicenseV1): void {
         activationId: data.activationId,
       }),
     );
+    try {
+      ls.removeItem(LEGACY_LICENSE_STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
   } catch {
     /* quota / private mode */
   }
@@ -97,6 +125,7 @@ export function clearStoredLicense(): void {
   }
   try {
     ls.removeItem(LICENSE_STORAGE_KEY);
+    ls.removeItem(LEGACY_LICENSE_STORAGE_KEY);
   } catch {
     /* ignore */
   }

@@ -1,7 +1,7 @@
 {
-  "name": "@agentsdraw/core",
+  "name": "@autodraw/core",
   "version": "0.1.0",
-  "description": "Diagram v1 schema, palettes, routing, and SVG rendering for agentsdraw",
+  "description": "Diagram v1 schema, palettes, routing, and SVG rendering for Autodraw",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -31,12 +31,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/biering/agentsdraw.git",
+    "url": "https://github.com/biering/autodraw.git",
     "directory": "packages/core"
   },
-  "homepage": "https://github.com/biering/agentsdraw#readme",
+  "homepage": "https://github.com/biering/autodraw#readme",
   "bugs": {
-    "url": "https://github.com/biering/agentsdraw/issues"
+    "url": "https://github.com/biering/autodraw/issues"
   },
   "publishConfig": {
     "access": "public"

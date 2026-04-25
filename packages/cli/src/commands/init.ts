@@ -1,6 +1,6 @@
 import { Args, Command, Flags } from "@oclif/core";
 import { writeFileSync } from "node:fs";
-import { emptyDiagram, serializeDiagram, type PalettePreset } from "@agentsdraw/core";
+import { emptyDiagram, serializeDiagram, type PalettePreset } from "@autodraw/core";
 
 export default class Init extends Command {
   static id = "init";

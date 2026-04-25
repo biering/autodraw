@@ -2,7 +2,7 @@ import { Args, Command, Flags } from "@oclif/core";
 import { writeFileSync } from "node:fs";
 import { PDFDocument } from "pdf-lib";
 import { Resvg } from "@resvg/resvg-js";
-import { renderSVG } from "@agentsdraw/core";
+import { renderSVG } from "@autodraw/core";
 import { readDiagram } from "../internal/io.js";
 
 export default class Export extends Command {

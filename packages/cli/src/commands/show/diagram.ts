@@ -1,5 +1,5 @@
 import { Args, Command, Flags } from "@oclif/core";
-import { serializeDiagram } from "@agentsdraw/core";
+import { serializeDiagram } from "@autodraw/core";
 import { readDiagram } from "../../internal/io.js";
 
 export default class ShowDiagram extends Command {

@@ -1,10 +1,10 @@
 {
-  "name": "agentsdraw",
+  "name": "autodraw",
   "private": true,
   "packageManager": "pnpm@10.30.3",
   "scripts": {
     "build": "pnpm -r run build",
-    "dev": "pnpm --filter @agentsdraw/app dev",
+    "dev": "pnpm --filter @autodraw/app dev",
     "dev:tauri": "node scripts/dev-tauri.mjs",
     "lint": "pnpm -r run lint",
     "typecheck": "pnpm -r run typecheck",

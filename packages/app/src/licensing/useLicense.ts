@@ -47,7 +47,7 @@ export function resetLicenseStoreForTests(): void {
   useLicense.setState({ ...initial });
 }
 
-export const useLicense = create<LicenseState>((set) => ({
+export const useLicense = create<LicenseState>()((set) => ({
   ...initial,
   clearError: () => set({ error: null }),
 
@@ -198,7 +198,7 @@ export const useLicense = create<LicenseState>((set) => ({
     set({ status: "licensed", error: null, configMissing: false });
   },
 
-  applyLicenseSync: (payload) => {
+  applyLicenseSync: (payload: LicenseSyncPayload) => {
     if (payload.kind === "dev_bypass") {
       if (!import.meta.env.DEV) return;
       set({ status: "licensed", error: null, configMissing: false });

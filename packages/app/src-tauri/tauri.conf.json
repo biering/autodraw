@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "agentsdraw",
+  "productName": "Autodraw",
   "version": "0.1.0",
-  "identifier": "com.cbiering.agentsdraw",
+  "identifier": "com.cbiering.autodraw",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "license",
-        "title": "Activate agentsdraw",
+        "title": "Activate Autodraw",
         "url": "license.html",
         "width": 520,
         "height": 700,
@@ -46,10 +46,10 @@
     "fileAssociations": [
       {
         "ext": ["adraw"],
-        "name": "Agentsdraw Diagram",
+        "name": "Autodraw Diagram",
         "role": "Editor",
         "mimeType": "application/json",
-        "description": "Agentsdraw diagram document"
+        "description": "Autodraw diagram document"
       }
     ]
   }

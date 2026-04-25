@@ -3,7 +3,7 @@ import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { readStoredLicense } from "./licenseStorage.js";
 import type { LicenseSyncPayload } from "./useLicense.js";
 
-export const LICENSE_SYNC_EVENT = "agentsdraw-license-sync";
+export const LICENSE_SYNC_EVENT = "autodraw-license-sync";
 
 /** Build payload for main after this webview is licensed (read storage after activate). */
 export function buildLicenseSyncPayload(): LicenseSyncPayload {

@@ -1,0 +1,35 @@
+{
+  "name": "@autodraw/mcp",
+  "version": "0.1.0",
+  "description": "Model Context Protocol (stdio) server for Autodraw .adraw diagrams — mirrors @autodraw/cli operations",
+  "type": "module",
+  "bin": {
+    "autodraw-mcp": "./bin/run.mjs"
+  },
+  "files": ["bin", "dist"],
+  "scripts": {
+    "prepublishOnly": "pnpm run build",
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node bin/run.mjs"
+  },
+  "dependencies": {
+    "@autodraw/core": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@resvg/resvg-js": "^2.6.2",
+    "pdf-lib": "^1.17.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/biering/autodraw.git",
+    "directory": "packages/mcp"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

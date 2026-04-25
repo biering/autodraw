@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { getPolarPublicConfig } from "./polarEnv.js";
-import { useLicense } from "./useLicense.js";
+import { useLicense, type LicenseState } from "./useLicense.js";
 
 export type ActivationGateProps = {
   /** Tauri license window: panel fills the webview (no floating card / letterboxing). */
@@ -18,14 +18,14 @@ export type ActivationGateProps = {
 };
 
 export function ActivationGate({ fillWindow = false }: ActivationGateProps) {
-  const status = useLicense((s) => s.status);
-  const error = useLicense((s) => s.error);
-  const configMissing = useLicense((s) => s.configMissing);
-  const activate = useLicense((s) => s.activate);
-  const openCheckout = useLicense((s) => s.openCheckout);
-  const openPortal = useLicense((s) => s.openPortal);
-  const clearError = useLicense((s) => s.clearError);
-  const devBypassLicense = useLicense((s) => s.devBypassLicense);
+  const status = useLicense((s: LicenseState) => s.status);
+  const error = useLicense((s: LicenseState) => s.error);
+  const configMissing = useLicense((s: LicenseState) => s.configMissing);
+  const activate = useLicense((s: LicenseState) => s.activate);
+  const openCheckout = useLicense((s: LicenseState) => s.openCheckout);
+  const openPortal = useLicense((s: LicenseState) => s.openPortal);
+  const clearError = useLicense((s: LicenseState) => s.clearError);
+  const devBypassLicense = useLicense((s: LicenseState) => s.devBypassLicense);
   const isDev = import.meta.env.DEV;
 
   const [keyDraft, setKeyDraft] = useState("");
@@ -62,7 +62,7 @@ export function ActivationGate({ fillWindow = false }: ActivationGateProps) {
           </div>
           <DialogHeader className="space-y-2 text-center sm:text-center">
             <DialogTitle className="text-2xl font-bold tracking-tight text-white">
-              Welcome to agentsdraw
+              Welcome to Autodraw
             </DialogTitle>
             <DialogDescription className="text-sm text-zinc-400">
               Activate your license to start diagramming. Purchase on Polar, then paste your key

@@ -2,11 +2,11 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { emptyDiagram, parseDiagram, renderSVG, serializeDiagram } from "@agentsdraw/core";
+import { emptyDiagram, parseDiagram, renderSVG, serializeDiagram } from "@autodraw/core";
 
 describe("cli fixture roundtrip", () => {
   it("writes and parses a diagram fixture", () => {
-    const dir = mkdtempSync(join(tmpdir(), "agentsdraw-"));
+    const dir = mkdtempSync(join(tmpdir(), "autodraw-"));
     try {
       const doc = emptyDiagram("universal");
       doc.nodes.push({

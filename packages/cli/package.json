@@ -1,10 +1,10 @@
 {
-  "name": "@agentsdraw/cli",
+  "name": "@autodraw/cli",
   "version": "0.1.0",
-  "description": "Command-line tool for creating, editing, and exporting agentsdraw .adraw diagrams",
+  "description": "Command-line tool for creating, editing, and exporting Autodraw .adraw diagrams",
   "type": "module",
   "bin": {
-    "agentsdraw": "./bin/run.mjs"
+    "autodraw": "./bin/run.mjs"
   },
   "files": [
     "bin",
@@ -21,7 +21,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@agentsdraw/core": "workspace:*",
+    "@autodraw/core": "workspace:*",
     "@oclif/core": "^4.2.10",
     "@resvg/resvg-js": "^2.6.2",
     "pdf-lib": "^1.17.1",
@@ -35,19 +35,19 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/biering/agentsdraw.git",
+    "url": "https://github.com/biering/autodraw.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://github.com/biering/agentsdraw#readme",
+  "homepage": "https://github.com/biering/autodraw#readme",
   "bugs": {
-    "url": "https://github.com/biering/agentsdraw/issues"
+    "url": "https://github.com/biering/autodraw/issues"
   },
   "publishConfig": {
     "access": "public"
   },
   "oclif": {
-    "bin": "agentsdraw",
-    "dirname": "agentsdraw",
+    "bin": "autodraw",
+    "dirname": "autodraw",
     "commands": "./dist/commands",
     "topicSeparator": " ",
     "topics": {

@@ -6,7 +6,7 @@ import {
   type DiagramV1,
   type EdgeRecord,
   type NodeRecord,
-} from "@agentsdraw/core";
+} from "@autodraw/core";
 
 export function readDiagram(path: string): DiagramV1 {
   try {

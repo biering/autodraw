@@ -55,4 +55,15 @@ describe("licenseStorage", () => {
     clearStoredLicense();
     expect(readStoredLicense()).toBeNull();
   });
+
+  it("migrates legacy storage key", () => {
+    localStorage.setItem(
+      "agentsdraw:license:v1",
+      JSON.stringify({ version: 1, key: "legacy-key", activationId: null }),
+    );
+    const back = readStoredLicense();
+    expect(back).toEqual({ version: 1, key: "legacy-key", activationId: null });
+    expect(localStorage.getItem("autodraw:license:v1")).toContain("legacy-key");
+    expect(localStorage.getItem("agentsdraw:license:v1")).toBeNull();
+  });
 });

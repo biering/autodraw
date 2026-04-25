@@ -1,6 +1,6 @@
 import { Args, Command, Flags } from "@oclif/core";
 import { randomUUID } from "node:crypto";
-import { defaultStyleId, nodeShapeSchema, type NodeShape } from "@agentsdraw/core";
+import { defaultStyleId, nodeShapeSchema, type NodeShape } from "@autodraw/core";
 import { readDiagram, writeDiagram } from "../../internal/io.js";
 
 export default class AddNode extends Command {

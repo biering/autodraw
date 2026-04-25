@@ -5,13 +5,13 @@ import { LicenseWindowRoot } from "./licensing/LicenseWindowRoot.js";
 import { isTauri } from "./platform/isTauri.js";
 import "./styles/globals.css";
 
-type RootHost = HTMLElement & { __agentsdrawRoot?: Root };
+type RootHost = HTMLElement & { __autodrawRoot?: Root };
 
 function LicenseBoot() {
   if (!isTauri()) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-[#131316] px-6 text-center text-sm text-[#a1a1aa]">
-        Open the agentsdraw desktop app to activate your license.
+        Open the Autodraw desktop app to activate your license.
       </div>
     );
   }
@@ -21,8 +21,8 @@ function LicenseBoot() {
 const container = document.getElementById("root") as RootHost | null;
 if (!container) throw new Error("#root element missing from license.html");
 
-const root = container.__agentsdrawRoot ?? ReactDOM.createRoot(container);
-container.__agentsdrawRoot = root;
+  const root = container.__autodrawRoot ?? ReactDOM.createRoot(container);
+  container.__autodrawRoot = root;
 root.render(
   <React.StrictMode>
     <div className="min-h-dvh bg-[#1a1a1a]">

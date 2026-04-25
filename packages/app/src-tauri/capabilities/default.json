@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Default capability for the main window",
-  "windows": ["main", "license"],
+  "windows": ["*"],
   "remote": {
     "urls": [
       "http://127.0.0.1:1420/*",
@@ -13,6 +13,8 @@
   },
   "permissions": [
     "core:default",
+    "core:window:allow-create",
+    "core:webview:allow-create-webview-window",
     "core:window:allow-close",
     "core:window:allow-set-focus",
     "core:window:allow-show",
@@ -21,6 +23,24 @@
     "core:event:default",
     "dialog:default",
     "fs:default",
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [
+        { "path": "$HOME/**" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$DESKTOP/**" },
+        { "path": "$DOWNLOAD/**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [
+        { "path": "$HOME/**" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$DESKTOP/**" },
+        { "path": "$DOWNLOAD/**" }
+      ]
+    },
     "shell:default",
     "clipboard-manager:allow-read-text",
     "clipboard-manager:allow-write-text"

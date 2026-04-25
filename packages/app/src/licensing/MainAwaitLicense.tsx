@@ -1,7 +1,7 @@
 /**
  * Main webview placeholder until the license window unlocks it.
  * Does not mount the editor or ActivationGate (those live in license.html).
- * The `agentsdraw-license-sync` listener is registered in `main.tsx` as early as possible.
+ * The `autodraw-license-sync` listener is registered in `main.tsx` as early as possible.
  */
 export function MainAwaitLicense() {
   return (

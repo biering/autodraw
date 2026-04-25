@@ -3,6 +3,60 @@ mod commands;
 use tauri::menu::{AboutMetadata, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 use tauri::{Emitter, Manager};
 
+#[cfg(target_os = "macos")]
+fn dispatch_run_event_opened_files<R: tauri::Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+    event: &tauri::RunEvent,
+) {
+    use tauri::{WebviewUrl, WebviewWindowBuilder};
+
+    if let tauri::RunEvent::Opened { urls } = event {
+        for url in urls {
+            let Ok(path) = url.to_file_path() else {
+                continue;
+            };
+            let path_str = path.to_string_lossy();
+            if !path_str.ends_with(".adraw") {
+                continue;
+            }
+            let label = format!(
+                "doc-{}",
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_nanos())
+                    .unwrap_or(0)
+            );
+            let encoded = urlencoding::encode(path_str.as_ref());
+            let webview_url = WebviewUrl::App(format!("index.html?openPath={encoded}").into());
+            let title = path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("Diagram")
+                .to_string();
+            if let Err(e) = WebviewWindowBuilder::new(app_handle, &label, webview_url)
+                .title(title)
+                .inner_size(1280.0, 820.0)
+                .center()
+                .resizable(true)
+                .decorations(true)
+                .hidden_title(true)
+                .title_bar_style(tauri::TitleBarStyle::Overlay)
+                .visible(true)
+                .build()
+            {
+                eprintln!("[autodraw] failed to open diagram window: {e}");
+            }
+        }
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+fn dispatch_run_event_opened_files<R: tauri::Runtime>(
+    _app_handle: &tauri::AppHandle<R>,
+    _event: &tauri::RunEvent,
+) {
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -49,7 +103,7 @@ pub fn run() {
                 .accelerator("CmdOrCtrl+R")
                 .build(app)?;
 
-            let app_submenu = SubmenuBuilder::new(handle, "agentsdraw")
+            let app_submenu = SubmenuBuilder::new(handle, "Autodraw")
                 .about(Some(AboutMetadata::default()))
                 .separator()
                 .services()
@@ -137,6 +191,9 @@ pub fn run() {
             }
             _ => {}
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            dispatch_run_event_opened_files(app_handle, &event);
+        });
 }

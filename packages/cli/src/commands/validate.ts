@@ -1,6 +1,6 @@
 import { Args, Command, Flags } from "@oclif/core";
 import { readFileSync, writeFileSync } from "node:fs";
-import { parseDiagram, serializeDiagram } from "@agentsdraw/core";
+import { parseDiagram, serializeDiagram } from "@autodraw/core";
 
 export default class Validate extends Command {
   static id = "validate";

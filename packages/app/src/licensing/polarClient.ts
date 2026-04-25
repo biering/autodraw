@@ -106,7 +106,7 @@ export async function activateLicenseFlow(
     body: JSON.stringify({
       key: trimmed,
       organization_id: organizationId,
-      label: "Agentsdraw",
+      label: "Autodraw",
     }),
   });
 

@@ -6,7 +6,7 @@ import {
   type EdgeHead,
   type EdgeRecord,
   type EdgeRouting,
-} from "@agentsdraw/core";
+} from "@autodraw/core";
 import { readDiagram, writeDiagram } from "../../internal/io.js";
 
 export default class AddEdge extends Command {

@@ -1,5 +1,5 @@
 import { Args, Command, Flags } from "@oclif/core";
-import { nodeShapeSchema, type NodeShape } from "@agentsdraw/core";
+import { nodeShapeSchema, type NodeShape } from "@autodraw/core";
 import { readDiagram, requireNode, writeDiagram } from "../../internal/io.js";
 
 export default class PatchNode extends Command {

@@ -1,5 +1,5 @@
 import { Args, Command, Flags } from "@oclif/core";
-import { normalizeDiagramName } from "@agentsdraw/core";
+import { normalizeDiagramName } from "@autodraw/core";
 import { readDiagram, writeDiagram } from "../../internal/io.js";
 
 export default class RenameDiagram extends Command {

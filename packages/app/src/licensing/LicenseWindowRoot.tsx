@@ -2,14 +2,14 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect } from "react";
 import { ActivationGate } from "./ActivationGate.js";
 import { finalizeLicenseWindowSuccess } from "./licenseWindowOrchestration.js";
-import { useLicense } from "./useLicense.js";
+import { useLicense, type LicenseState } from "./useLicense.js";
 
 /** Survives React StrictMode remounts (ref resets; module state does not). */
 let licenseWindowFinalizeStarted = false;
 
 export function LicenseWindowRoot() {
-  const status = useLicense((s) => s.status);
-  const bootstrap = useLicense((s) => s.bootstrap);
+  const status = useLicense((s: LicenseState) => s.status);
+  const bootstrap = useLicense((s: LicenseState) => s.bootstrap);
 
   useEffect(() => {
     void bootstrap();

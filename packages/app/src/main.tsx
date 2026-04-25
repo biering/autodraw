@@ -8,7 +8,7 @@ import { useLicense, type LicenseSyncPayload } from "./licensing/useLicense.js";
 import { isTauri } from "./platform/isTauri.js";
 import "./styles/globals.css";
 
-type RootHost = HTMLElement & { __agentsdrawRoot?: Root };
+type RootHost = HTMLElement & { __autodrawRoot?: Root };
 
 if (isTauri()) {
   if (import.meta.hot) {
@@ -34,7 +34,7 @@ class RuntimeErrorBoundary extends React.Component<
     return { err };
   }
   componentDidCatch(err: Error, info: React.ErrorInfo) {
-    console.error("[agentsdraw] render error:", err, info);
+    console.error("[autodraw] render error:", err, info);
   }
   render() {
     if (this.state.err) {
@@ -55,7 +55,7 @@ class RuntimeErrorBoundary extends React.Component<
             zIndex: 99999,
           }}
         >
-          agentsdraw crashed:{"\n\n"}
+          autodraw crashed:{"\n\n"}
           {e.message}
           {e.stack ? "\n\n" + e.stack : ""}
         </pre>
@@ -77,7 +77,7 @@ function showBootError(message: string, stack?: string) {
       background: #1a0b0b; color: #ffb4b4;
       font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
       z-index: 99999;
-    ">agentsdraw failed to start:
+    ">autodraw failed to start:
 
 ${escape(message)}${stack ? "\n\n" + escape(stack) : ""}</pre>`;
   function escape(s: string) {
@@ -99,8 +99,8 @@ window.addEventListener("unhandledrejection", (e) => {
 try {
   const container = document.getElementById("root") as RootHost | null;
   if (!container) throw new Error("#root element missing from index.html");
-  const root = container.__agentsdrawRoot ?? ReactDOM.createRoot(container);
-  container.__agentsdrawRoot = root;
+  const root = container.__autodrawRoot ?? ReactDOM.createRoot(container);
+  container.__autodrawRoot = root;
   root.render(
     <React.StrictMode>
       <RuntimeErrorBoundary>
