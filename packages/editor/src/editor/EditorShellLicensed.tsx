@@ -165,7 +165,7 @@ export function EditorShellLicensed() {
 
   return (
     <ReactFlowProvider>
-      <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="relative flex h-full min-h-0 w-full flex-col">
         <div
           className="min-h-0 flex-1 bg-[var(--canvas)] transition-colors duration-200 data-[canvas-theme=dark]:bg-[#131316] data-[canvas-theme=dark]:[color-scheme:dark]"
           data-canvas-theme={canvasTheme}

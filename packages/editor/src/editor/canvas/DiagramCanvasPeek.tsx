@@ -21,9 +21,16 @@ export type DiagramCanvasPeekProps = {
   canvasTheme?: "light" | "dark";
   /** When set, render this diagram read-only instead of the animated landing preview. */
   diagram?: DiagramV1 | null;
+  /** Enables pan/zoom interactions in read-only mode. */
+  interactive?: boolean;
 };
 
-function DiagramCanvasPeekInner({ className, canvasTheme = "light", diagram: staticDiagram }: DiagramCanvasPeekProps) {
+function DiagramCanvasPeekInner({
+  className,
+  canvasTheme = "light",
+  diagram: staticDiagram,
+  interactive,
+}: DiagramCanvasPeekProps) {
   const baseRef = useRef<DiagramV1>(createLandingPeekDiagram());
   const [tMs, setTMs] = useState(0);
   const lastFrameMs = useRef(0);
@@ -63,6 +70,7 @@ function DiagramCanvasPeekInner({ className, canvasTheme = "light", diagram: sta
     [diagram],
   );
 
+  const isInteractive = interactive ?? staticDiagram != null;
   const dotGridColor = canvasTheme === "dark" ? "#4b4b52" : "#d9d9d9";
 
   const onInit = useCallback((inst: { fitView: (opts?: object) => void }) => {
@@ -88,10 +96,10 @@ function DiagramCanvasPeekInner({ className, canvasTheme = "light", diagram: sta
         nodesConnectable={false}
         elementsSelectable={false}
         edgesFocusable={false}
-        panOnDrag={staticDiagram != null}
+        panOnDrag={isInteractive}
         panOnScroll={false}
-        zoomOnScroll={staticDiagram != null}
-        zoomOnPinch={staticDiagram != null}
+        zoomOnScroll={isInteractive}
+        zoomOnPinch={isInteractive}
         zoomOnDoubleClick={false}
         preventScrolling
         proOptions={PRO_OPTIONS}

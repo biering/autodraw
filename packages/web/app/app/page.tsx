@@ -1,7 +1,6 @@
 "use client";
 
 import { EditorShellLicensed } from "@autodraw/editor";
-import "@xyflow/react/dist/style.css";
 
 export default function WebEditorPage() {
   return (

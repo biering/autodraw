@@ -1,82 +1,39 @@
-import { defaultStyleId, emptyDiagram, type DiagramV1, type NodeRecord } from "@autodraw/core";
+import { emptyDiagram, type DiagramV1, type NodeRecord, type NodeStyleDefinition } from "@autodraw/core";
+
+const PEEK_STYLE_ID = "lp-card";
+
+/** White fill + crisp dark border so the marketing peek reads against the white page background. */
+const PEEK_STYLE: NodeStyleDefinition = {
+  id: PEEK_STYLE_ID,
+  fillRed: 1,
+  fillGreen: 1,
+  fillBlue: 1,
+  fillAlpha: 1,
+  strokeRed: 0.07,
+  strokeGreen: 0.07,
+  strokeBlue: 0.08,
+  strokeAlpha: 1,
+  shape: "roundedRect",
+};
 
 /** Static sample used on the marketing page; ids prefixed so they never collide with editor sessions. */
 export function createLandingPeekDiagram(): DiagramV1 {
-  const styleId = defaultStyleId("grayscale");
   const d = emptyDiagram("grayscale");
   d.name = "Preview";
   d.canvas = { showGrid: true, gridSpacing: 16, zoom: 1 };
   return {
     ...d,
+    customStyles: [PEEK_STYLE],
     nodes: [
-      { id: "lp-gateway", text: "Gateway", x: 32, y: 72, w: 112, h: 48, styleId },
-      { id: "lp-service", text: "Service", x: 208, y: 32, w: 112, h: 48, styleId },
-      { id: "lp-queue", text: "Queue", x: 208, y: 128, w: 112, h: 48, styleId },
-      { id: "lp-db", text: "Database", x: 384, y: 72, w: 120, h: 48, styleId },
-      { id: "lp-cache", text: "Cache", x: 48, y: 208, w: 112, h: 48, styleId },
-      { id: "lp-worker", text: "Worker", x: 256, y: 208, w: 112, h: 48, styleId },
+      { id: "lp-left", text: "API", x: 64, y: 92, w: 132, h: 56, styleId: PEEK_STYLE_ID },
+      { id: "lp-right", text: "Service", x: 320, y: 92, w: 132, h: 56, styleId: PEEK_STYLE_ID },
     ],
     edges: [
       {
         id: "lp-e1",
-        from: "lp-gateway",
-        to: "lp-service",
-        routing: "curved",
-        dash: "solid",
-        head: "lineArrow",
-        tail: "none",
-        label: "",
-        strokeWidth: 1,
-      },
-      {
-        id: "lp-e2",
-        from: "lp-gateway",
-        to: "lp-queue",
-        routing: "curved",
-        dash: "solid",
-        head: "lineArrow",
-        tail: "none",
-        label: "",
-        strokeWidth: 1,
-      },
-      {
-        id: "lp-e3",
-        from: "lp-service",
-        to: "lp-db",
-        routing: "curved",
-        dash: "dashed",
-        head: "lineArrow",
-        tail: "none",
-        label: "",
-        strokeWidth: 1,
-      },
-      {
-        id: "lp-e4",
-        from: "lp-queue",
-        to: "lp-db",
-        routing: "curved",
-        dash: "dotted",
-        head: "lineArrow",
-        tail: "none",
-        label: "",
-        strokeWidth: 1,
-      },
-      {
-        id: "lp-e5",
-        from: "lp-service",
-        to: "lp-queue",
+        from: "lp-left",
+        to: "lp-right",
         routing: "orthogonal",
-        dash: "solid",
-        head: "none",
-        tail: "none",
-        label: "",
-        strokeWidth: 1,
-      },
-      {
-        id: "lp-e6",
-        from: "lp-cache",
-        to: "lp-worker",
-        routing: "curved",
         dash: "solid",
         head: "lineArrow",
         tail: "none",
@@ -109,11 +66,7 @@ export function landingPeekDiagramAtTime(base: DiagramV1, tMs: number): DiagramV
     const next: NodeRecord = { ...cur, y: cur.y + dy };
     d.nodes[i] = next;
   };
-  wobble("lp-gateway", 0, 2.2);
-  wobble("lp-service", 1.1, 1.8);
-  wobble("lp-queue", 2.3, 2);
-  wobble("lp-db", 0.6, 2.4);
-  wobble("lp-cache", 1.7, 1.6);
-  wobble("lp-worker", 2.8, 1.9);
+  wobble("lp-left", 0, 2.2);
+  wobble("lp-right", 1.4, 1.8);
   return d;
 }

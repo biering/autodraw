@@ -1,5 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Check, Command, Download, Layers, Sparkles } from "lucide-react";
+import { Check, Command, Download, Heart, Layers, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroDiagramPreview } from "./components/HeroDiagramPreview";
 
@@ -11,8 +12,16 @@ export default function Home() {
     <div className="flex min-h-full flex-col bg-white text-black">
       <header className="sticky top-0 z-50 border-b border-neutral-200 bg-white/90 backdrop-blur-sm">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link href="/" className="text-lg font-medium tracking-tight">
-            Autodraw
+          <Link href="/" className="flex items-center gap-2.5 text-lg font-medium tracking-tight">
+            <Image
+              src="/img/logo-autodraw.png"
+              alt="autodraw logo"
+              width={28}
+              height={28}
+              className="size-8 shrink-0 rounded-lg"
+              priority
+            />
+            <span>Autodraw</span>
           </Link>
           <nav className="hidden items-center gap-8 text-base font-normal text-neutral-700 md:flex">
             <a className="hover:text-black" href="#features">
@@ -44,6 +53,16 @@ export default function Home() {
       <main className="flex-1">
         <section className="mx-auto max-w-6xl px-6 pb-24 pt-16 md:pb-28 md:pt-24">
           <div className="mx-auto max-w-2xl text-center">
+            <div className="mb-6 flex justify-center md:mb-8" aria-hidden>
+              <Image
+                src="/img/logo-autodraw.png"
+                alt="autodraw logo"
+                width={200}
+                height={200}
+                className="h-20 w-20 object-contain md:h-28 md:w-28 rounded-2xl"
+                priority
+              />
+            </div>
             <h1
               className="text-balance text-5xl font-medium leading-none tracking-tight text-black md:text-7xl"
               style={{
@@ -193,21 +212,24 @@ pnpm exec autodraw add node ./design.adraw \\
       <footer className="border-t border-neutral-200 bg-white py-12">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 px-6 md:flex-row md:items-center">
           <div>
-            <p className="text-base font-medium text-black">Autodraw</p>
+            <div className="flex items-center gap-2.5">
+              <Image
+                src="/img/logo-autodraw.png"
+                alt=""
+                width={28}
+                height={28}
+                className="size-7 shrink-0 rounded-lg"
+              />
+              <p className="text-base font-medium text-black">Autodraw</p>
+            </div>
             <p className="mt-1 text-sm text-neutral-600">Diagram canvas · autodraw.ink</p>
-            <p className="mt-3 max-w-md text-sm text-neutral-500">
-              UI primitives follow patterns compatible with{" "}
-              <a className="text-black underline underline-offset-4 hover:text-neutral-700" href="https://ui.shadcn.com">
-                shadcn/ui
-              </a>{" "}
-              and blocks from{" "}
-              <a
-                className="text-black underline underline-offset-4 hover:text-neutral-700"
-                href="https://www.shadcn.io/"
-              >
-                shadcn.io
+            <p className="mt-3 flex max-w-md items-center gap-1 text-sm text-neutral-500">
+              <span>Made with</span>
+              <Heart className="size-4 fill-pink-400 text-pink-500" aria-hidden />
+              <span>by</span>
+              <a className="text-black underline underline-offset-4 hover:text-neutral-700" href="https://github.com/biering">
+                Christoph Biering
               </a>
-              .
             </p>
           </div>
           <div className="flex flex-col gap-3 text-sm text-neutral-600 md:items-end">
@@ -220,6 +242,12 @@ pnpm exec autodraw add node ./design.adraw \\
             <a className="hover:text-black" href="https://github.com/biering/autodraw" rel="noopener noreferrer">
               Source
             </a>
+            <Link className="hover:text-black" href="/imprint">
+              Imprint
+            </Link>
+            <Link className="hover:text-black" href="/privacy">
+              Privacy
+            </Link>
           </div>
         </div>
       </footer>

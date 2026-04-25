@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { decodeDiagramSharePayload } from "@autodraw/editor";
+import { decodeDiagramSharePayload } from "@autodraw/editor/share-payload";
 import { DiagramViewer } from "./DiagramViewer";
 
 export const metadata: Metadata = {

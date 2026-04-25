@@ -2,6 +2,7 @@ import { Moon, Sun } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Button } from "../components/ui/button";
+import { isTauri } from "../platform/isTauri";
 import { redoDocument, undoDocument, useDocument } from "./state/useDocument";
 
 function IconSpark() {
@@ -135,7 +136,18 @@ export function Toolbar() {
           aria-label="Editor toolbar"
         >
           <div className="flex shrink-0 items-center gap-2 pl-0.5 pr-1">
-            <IconSpark />
+            {isTauri() ? (
+              <img
+                src="/img/logo-autodraw.png"
+                alt=""
+                width={20}
+                height={20}
+                className="block h-5 w-5 shrink-0 object-contain [-webkit-app-region:no-drag] [app-region:no-drag]"
+                decoding="async"
+              />
+            ) : (
+              <IconSpark />
+            )}
             <ToolbarDiagramName />
           </div>
 

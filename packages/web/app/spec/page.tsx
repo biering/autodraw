@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { defaultStyleId, emptyDiagram, relationshipPresets } from "@autodraw/core";
-import { encodeDiagramSharePayload } from "@autodraw/editor";
+import { encodeDiagramSharePayload } from "@autodraw/editor/share-payload";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
@@ -301,7 +301,7 @@ For consistent relationship styling you MAY set relationshipPreset to an integer
 6 orthogonal dashed diamond head
 7 orthogonal dotted open head
 
-STYLE IDs: for palette "universal", common styleIds include yellow, orange, pink, blue, green, gray (see Autodraw spec page).
+STYLE IDs: for palette "universal", common styleIds include yellow, orange, pink, blue, green, lime, gray (see Autodraw spec page).
 
 SHARING: After emitting JSON, tell the user they can:
 - Save as file.adraw and open in the Autodraw Mac app or import in the web editor, OR

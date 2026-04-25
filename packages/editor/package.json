@@ -8,6 +8,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./share-payload": {
+      "types": "./src/sharePayload.ts",
+      "default": "./src/sharePayload.ts"
     }
   },
   "scripts": {

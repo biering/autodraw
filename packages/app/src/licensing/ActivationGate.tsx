@@ -1,4 +1,4 @@
-import { ExternalLink, Hand, ShoppingCart } from "lucide-react";
+import { ExternalLink, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,8 +57,15 @@ export function ActivationGate({ fillWindow = false }: ActivationGateProps) {
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <div className="shrink-0 border-b border-zinc-800 px-6 pb-5 pt-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-lime-400 text-lime-950">
-            <Hand className="h-9 w-9" strokeWidth={1.75} aria-hidden />
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center">
+            <img
+              src="/img/logo-autodraw.png"
+              alt=""
+              width={80}
+              height={80}
+              className="h-20 w-20 object-contain"
+              decoding="async"
+            />
           </div>
           <DialogHeader className="space-y-2 text-center sm:text-center">
             <DialogTitle className="text-2xl font-bold tracking-tight text-white">

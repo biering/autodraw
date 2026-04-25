@@ -47,6 +47,7 @@ const universal: NodeStyleDefinition[] = [
   styleFromHex("pink", "#6A66A3"),
   styleFromHex("blue", "#32908F"),
   styleFromHex("green", "#26C485"),
+  styleFromHex("lime", "#E0EF91"),
   style("gray", [0.82, 0.82, 0.84, 1], [0.45, 0.45, 0.48, 1], "roundedRect"),
 ];
 

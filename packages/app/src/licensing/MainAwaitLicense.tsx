@@ -5,8 +5,16 @@
  */
 export function MainAwaitLicense() {
   return (
-    <div className="flex h-screen w-screen items-center justify-center bg-[#131316] text-sm text-[#a1a1aa]">
-      Waiting for license activation…
+    <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-[#131316] text-sm text-[#a1a1aa]">
+      <img
+        src="/img/logo-autodraw.png"
+        alt=""
+        width={56}
+        height={56}
+        className="h-14 w-14 object-contain opacity-90"
+        decoding="async"
+      />
+      <p>Waiting for license activation…</p>
     </div>
   );
 }

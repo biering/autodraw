@@ -12,6 +12,7 @@ export const CREATION_MENU_COLOR_IDS: readonly string[] = [
   "pink",
   "blue",
   "green",
+  "lime",
   "gray",
 ];
 
