@@ -139,7 +139,7 @@ export function Toolbar() {
           <div className="flex shrink-0 items-center gap-2 pl-0.5 pr-1">
             {isTauri() ? (
               <img
-                src="/img/logo-autodraw.png"
+                src="/img/logo-1024x.png"
                 alt=""
                 width={20}
                 height={20}
