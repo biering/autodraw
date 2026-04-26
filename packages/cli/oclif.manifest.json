@@ -168,6 +168,42 @@
         "validate.js"
       ]
     },
+    "copy:palette": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Target diagram .adraw path (modified in place)",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Copy palette and custom styles from another diagram",
+      "flags": {
+        "from": {
+          "description": "Source diagram .adraw path",
+          "name": "from",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "copy:palette",
+      "pluginAlias": "@autodraw/cli",
+      "pluginName": "@autodraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "copy",
+        "palette.js"
+      ]
+    },
     "add:edge": {
       "aliases": [],
       "args": {
@@ -405,20 +441,36 @@
         "node.js"
       ]
     },
-    "copy:palette": {
+    "move:node": {
       "aliases": [],
       "args": {
         "file": {
-          "description": "Target diagram .adraw path (modified in place)",
+          "description": "Diagram .adraw path",
           "name": "file",
           "required": true
         }
       },
-      "description": "Copy palette and custom styles from another diagram",
+      "description": "Move a node",
       "flags": {
-        "from": {
-          "description": "Source diagram .adraw path",
-          "name": "from",
+        "id": {
+          "description": "Node id",
+          "name": "id",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "x": {
+          "description": "X",
+          "name": "x",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "y": {
+          "description": "Y",
+          "name": "y",
           "required": true,
           "hasDynamicHelp": false,
           "multiple": false,
@@ -427,7 +479,7 @@
       },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
-      "id": "copy:palette",
+      "id": "move:node",
       "pluginAlias": "@autodraw/cli",
       "pluginName": "@autodraw/cli",
       "pluginType": "core",
@@ -437,62 +489,8 @@
       "relativePath": [
         "dist",
         "commands",
-        "copy",
-        "palette.js"
-      ]
-    },
-    "list:edges": {
-      "aliases": [],
-      "args": {
-        "file": {
-          "description": "Diagram .adraw path",
-          "name": "file",
-          "required": true
-        }
-      },
-      "description": "List edges in a diagram",
-      "flags": {},
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "list:edges",
-      "pluginAlias": "@autodraw/cli",
-      "pluginName": "@autodraw/cli",
-      "pluginType": "core",
-      "strict": true,
-      "enableJsonFlag": false,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "list",
-        "edges.js"
-      ]
-    },
-    "list:nodes": {
-      "aliases": [],
-      "args": {
-        "file": {
-          "description": "Diagram .adraw path",
-          "name": "file",
-          "required": true
-        }
-      },
-      "description": "List nodes in a diagram",
-      "flags": {},
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "list:nodes",
-      "pluginAlias": "@autodraw/cli",
-      "pluginName": "@autodraw/cli",
-      "pluginType": "core",
-      "strict": true,
-      "enableJsonFlag": false,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "list",
-        "nodes.js"
+        "move",
+        "node.js"
       ]
     },
     "patch:edge": {
@@ -787,40 +785,6 @@
         "node.js"
       ]
     },
-    "show:diagram": {
-      "aliases": [],
-      "args": {
-        "file": {
-          "description": "Diagram .adraw path",
-          "name": "file",
-          "required": true
-        }
-      },
-      "description": "Print diagram metadata summary",
-      "flags": {
-        "json": {
-          "description": "Print full diagram JSON",
-          "name": "json",
-          "allowNo": true,
-          "type": "boolean"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "show:diagram",
-      "pluginAlias": "@autodraw/cli",
-      "pluginName": "@autodraw/cli",
-      "pluginType": "core",
-      "strict": true,
-      "enableJsonFlag": false,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "show",
-        "diagram.js"
-      ]
-    },
     "rename:diagram": {
       "aliases": [],
       "args": {
@@ -857,7 +821,7 @@
         "diagram.js"
       ]
     },
-    "move:node": {
+    "show:diagram": {
       "aliases": [],
       "args": {
         "file": {
@@ -866,36 +830,18 @@
           "required": true
         }
       },
-      "description": "Move a node",
+      "description": "Print diagram metadata summary",
       "flags": {
-        "id": {
-          "description": "Node id",
-          "name": "id",
-          "required": true,
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "x": {
-          "description": "X",
-          "name": "x",
-          "required": true,
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "y": {
-          "description": "Y",
-          "name": "y",
-          "required": true,
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
+        "json": {
+          "description": "Print full diagram JSON",
+          "name": "json",
+          "allowNo": true,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
-      "id": "move:node",
+      "id": "show:diagram",
       "pluginAlias": "@autodraw/cli",
       "pluginName": "@autodraw/cli",
       "pluginType": "core",
@@ -905,8 +851,62 @@
       "relativePath": [
         "dist",
         "commands",
-        "move",
-        "node.js"
+        "show",
+        "diagram.js"
+      ]
+    },
+    "list:edges": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "List edges in a diagram",
+      "flags": {},
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "list:edges",
+      "pluginAlias": "@autodraw/cli",
+      "pluginName": "@autodraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "list",
+        "edges.js"
+      ]
+    },
+    "list:nodes": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "List nodes in a diagram",
+      "flags": {},
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "list:nodes",
+      "pluginAlias": "@autodraw/cli",
+      "pluginName": "@autodraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "list",
+        "nodes.js"
       ]
     },
     "set:canvas": {

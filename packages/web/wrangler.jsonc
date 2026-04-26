@@ -1,17 +1,12 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "autodraw-web",
-	"main": ".open-next/worker.js",
 	"compatibility_date": "2026-04-25",
-	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 	"assets": {
-		"directory": ".open-next/assets",
-		"binding": "ASSETS"
+		"directory": "./dist",
+		"not_found_handling": "404-page"
 	},
-	"services": [
-		{
-			"binding": "WORKER_SELF_REFERENCE",
-			"service": "autodraw-web"
-		}
-	]
+	"observability": {
+		"enabled": true
+	}
 }

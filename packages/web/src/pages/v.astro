@@ -1,0 +1,11 @@
+---
+import RootLayout from "../layouts/RootLayout.astro";
+import { DiagramViewerIsland } from "@/islands/DiagramViewerIsland";
+
+const title = "View diagram · Autodraw";
+const description = "Read-only Autodraw diagram from a share link.";
+---
+
+<RootLayout {title} {description} ogTitle={title} canonicalPath="/v">
+	<DiagramViewerIsland client:only="react" />
+</RootLayout>

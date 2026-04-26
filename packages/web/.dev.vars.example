@@ -1,3 +1,3 @@
 # Copy to `.dev.vars` for local Workers preview (`pnpm preview`).
 # https://developers.cloudflare.com/workers/testing/local-development/#local-only-environment-variables
-NEXTJS_ENV=development
+# Add any Worker-only secrets or vars your app reads at runtime (static deploy may not need any).

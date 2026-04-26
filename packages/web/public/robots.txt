@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Allow: /app
+
+Host: https://autodraw.ink
+Sitemap: https://autodraw.ink/sitemap-index.xml
