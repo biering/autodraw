@@ -93,11 +93,7 @@ export function HeroDiagramPreview() {
 
 	return (
 		<section className="relative bg-white" aria-label="Product preview">
-			<p className="px-6 pt-2 text-center font-mono text-xs leading-relaxed text-neutral-600 md:text-sm">
-				macOS 14.6+ (Sonoma) · Apple Silicon recommended · Web canvas runs in any modern browser
-			</p>
-
-			<div className="relative mx-auto mt-8 max-w-5xl px-4 sm:px-6">
+			<div className="relative mx-auto mt-3 max-w-5xl px-4 sm:px-6">
 				<div className="relative overflow-hidden rounded-t-lg border border-b-0 border-neutral-200 pb-px">
 					<div className="relative h-[200px] w-full sm:h-[240px]">
 						<div className="pointer-events-none h-full w-full">

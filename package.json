@@ -6,6 +6,7 @@
     "build": "pnpm -r run build",
     "deploy:web": "pnpm --filter web deploy",
     "dev": "pnpm --filter @autodraw/app dev",
+    "dev:web": "pnpm --filter web dev",
     "dev:tauri": "node scripts/dev-tauri.mjs",
     "lint": "pnpm -r run lint",
     "typecheck": "pnpm -r run typecheck",

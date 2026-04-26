@@ -8,7 +8,7 @@ import { HomeSections } from "@/islands/HomeSections";
 
 const title = "Autodraw — Diagram canvas for agents & teams";
 const description =
-	"Ship clear architecture diagrams fast. Free web canvas at autodraw.ink; native Mac app with offline files and pro export (paid). CLI for agents and CI.";
+	"Open-source architecture and flow diagrams in the .adraw file format. Free web canvas at autodraw.ink; Mac app for offline files and export (paid, coming soon). CLI and MCP for agents and CI.";
 ---
 
 <RootLayout {title} {description} ogTitle={title} canonicalPath="/">
@@ -53,7 +53,7 @@ const description =
 						</svg>
 						Download for Mac
 					</Button>
-					<a href="/app" class={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>Open in web</a>
+					<a href="/app" class={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>Start free in browser</a>
 				</div>
 			</div>
 		</header>
@@ -71,14 +71,20 @@ const description =
 						/>
 					</div>
 					<h1
-						class="text-balance text-5xl font-medium leading-none tracking-tight text-black md:text-7xl"
+						class="text-balance text-5xl font-medium leading-none text-black md:text-7xl"
 						style="font-family: ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;"
 					>
-						Autodraw
+						Let your agents draw
 					</h1>
-					<p class="mx-auto mt-8 max-w-xl text-balance text-lg font-normal leading-snug text-neutral-700 md:text-xl">
-						Sketch the diagram. Hand off the <code class="font-mono text-base text-neutral-800">.adraw</code> file.
-						Let agents and teammates follow along—that's it. That's the loop.
+					<p
+						class="mx-auto mt-4 max-w-xl text-balance text-xl font-medium leading-snug text-neutral-800 md:mt-5 md:text-2xl"
+						style="font-family: ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;"
+					>
+						Diagram canvas for agents and teams
+					</p>
+					<p class="mx-auto mt-6 max-w-xl text-balance text-lg font-normal leading-snug text-neutral-700 md:mt-8 md:text-xl">
+						Draw beautiful diagrams, commit it next to
+						your code, or send a share link. Teammates open it in the browser. One file, no drift.
 					</p>
 					<div class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
 						<Button disabled size="lg" className="gap-2 px-8" title="Coming soon">
@@ -101,8 +107,9 @@ const description =
 							</svg>
 							Download for Mac
 						</Button>
-						<a href="/app" class={cn(buttonVariants({ variant: "secondary", size: "lg" }), "px-8")}>Open in web</a>
+						<a href="/app" class={cn(buttonVariants({ variant: "secondary", size: "lg" }), "px-8")}>Start free in browser</a>
 					</div>
+					<p class="mt-4 font-mono text-center text-sm text-neutral-500">macOS 14.6+ (Sonoma) · Web canvas is free. No install.</p>
 				</div>
 			</section>
 

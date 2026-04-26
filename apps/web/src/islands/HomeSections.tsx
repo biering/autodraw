@@ -4,25 +4,25 @@ import { Button } from "@/components/ui/button";
 const features = [
 	{
 		title: "Clarity by default",
-		body: "Grayscale-first UI so your diagram stays the hero—no noisy chrome, no gradients.",
+		body: "Mostly grayscale so the diagram stays readable. Less chrome, fewer gradients, more of what you ship.",
 		icon: Layers,
 	},
 	{
 		title: "Built for iteration",
-		body: "Keyboard-first editing, snapping, and undo-friendly moves so you stay in flow.",
+		body: "Keyboard-first edits, snapping, and undo-friendly moves. You stay in flow instead of fighting the UI.",
 		icon: Command,
 	},
 	{
-		title: "Agents + humans",
-		body: "Pair the free canvas with the `autodraw` CLI for CI, bots, and repo-native diagrams.",
+		title: "Agents and humans, same file",
+		body: "Pair the web canvas with the `autodraw` CLI and MCP so bots and pipelines edit the same JSON the UI does.",
 		icon: Sparkles,
 	},
 ] as const;
 
 const workflowBullets = [
-	"Drop nodes, connect edges, name what matters—no diagram gymnastics.",
-	"Export or script with the CLI when you need SVG/PNG/PDF in CI.",
-	"Mac app adds native open/save, offline work, and pro export paths.",
+	"Stop passing screenshots around. One `.adraw` in git is the source of truth for reviews and handoffs.",
+	"When CI needs assets, export SVG, PNG, or PDF from the CLI, or script changes and open the result in `/app`.",
+	"The Mac app will add native open/save, offline work, and export paths tuned for daily use.",
 ] as const;
 
 export function HomeSections() {
@@ -52,7 +52,7 @@ export function HomeSections() {
 									"ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
 							}}
 						>
-							From blank canvas to PR comment in minutes
+							From sketch to a diagram in the repo
 						</h2>
 						<ul className="mt-8 space-y-4 text-base leading-relaxed text-neutral-700">
 							{workflowBullets.map((t) => (
@@ -75,7 +75,8 @@ pnpm exec autodraw add node ./design.adraw \\
 							</code>
 						</pre>
 						<p className="mt-4 text-sm text-neutral-600">
-							Same `.adraw` format in the web canvas, desktop app, and CLI—no lock-in.
+							Same `.adraw` on the web canvas, in the desktop app, and from the CLI. If you outgrow
+							the tool, you still own plain JSON.
 						</p>
 					</div>
 				</div>
@@ -91,11 +92,11 @@ pnpm exec autodraw add node ./design.adraw \\
 									"ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
 							}}
 						>
-							Simple pricing story
+							Web or Mac
 						</h2>
 						<p className="mt-4 text-lg text-neutral-600">
-							The web app stays free forever. The Mac app is a paid product for professionals who
-							want native performance and file workflows.
+							The browser canvas stays free. The Mac app is for people who want files on disk,
+							offline work, and native export.
 						</p>
 					</div>
 					<div className="mx-auto mt-14 grid max-w-4xl gap-6 md:grid-cols-2">
@@ -103,17 +104,19 @@ pnpm exec autodraw add node ./design.adraw \\
 							<h3 className="text-xl font-medium">Web</h3>
 							<p className="mt-2 text-4xl font-medium tracking-tight">$0</p>
 							<p className="mt-2 text-neutral-600">
-								Full canvas in your browser. Great for sharing and quick drafts.
+								Full canvas in your browser. Share a link, drop a file, or paste a payload from the
+								spec page.
 							</p>
 							<Button className="mt-8" size="lg" asChild>
-								<a href="/app">Open /app</a>
+								<a href="/app">Start free in browser</a>
 							</Button>
 						</div>
 						<div className="flex flex-col rounded-xl border border-neutral-200 bg-white p-8">
 							<h3 className="text-xl font-medium">Mac</h3>
-							<p className="mt-2 text-4xl font-medium tracking-tight">Paid</p>
+							<p className="mt-2 text-4xl font-medium tracking-tight">Coming soon</p>
 							<p className="mt-2 text-neutral-600">
-								Native app with licensing, disk workflows, and export paths tuned for daily use.
+								Native app with licensing, real files on disk, offline edits, and export paths tuned
+								for daily use. Paid when it launches.
 							</p>
 							<Button
 								variant="outline"
