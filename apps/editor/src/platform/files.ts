@@ -1,4 +1,5 @@
 import { parseDiagram, serializeDiagram } from "@autodraw/core";
+import { toast } from "sonner";
 import { useDocument } from "../editor/state/useDocument";
 import { isTauri } from "./isTauri";
 
@@ -128,6 +129,8 @@ export async function saveDocumentInteractive(): Promise<void> {
   await writeTextFile(path, serializeDiagram(st.diagram));
   st.setFilePath(path);
   st.markClean();
+  const label = fileTitleFromPath(path);
+  toast.success("Saved", { description: label });
 }
 
 /** File ▸ New: blank universal diagram in a new window (desktop); in-browser dev uses the current tab. */
@@ -145,4 +148,70 @@ export async function openDocumentFromPath(path: string): Promise<void> {
     return;
   }
   await loadDiagramFromAdrawPath(path);
+}
+
+function safeDownloadBasename(name: string): string {
+  const t = name.trim() || "Untitled";
+  return t.replace(/[\\/:*?"<>|]/g, "_").slice(0, 200);
+}
+
+/** Web: pick a `.adraw` file and load it into the current editor tab. */
+export async function importAdrawInBrowser(): Promise<void> {
+  if (isTauri()) return;
+  await new Promise<void>((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      resolve();
+    };
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".adraw,application/json";
+    input.addEventListener(
+      "change",
+      () => {
+        void (async () => {
+          try {
+            const file = input.files?.[0];
+            if (!file) return;
+            const st = useDocument.getState();
+            if (st.dirty) {
+              const ok = window.confirm(
+                "Replace the current diagram? Unsaved changes will be lost.",
+              );
+              if (!ok) return;
+            }
+            const text = await file.text();
+            const doc = parseDiagram(JSON.parse(text) as unknown);
+            st.setDiagram(doc, { dirty: false });
+            st.setFilePath(null);
+          } catch {
+            window.alert("Could not open that file. Make sure it is a valid .adraw diagram.");
+          } finally {
+            finish();
+          }
+        })();
+      },
+      { once: true },
+    );
+    input.addEventListener("cancel", finish, { once: true });
+    input.click();
+  });
+}
+
+/** Web: download the current diagram as a `.adraw` file (UTF-8 JSON). */
+export function exportAdrawInBrowser(): void {
+  if (isTauri()) return;
+  const st = useDocument.getState();
+  const json = serializeDiagram(st.diagram);
+  const base = safeDownloadBasename(st.diagram.name);
+  const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${base}.adraw`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast.success("Saved", { description: `${base}.adraw` });
 }

@@ -3,23 +3,24 @@ import { ReactFlowProvider } from "@xyflow/react";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useShallow } from "zustand/react/shallow";
-import { isTauri } from "../platform/isTauri";
+import { Toaster } from "../components/ui/sonner";
 import {
   newDocumentInteractive,
   openDocumentFromPath,
   openDocumentInteractive,
   saveDocumentInteractive,
 } from "../platform/files";
+import { isTauri } from "../platform/isTauri";
+import { decodeDiagramSharePayload } from "../sharePayload";
 import { CliSkillHelp } from "./CliSkillHelp";
 import { DiagramCanvas } from "./canvas/DiagramCanvas";
+import { isTypingInField } from "./isTypingInField";
 import { AddElementPopover } from "./popovers/AddElementPopover";
 import { ExportSheet } from "./sheets/ExportSheet";
 import { WelcomeDiagramSheet } from "./sheets/WelcomeDiagramSheet";
+import { redoDocument, undoDocument, useDocument } from "./state/useDocument";
 import { Toolbar } from "./Toolbar";
 import { ZoomDock } from "./ZoomDock";
-import { isTypingInField } from "./isTypingInField";
-import { redoDocument, undoDocument, useDocument } from "./state/useDocument";
-import { decodeDiagramSharePayload } from "../sharePayload";
 
 /** Full editor UI + document bootstrap; only mounted after Polar license is valid. */
 export function EditorShellLicensed() {
@@ -178,6 +179,7 @@ export function EditorShellLicensed() {
         <WelcomeDiagramSheet />
         <ExportSheet />
         <AddElementPopover />
+        <Toaster position="bottom-right" closeButton />
       </div>
     </ReactFlowProvider>
   );

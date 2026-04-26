@@ -1,7 +1,8 @@
-import { Moon, Sun } from "lucide-react";
+import { Download, Moon, Sun, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Button } from "../components/ui/button";
+import { exportAdrawInBrowser, importAdrawInBrowser } from "../platform/files";
 import { isTauri } from "../platform/isTauri";
 import { redoDocument, undoDocument, useDocument } from "./state/useDocument";
 
@@ -154,6 +155,32 @@ export function Toolbar() {
           <span className="h-[26px] w-px shrink-0 bg-black/[0.08]" aria-hidden />
 
           <div className="flex shrink-0 items-center gap-1">
+            {!isTauri() ? (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-full text-[#1d1d1f] hover:bg-black/[0.06] [-webkit-app-region:no-drag] [app-region:no-drag]"
+                  title="Import .adraw file"
+                  aria-label="Import .adraw file"
+                  onClick={() => void importAdrawInBrowser()}
+                >
+                  <Upload className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-9 gap-1.5 rounded-full px-2.5 text-[13px] font-semibold text-[#1d1d1f] hover:bg-black/[0.06] [-webkit-app-region:no-drag] [app-region:no-drag] [&_svg]:size-[18px]"
+                  title="Save as .adraw file"
+                  aria-label="Save as .adraw file"
+                  onClick={() => exportAdrawInBrowser()}
+                >
+                  <Download strokeWidth={1.75} aria-hidden />
+                  <span>Save</span>
+                </Button>
+              </>
+            ) : null}
             <Button
               type="button"
               variant="ghost"

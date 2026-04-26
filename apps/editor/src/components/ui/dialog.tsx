@@ -5,11 +5,32 @@ import { cn } from "../../lib/utils";
 
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
-const DialogPortal = DialogPrimitive.Portal;
 const DialogClose = DialogPrimitive.Close;
 
+/**
+ * Web (`apps/web`) scopes shadcn CSS variables to `#autodraw-app-root.dark` so marketing
+ * pages stay light. Radix portals to `body` by default, so dialogs would miss those tokens.
+ * Tauri has tokens on `:root`, so we only redirect the portal when the web editor root exists.
+ */
+function DialogPortal({
+  container,
+  children,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Portal>) {
+  const auto =
+    typeof document !== "undefined"
+      ? (document.getElementById("autodraw-app-root") as HTMLElement | null)
+      : null;
+  const resolved = container ?? auto;
+  return (
+    <DialogPrimitive.Portal {...props} {...(resolved ? { container: resolved } : {})}>
+      {children}
+    </DialogPrimitive.Portal>
+  );
+}
+
 const DialogOverlay = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Overlay>,
+  React.ComponentRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
@@ -33,7 +54,7 @@ const dialogContentMotion =
   "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0";
 
 const DialogContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
+  React.ComponentRef<typeof DialogPrimitive.Content>,
   DialogContentProps
 >(({ className, children, hideClose, fullscreen, ...props }, ref) => (
   <DialogPortal>
@@ -81,7 +102,7 @@ const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 DialogFooter.displayName = "DialogFooter";
 
 const DialogTitle = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Title>,
+  React.ComponentRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
@@ -93,7 +114,7 @@ const DialogTitle = React.forwardRef<
 DialogTitle.displayName = DialogPrimitive.Title.displayName;
 
 const DialogDescription = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Description>,
+  React.ComponentRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
