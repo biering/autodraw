@@ -1,56 +1,86 @@
 ---
 import RootLayout from "../layouts/RootLayout.astro";
 
-const title = "Imprint";
-const description = "Legal notice and service provider information for Autodraw (autodraw.ink).";
+const title = "Impressum · Autodraw";
+const description =
+	"Impressum, Verbraucherstreitbeilegung, Haftung und Urheberrecht für Autodraw (autodraw.ink).";
 ---
 
-<RootLayout {title} {description} ogTitle={`${title} · Autodraw`} canonicalPath="/imprint">
+<RootLayout
+	{title}
+	{description}
+	ogTitle={title}
+	canonicalPath="/imprint"
+	htmlLang="de"
+	robots="noindex, nofollow"
+>
 	<div class="min-h-full bg-white text-black">
 		<header class="border-b border-neutral-200">
 			<div class="mx-auto flex h-14 max-w-3xl items-center justify-between px-6">
 				<a href="/" class="text-base font-medium tracking-tight">Autodraw</a>
-				<a href="/" class="text-sm font-normal text-neutral-600 hover:text-black">Home</a>
+				<a href="/" class="text-sm font-normal text-neutral-600 hover:text-black">Startseite</a>
 			</div>
 		</header>
-		<article class="mx-auto max-w-3xl px-6 py-12 pb-24">
-			<h1
-				class="text-3xl font-medium tracking-tight"
-				style="font-family: ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;"
-			>
-				Imprint
-			</h1>
-			<p class="mt-2 text-sm text-neutral-500">Legal notice</p>
+		<article class="legal-content mx-auto max-w-3xl px-6 py-12 pb-24">
+			<h1 class="text-3xl font-medium tracking-tight text-black">Impressum</h1>
 
-			<section class="mt-10 space-y-4 text-base leading-relaxed text-neutral-800">
-				<h2 class="text-lg font-medium text-black">Service provider</h2>
-				<p>
-					Information under applicable law (for example, EU/EEA “Imprint” or provider identification requirements).
-					Update this section with your legal name, registered address, and other details required in your jurisdiction.
-				</p>
-			</section>
+			<img
+				src="https://assets.agentsgym.com/legal/imprint.png"
+				alt="Impressum - Kontakt- und Anbieterangaben"
+				class="mt-8 w-full rounded-lg border border-neutral-200"
+				loading="lazy"
+				width="800"
+				height="450"
+			/>
 
-			<section class="mt-10 space-y-4 text-base leading-relaxed text-neutral-800">
-				<h2 class="text-lg font-medium text-black">Contact</h2>
-				<p>
-					For legal notices and business inquiries, use the contact channel you publish for Autodraw (e.g. a support or
-					legal email). Replace this paragraph once your contact information is final.
-				</p>
-			</section>
+			<hr class="my-10 border-neutral-200" />
 
-			<section class="mt-10 space-y-4 text-base leading-relaxed text-neutral-800">
-				<h2 class="text-lg font-medium text-black">Liability for content</h2>
-				<p>
-					We make reasonable efforts to keep this website accurate. We are not liable for third-party content or links we
-					do not control. External links are provided for convenience; the respective operators are responsible for their
-					own sites.
-				</p>
-			</section>
+			<h2 class="text-xl font-medium tracking-tight text-black">Verbraucherstreitbeilegung (§ 36 VSBG)</h2>
+			<p class="mt-4 text-base leading-relaxed text-neutral-800">
+				Wir nehmen an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teil. Zuständig ist die
+				Universalschlichtungsstelle des Zentrums für Schlichtung e. V., Straßburger Straße 8, 77694 Kehl am Rhein,{" "}
+				<a
+					class="text-black underline underline-offset-4 hover:text-neutral-700"
+					href="https://www.verbraucher-schlichter.de"
+					target="_blank"
+					rel="noreferrer">www.verbraucher-schlichter.de</a>.
+			</p>
+
+			<hr class="my-10 border-neutral-200" />
+
+			<h2 class="text-xl font-medium tracking-tight text-black">Haftung und Urheberrecht</h2>
+			<p class="mt-4 text-base leading-relaxed text-neutral-800">
+				Inhalte dieser Website wurden mit größter Sorgfalt erstellt. Für Richtigkeit, Vollständigkeit und Aktualität wird
+				jedoch keine Gewähr übernommen. Bei Kenntnis von Rechtsverletzungen entfernen wir betroffene Inhalte unverzüglich.
+			</p>
+			<p class="mt-4 text-base leading-relaxed text-neutral-800">
+				Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung für Inhalte externer Links. Für den Inhalt
+				verlinkter Seiten sind ausschließlich deren Betreiber verantwortlich.
+			</p>
+			<p class="mt-4 text-base leading-relaxed text-neutral-800">
+				Texte, Bilder und Grafiken auf dieser Website sind urheberrechtlich geschützt. Jede Nutzung außerhalb der gesetzlichen
+				Schranken bedarf der vorherigen Zustimmung.
+			</p>
+
+			<h3 class="mt-8 text-lg font-medium text-black">Disclaimer</h3>
+			<p class="mt-4 text-base leading-relaxed text-neutral-800">
+				Die bereitgestellten Informationen stellen keine Rechts-, Steuer- oder Finanzberatung dar. Inhalte, Bewertungen und
+				rechnerische Hilfsmittel können unvollständig sein oder Fehler enthalten und ersetzen keine individuelle fachkundige
+				Beratung.
+			</p>
+			<p class="mt-4 text-base leading-relaxed text-neutral-800">Es gilt das Recht der Bundesrepublik Deutschland.</p>
+
+			<hr class="my-10 border-neutral-200" />
+
+			<p class="text-base leading-relaxed text-neutral-800">
+				Datenschutzhinweise findest du auf{" "}
+				<a class="text-black underline underline-offset-4 hover:text-neutral-700" href="/privacy">/privacy</a>.
+			</p>
 
 			<p class="mt-16 text-sm text-neutral-500">
-				<a class="text-black underline underline-offset-4" href="/privacy">Privacy</a>
+				<a class="text-black underline underline-offset-4" href="/privacy">Datenschutz</a>
 				{" · "}
-				<a class="text-black underline underline-offset-4" href="/">Home</a>
+				<a class="text-black underline underline-offset-4" href="/">Startseite</a>
 			</p>
 		</article>
 	</div>

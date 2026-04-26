@@ -26,7 +26,11 @@ describe("sharePayload", () => {
     const d = emptyDiagram("grayscale");
     d.name = "Plain";
     const json = JSON.stringify(d);
-    const b64 = Buffer.from(json, "utf8").toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    const b64 = Buffer.from(json, "utf8")
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
     const back = decodeDiagramSharePayload(b64);
     expect(back.palette).toBe("grayscale");
     expect(back.name).toBe("Plain");

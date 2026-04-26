@@ -60,7 +60,10 @@ export async function spawnEditorWebviewWindow(opts: {
     visible: true,
   });
   await new Promise<void>((resolve, reject) => {
-    const t = window.setTimeout(() => reject(new Error("Timed out creating editor window")), 15_000);
+    const t = window.setTimeout(
+      () => reject(new Error("Timed out creating editor window")),
+      15_000,
+    );
     webview.once("tauri://created", () => {
       window.clearTimeout(t);
       resolve();

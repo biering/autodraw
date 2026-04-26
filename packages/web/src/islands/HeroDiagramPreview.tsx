@@ -116,7 +116,10 @@ export function HeroDiagramPreview() {
 				</div>
 			</div>
 
-			<div className="relative z-1 h-px w-screen max-w-none bg-[#e5e5e5] mx-[calc(50%-50vw)]" aria-hidden />
+			<div
+				className="relative z-1 h-px w-screen max-w-none bg-[#e5e5e5] mx-[calc(50%-50vw)]"
+				aria-hidden
+			/>
 		</section>
 	);
 }

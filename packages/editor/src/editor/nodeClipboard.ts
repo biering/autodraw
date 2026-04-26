@@ -87,7 +87,9 @@ function parseNodeClipFields(parsed: Record<string, unknown>): Omit<NodeRecord, 
   };
 }
 
-function isNodesClipType(t: unknown): t is typeof NODES_CLIP_MARKER | typeof LEGACY_NODES_CLIP_MARKER {
+function isNodesClipType(
+  t: unknown,
+): t is typeof NODES_CLIP_MARKER | typeof LEGACY_NODES_CLIP_MARKER {
   return t === NODES_CLIP_MARKER || t === LEGACY_NODES_CLIP_MARKER;
 }
 

@@ -1,4 +1,9 @@
-import { emptyDiagram, type DiagramV1, type NodeRecord, type NodeStyleDefinition } from "@autodraw/core";
+import {
+  emptyDiagram,
+  type DiagramV1,
+  type NodeRecord,
+  type NodeStyleDefinition,
+} from "@autodraw/core";
 
 const PEEK_STYLE_ID = "lp-card";
 

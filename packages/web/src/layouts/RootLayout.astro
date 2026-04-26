@@ -7,10 +7,20 @@ interface Props {
 	description: string;
 	ogTitle?: string;
 	canonicalPath?: string;
+	/** e.g. `noindex, nofollow` for legal pages */
+	robots?: string;
+	htmlLang?: string;
 }
 
 const siteUrl = "https://autodraw.ink";
-const { title, description, ogTitle = title, canonicalPath = "/" } = Astro.props;
+const {
+	title,
+	description,
+	ogTitle = title,
+	canonicalPath = "/",
+	robots,
+	htmlLang = "en",
+} = Astro.props;
 const canonicalUrl = new URL(canonicalPath, siteUrl).toString();
 
 const jsonLd = {
@@ -52,12 +62,13 @@ const keywords = [
 ---
 
 <!doctype html>
-<html lang="en" class="h-full">
+<html lang={htmlLang} class="h-full">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
+		{robots && <meta name="robots" content={robots} />}
 		<title>{title}</title>
 		<meta name="description" content={description} />
 		<meta name="application-name" content="Autodraw" />

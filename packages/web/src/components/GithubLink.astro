@@ -1,0 +1,29 @@
+---
+import { siGithub } from "simple-icons";
+
+interface Props {
+	/** Icon-only (header) vs icon + “GitHub” label (footer) */
+	showLabel?: boolean;
+	class?: string;
+}
+
+const { showLabel = false, class: className } = Astro.props;
+const href = "https://github.com/biering/autodraw";
+---
+
+<a
+	href={href}
+	class:list={[
+		"inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 bg-white font-normal text-neutral-700 transition-colors hover:border-neutral-400 hover:bg-neutral-50 hover:text-black",
+		showLabel ? "h-9 px-4 text-sm" : "size-9 shrink-0",
+		className,
+	]}
+	target="_blank"
+	rel="noopener noreferrer"
+	aria-label={`${siGithub.title} — ${href}`}
+>
+	<svg role="img" viewBox="0 0 24 24" class="size-5 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+		<path fill="currentColor" d={siGithub.path} />
+	</svg>
+	{showLabel && <span>GitHub</span>}
+</a>

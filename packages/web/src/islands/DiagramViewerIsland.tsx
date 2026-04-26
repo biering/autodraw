@@ -52,8 +52,9 @@ export function DiagramViewerIsland() {
 			<div className="mx-auto max-w-lg px-6 py-16 text-neutral-800">
 				<h1 className="text-2xl font-medium tracking-tight">Missing payload</h1>
 				<p className="mt-3 text-neutral-600">
-					Add query parameter <code className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-sm">d</code>{" "}
-					with a gzip+base64url-encoded diagram (see{" "}
+					Add query parameter{" "}
+					<code className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-sm">d</code> with a
+					gzip+base64url-encoded diagram (see{" "}
 					<a className="text-black underline underline-offset-4" href="/spec">
 						format spec
 					</a>
@@ -70,7 +71,9 @@ export function DiagramViewerIsland() {
 		return (
 			<div className="mx-auto max-w-lg px-6 py-16 text-neutral-800">
 				<h1 className="text-2xl font-medium tracking-tight">Invalid diagram</h1>
-				<p className="mt-3 text-neutral-600">The payload could not be decoded or is not valid diagram v1 JSON.</p>
+				<p className="mt-3 text-neutral-600">
+					The payload could not be decoded or is not valid diagram v1 JSON.
+				</p>
 				<p className="mt-6">
 					<ButtonLink href="/spec">Format spec</ButtonLink>
 				</p>
@@ -99,7 +102,9 @@ export function DiagramViewerIsland() {
 			<div className="min-h-0 flex-1 p-3 md:p-4">
 				<div className="mx-auto flex h-[min(85dvh,900px)] max-w-6xl flex-col overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50">
 					<div className="border-b border-neutral-200 px-4 py-2">
-						<h1 className="truncate text-sm font-medium text-neutral-800 md:text-base">{diagram.name}</h1>
+						<h1 className="truncate text-sm font-medium text-neutral-800 md:text-base">
+							{diagram.name}
+						</h1>
 						<p className="text-xs text-neutral-500">
 							{diagram.nodes.length} nodes · {diagram.edges.length} edges · read-only
 						</p>

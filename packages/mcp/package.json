@@ -6,7 +6,10 @@
   "bin": {
     "autodraw-mcp": "./bin/run.mjs"
   },
-  "files": ["bin", "dist"],
+  "files": [
+    "bin",
+    "dist"
+  ],
   "scripts": {
     "prepublishOnly": "pnpm run build",
     "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",

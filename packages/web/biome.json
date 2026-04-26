@@ -1,0 +1,15 @@
+{
+	"root": false,
+	"extends": ["../../biome.json"],
+	"formatter": {
+		"indentStyle": "tab"
+	},
+	"overrides": [
+		{
+			"includes": ["**/*.astro"],
+			"linter": {
+				"enabled": false
+			}
+		}
+	]
+}

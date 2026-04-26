@@ -1,11 +1,11 @@
 ---
 import RootLayout from "../layouts/RootLayout.astro";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import GithubLink from "@/components/GithubLink.astro";
 import { HeroDiagramPreview } from "@/islands/HeroDiagramPreview";
 import { HomeSections } from "@/islands/HomeSections";
 
-const MAC_DOWNLOAD_URL = "https://github.com/biering/autodraw/releases";
 const title = "Autodraw — Diagram canvas for agents & teams";
 const description =
 	"Ship clear architecture diagrams fast. Free web canvas at autodraw.ink; native Mac app with offline files and pro export (paid). CLI for agents and CI.";
@@ -32,12 +32,8 @@ const description =
 					<a class="hover:text-black" href="/spec">Spec</a>
 				</nav>
 				<div class="flex items-center gap-2 sm:gap-3">
-					<a
-						href={MAC_DOWNLOAD_URL}
-						rel="noopener noreferrer"
-						target="_blank"
-						class={cn(buttonVariants({ size: "sm" }), "hidden sm:inline-flex gap-2")}
-					>
+					<GithubLink />
+					<Button disabled size="sm" className="hidden gap-2 sm:inline-flex" title="Coming soon">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							width="20"
@@ -56,7 +52,7 @@ const description =
 							<line x1="12" x2="12" y1="15" y2="3" />
 						</svg>
 						Download for Mac
-					</a>
+					</Button>
 					<a href="/app" class={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>Open in web</a>
 				</div>
 			</div>
@@ -85,12 +81,7 @@ const description =
 						Let agents and teammates follow along—that's it. That's the loop.
 					</p>
 					<div class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-						<a
-							href={MAC_DOWNLOAD_URL}
-							rel="noopener noreferrer"
-							target="_blank"
-							class={cn(buttonVariants({ size: "lg" }), "gap-2 px-8")}
-						>
+						<Button disabled size="lg" className="gap-2 px-8" title="Coming soon">
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								width="20"
@@ -109,7 +100,7 @@ const description =
 								<line x1="12" x2="12" y1="15" y2="3" />
 							</svg>
 							Download for Mac
-						</a>
+						</Button>
 						<a href="/app" class={cn(buttonVariants({ variant: "secondary", size: "lg" }), "px-8")}>Open in web</a>
 					</div>
 				</div>
@@ -159,9 +150,7 @@ const description =
 					<div class="flex flex-col gap-3 text-sm text-neutral-600 md:items-end">
 						<a class="hover:text-black" href="/app">Web app</a>
 						<a class="hover:text-black" href="/spec">.adraw spec</a>
-						<a class="hover:text-black" href="https://github.com/biering/autodraw" rel="noopener noreferrer"
-							>Source</a
-						>
+						<GithubLink showLabel class="w-fit md:ml-auto" />
 						<a class="hover:text-black" href="/imprint">Imprint</a>
 						<a class="hover:text-black" href="/privacy">Privacy</a>
 					</div>

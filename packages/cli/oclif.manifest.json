@@ -17,11 +17,7 @@
           "required": true,
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "pdf",
-            "png",
-            "svg"
-          ],
+          "options": ["pdf", "png", "svg"],
           "type": "option"
         },
         "output": {
@@ -56,11 +52,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "export.js"
-      ]
+      "relativePath": ["dist", "commands", "export.js"]
     },
     "init": {
       "aliases": [],
@@ -79,12 +71,7 @@
           "default": "universal",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "universal",
-            "grayscale",
-            "flowchart",
-            "empty"
-          ],
+          "options": ["universal", "grayscale", "flowchart", "empty"],
           "type": "option"
         }
       },
@@ -97,11 +84,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "init.js"
-      ]
+      "relativePath": ["dist", "commands", "init.js"]
     },
     "open": {
       "aliases": [],
@@ -123,11 +106,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "open.js"
-      ]
+      "relativePath": ["dist", "commands", "open.js"]
     },
     "validate": {
       "aliases": [],
@@ -162,11 +141,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "validate.js"
-      ]
+      "relativePath": ["dist", "commands", "validate.js"]
     },
     "copy:palette": {
       "aliases": [],
@@ -197,12 +172,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "copy",
-        "palette.js"
-      ]
+      "relativePath": ["dist", "commands", "copy", "palette.js"]
     },
     "add:edge": {
       "aliases": [],
@@ -237,11 +207,7 @@
           "default": "orthogonal",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "straight",
-            "orthogonal",
-            "curved"
-          ],
+          "options": ["straight", "orthogonal", "curved"],
           "type": "option"
         },
         "dash": {
@@ -250,11 +216,7 @@
           "default": "solid",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "solid",
-            "dashed",
-            "dotted"
-          ],
+          "options": ["solid", "dashed", "dotted"],
           "type": "option"
         },
         "head": {
@@ -335,12 +297,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "add",
-        "edge.js"
-      ]
+      "relativePath": ["dist", "commands", "add", "edge.js"]
     },
     "add:node": {
       "aliases": [],
@@ -434,12 +391,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "add",
-        "node.js"
-      ]
+      "relativePath": ["dist", "commands", "add", "node.js"]
     },
     "move:node": {
       "aliases": [],
@@ -486,12 +438,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "move",
-        "node.js"
-      ]
+      "relativePath": ["dist", "commands", "move", "node.js"]
     },
     "patch:edge": {
       "aliases": [],
@@ -517,11 +464,7 @@
           "name": "routing",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "straight",
-            "orthogonal",
-            "curved"
-          ],
+          "options": ["straight", "orthogonal", "curved"],
           "type": "option"
         },
         "dash": {
@@ -529,11 +472,7 @@
           "name": "dash",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "solid",
-            "dashed",
-            "dotted"
-          ],
+          "options": ["solid", "dashed", "dotted"],
           "type": "option"
         },
         "head": {
@@ -611,12 +550,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "patch",
-        "edge.js"
-      ]
+      "relativePath": ["dist", "commands", "patch", "edge.js"]
     },
     "patch:node": {
       "aliases": [],
@@ -706,12 +640,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "patch",
-        "node.js"
-      ]
+      "relativePath": ["dist", "commands", "patch", "node.js"]
     },
     "remove:edge": {
       "aliases": [],
@@ -742,12 +671,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "remove",
-        "edge.js"
-      ]
+      "relativePath": ["dist", "commands", "remove", "edge.js"]
     },
     "remove:node": {
       "aliases": [],
@@ -778,12 +702,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "remove",
-        "node.js"
-      ]
+      "relativePath": ["dist", "commands", "remove", "node.js"]
     },
     "rename:diagram": {
       "aliases": [],
@@ -814,12 +733,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "rename",
-        "diagram.js"
-      ]
+      "relativePath": ["dist", "commands", "rename", "diagram.js"]
     },
     "show:diagram": {
       "aliases": [],
@@ -848,12 +762,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "show",
-        "diagram.js"
-      ]
+      "relativePath": ["dist", "commands", "show", "diagram.js"]
     },
     "list:edges": {
       "aliases": [],
@@ -875,12 +784,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "list",
-        "edges.js"
-      ]
+      "relativePath": ["dist", "commands", "list", "edges.js"]
     },
     "list:nodes": {
       "aliases": [],
@@ -902,12 +806,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "list",
-        "nodes.js"
-      ]
+      "relativePath": ["dist", "commands", "list", "nodes.js"]
     },
     "set:canvas": {
       "aliases": [],
@@ -950,12 +849,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "set",
-        "canvas.js"
-      ]
+      "relativePath": ["dist", "commands", "set", "canvas.js"]
     }
   },
   "version": "0.1.0"

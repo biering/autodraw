@@ -21,8 +21,8 @@ function LicenseBoot() {
 const container = document.getElementById("root") as RootHost | null;
 if (!container) throw new Error("#root element missing from license.html");
 
-  const root = container.__autodrawRoot ?? ReactDOM.createRoot(container);
-  container.__autodrawRoot = root;
+const root = container.__autodrawRoot ?? ReactDOM.createRoot(container);
+container.__autodrawRoot = root;
 root.render(
   <React.StrictMode>
     <div className="min-h-dvh bg-[#1a1a1a]">

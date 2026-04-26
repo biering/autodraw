@@ -24,7 +24,9 @@ import { readDiagram, requireEdge, requireNode, writeDiagram } from "./io.js";
 
 function okText(data: unknown): CallToolResult {
   return {
-    content: [{ type: "text", text: typeof data === "string" ? data : JSON.stringify(data, null, 2) }],
+    content: [
+      { type: "text", text: typeof data === "string" ? data : JSON.stringify(data, null, 2) },
+    ],
   };
 }
 
@@ -108,13 +110,24 @@ export const TOOL_DEFINITIONS = [
         to: { type: "string" },
         routing: { type: "string", enum: ["straight", "orthogonal", "curved"] },
         dash: { type: "string", enum: ["solid", "dashed", "dotted"] },
-        head: { type: "string", enum: ["none", "lineArrow", "triangleArrow", "triangleReversed", "circle", "diamond"] },
-        tail: { type: "string", enum: ["none", "lineArrow", "triangleArrow", "triangleReversed", "circle", "diamond"] },
+        head: {
+          type: "string",
+          enum: ["none", "lineArrow", "triangleArrow", "triangleReversed", "circle", "diamond"],
+        },
+        tail: {
+          type: "string",
+          enum: ["none", "lineArrow", "triangleArrow", "triangleReversed", "circle", "diamond"],
+        },
         label: { type: "string" },
         strokeWidth: { type: "number", minimum: 1, maximum: 20 },
         sourceHandle: { type: "string" },
         targetHandle: { type: "string" },
-        preset: { type: "integer", minimum: 0, maximum: 7, description: "Relationship preset; overrides routing/dash/head/tail/strokeWidth" },
+        preset: {
+          type: "integer",
+          minimum: 0,
+          maximum: 7,
+          description: "Relationship preset; overrides routing/dash/head/tail/strokeWidth",
+        },
       },
       required: ["path", "from", "to"],
     },
@@ -180,8 +193,14 @@ export const TOOL_DEFINITIONS = [
         id: { type: "string" },
         routing: { type: "string", enum: ["straight", "orthogonal", "curved"] },
         dash: { type: "string", enum: ["solid", "dashed", "dotted"] },
-        head: { type: "string", enum: ["none", "lineArrow", "triangleArrow", "triangleReversed", "circle", "diamond"] },
-        tail: { type: "string", enum: ["none", "lineArrow", "triangleArrow", "triangleReversed", "circle", "diamond"] },
+        head: {
+          type: "string",
+          enum: ["none", "lineArrow", "triangleArrow", "triangleReversed", "circle", "diamond"],
+        },
+        tail: {
+          type: "string",
+          enum: ["none", "lineArrow", "triangleArrow", "triangleReversed", "circle", "diamond"],
+        },
         label: { type: "string" },
         strokeWidth: { type: "number" },
         sourceHandle: { type: "string", description: 'Use "" to clear' },
@@ -409,7 +428,8 @@ async function dispatchTool(name: string, args: unknown): Promise<CallToolResult
       const id = str(r, "id");
       const x = num(r, "x");
       const y = num(r, "y");
-      if (!path || !id || x === undefined || y === undefined) return errText("path, id, x, y are required");
+      if (!path || !id || x === undefined || y === undefined)
+        return errText("path, id, x, y are required");
       const doc = readDiagram(path);
       requireNode(doc, id);
       const idx = doc.nodes.findIndex((n) => n.id === id);
@@ -608,7 +628,9 @@ async function dispatchTool(name: string, args: unknown): Promise<CallToolResult
       if (!path) return errText("path is required");
       const doc = readDiagram(path);
       const has =
-        bool(r, "showGrid") !== undefined || num(r, "gridSpacing") !== undefined || num(r, "zoom") !== undefined;
+        bool(r, "showGrid") !== undefined ||
+        num(r, "gridSpacing") !== undefined ||
+        num(r, "zoom") !== undefined;
       if (!has) return errText("Provide at least one of: showGrid, gridSpacing, zoom");
       const c = { ...doc.canvas };
       const sg = bool(r, "showGrid");

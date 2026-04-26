@@ -1,119 +1,77 @@
 # Autodraw
 
-Cross-platform diagram editor (Tauri + React + React Flow) with a shared TypeScript core (`@autodraw/core`), a reusable editor package (`@autodraw/editor`), an agent-friendly CLI (`@autodraw/cli`), a local MCP server (`@autodraw/mcp`), and a Next.js marketing site (`packages/web`).
+**Open source** diagram editor for people, teams, and **agents** — one small JSON format (`.adraw`), a fast canvas, and tools so automation and humans stay in sync.
 
-## Monorepo layout
+**Website:** [autodraw.ink](https://autodraw.ink) — free web canvas at [`/app`](https://autodraw.ink/app), format spec at [`/spec`](https://autodraw.ink/spec), read-only share links at [`/v?d=…`](https://autodraw.ink/v).
 
-- [`packages/core`](packages/core) — `.adraw` JSON schema (Zod), palette presets, edge routing, and a pure `renderSVG()` used by the app export path and the CLI.
-- [`packages/editor`](packages/editor) — shared React Flow diagram editor (canvas, toolbar, state) used by the desktop app and the free web canvas; share-link encode/decode helpers for `/v` and `/app?d=`.
-- [`packages/app`](packages/app) — Tauri 2 desktop shell (licensing, native menus, export) wrapping `@autodraw/editor`.
-- [`packages/web`](packages/web) — SEO landing, [`.adraw` v1 spec](/spec) at `/spec`, read-only viewer at `/v?d=…`, and free in-browser editor at `/app` (no license gate; `/app?d=…` deep-links the same gzip+base64url payload).
-- [`packages/cli`](packages/cli) — `oclif` CLI for scripting diagrams from agents/CI.
-- [`packages/mcp`](packages/mcp) — stdio [Model Context Protocol](https://modelcontextprotocol.io/) server exposing the same operations as the CLI for MCP-capable hosts (Cursor, Claude Desktop, etc.).
+## Goal
 
-## `.adraw` file format (v1)
+Architecture and flow diagrams should be easy to sketch, hand off, and evolve. Autodraw keeps the loop simple: **draw or generate** a `.adraw` file, **commit or share** it, **open** it in the browser or native app, and let **CLI / MCP** do the same operations your editor does — so agents and CI can maintain diagrams next to code.
 
-JSON on disk:
+## Quick demo
 
-```json
-{
-  "version": 1,
-  "palette": "universal",
-  "canvas": { "showGrid": true, "gridSpacing": 16, "zoom": 1 },
-  "nodes": [
-    { "id": "n1", "text": "A node", "x": 260, "y": 330, "w": 140, "h": 64, "styleId": "yellow" }
-  ],
-  "edges": [
-    {
-      "id": "e1",
-      "from": "n1",
-      "to": "n2",
-      "routing": "orthogonal",
-      "head": "lineArrow",
-      "dash": "solid",
-      "tail": "none",
-      "label": "",
-      "strokeWidth": 1
-    }
-  ]
-}
-```
-
-## Agent workflow (CLI + MCP)
+From the repo root after `pnpm install`, build the CLI once (`pnpm build` or `pnpm --filter @autodraw/cli build`), then:
 
 ```bash
+pnpm exec autodraw init ./demo.adraw --palette universal
+pnpm exec autodraw add node ./demo.adraw --text "API" --x 200 --y 200
+pnpm exec autodraw add node ./demo.adraw --text "Worker" --x 420 --y 220
+pnpm exec autodraw add edge ./demo.adraw --from <first-id> --to <second-id> --preset 1
+pnpm exec autodraw export ./demo.adraw --format svg --output ./demo.svg
+```
+
+Open [`autodraw.ink/app`](https://autodraw.ink/app) and drag in `demo.adraw`, or paste a share payload from the spec page. Same format everywhere.
+
+## Getting started
+
+```bash
+git clone https://github.com/biering/autodraw.git
+cd autodraw
 pnpm install
-pnpm --filter @autodraw/cli build
-pnpm --filter @autodraw/mcp build
-
-# Create a diagram
-pnpm exec autodraw init ./example.adraw --palette universal
-
-# Add nodes + edge
-pnpm exec autodraw add node ./example.adraw --text "A node" --x 200 --y 200
-pnpm exec autodraw add node ./example.adraw --text "Another node" --x 520 --y 260
-pnpm exec autodraw list nodes ./example.adraw
-
-pnpm exec autodraw add edge ./example.adraw --from <id1> --to <id2> --preset 4
-
-# Export (CLI uses Resvg for PNG; PDF embeds a high-res PNG for maximum headless compatibility)
-pnpm exec autodraw export ./example.adraw --format png --output ./out.png
-pnpm exec autodraw export ./example.adraw --format pdf --output ./out.pdf --no-show-grid
-pnpm exec autodraw export ./example.adraw --format svg --output ./out.svg
 ```
 
-The desktop app’s **Export** dialog uses Rust (`svg2pdf` + `resvg`) for **vector PDF** and PNG when you build the Tauri bundle.
+| What you want | Command |
+|----------------|---------|
+| Web marketing + editor (Astro) | `pnpm --filter web dev` |
+| Desktop UI in browser (Vite, no Rust) | `pnpm dev` |
+| Full desktop (Tauri + Rust) | `pnpm dev:tauri` |
+| All package builds | `pnpm build` |
+| Tests | `pnpm -r test` |
 
-### Publishing to npm
+The desktop app needs [Rust](https://rustup.rs/) and [Tauri 2 prerequisites](https://v2.tauri.app/start/prerequisites/) for native shells. If `cargo` is missing from `PATH`, try `pnpm dev:tauri` (it prepends `~/.cargo/bin` when present).
 
-The CLI and MCP depend on `@autodraw/core`, so **publish core first**, then the CLI and MCP (from the repo root, with [`npm login`](https://docs.npmjs.com/cli/v10/commands/npm-login) or a granular token):
+## Let your agent draw
 
-```bash
-pnpm --filter @autodraw/core publish --access public
-pnpm --filter @autodraw/cli publish --access public
-pnpm --filter @autodraw/mcp publish --access public
-```
+1. **`.adraw` v1** — UTF-8 JSON; validated in [`@autodraw/core`](packages/core). Full field list: [autodraw.ink/spec](https://autodraw.ink/spec).
+2. **CLI** — [`@autodraw/cli`](packages/cli): `pnpm exec autodraw …` from any machine with the package built or installed.
+3. **MCP** — [`@autodraw/mcp`](packages/mcp): stdio server with the same operations for Cursor, Claude Desktop, and other MCP hosts.
 
-`prepublishOnly` runs `pnpm run build` in each package so the tarball includes `dist/`. Scoped packages use `publishConfig.access: "public"` in each `package.json`. After the first release, bump versions before publishing again.
+Agents can emit JSON that matches the spec, write `.adraw` files in-repo, or call CLI/MCP in CI. Share links (`/v?d=…`, `/app?d=…`) use gzip + base64url encoding — see the spec page for details.
 
-## Desktop app (dev)
+## Monorepo
 
-**UI only (Node + pnpm, no Rust):** Vite on [http://localhost:1420](http://localhost:1420). Native file dialogs, menu IPC, and Rust export are skipped in a normal browser; the app still loads.
+| Package | Role |
+|---------|------|
+| [`packages/core`](packages/core) | Schema (Zod), palettes, routing, `renderSVG()` |
+| [`packages/editor`](packages/editor) | React Flow editor (web + desktop) |
+| [`packages/app`](packages/app) | Tauri 2 shell, licensing, native export |
+| [`packages/web`](packages/web) | Astro site + public `/app` canvas |
+| [`packages/cli`](packages/cli) | `oclif` CLI for scripts and agents |
+| [`packages/mcp`](packages/mcp) | MCP server over stdio |
 
-```bash
-pnpm install
-pnpm dev
-```
+## Contributing
 
-**Full desktop shell (Tauri):** requires [Rust / Cargo](https://rustup.rs/). If `tauri dev` fails with “No such file or directory” for `cargo metadata`, either Rust is not installed or `cargo` is not on `PATH` (some IDE terminals omit `~/.cargo/bin`; `pnpm dev:tauri` runs a small launcher that prepends that directory when `~/.cargo/bin/cargo` exists).
+Contributions are welcome. Open an [issue](https://github.com/biering/autodraw/issues) to discuss larger changes; small fixes and docs can go straight to a PR.
 
-```bash
-pnpm install
-pnpm dev:tauri
-```
+- Match existing style and keep diffs focused.
+- `pnpm build` and `pnpm -r test` should pass where relevant.
+- Formatting: `pnpm format` / Biome (`biome.json` at repo root).
 
-Equivalent from the app package:
+## Publishing (maintainers)
 
-```bash
-pnpm --filter @autodraw/app exec tauri dev
-```
+`@autodraw/cli` and `@autodraw/mcp` depend on `@autodraw/core`. Publish **core** first, then CLI and MCP. `prepublishOnly` builds each package; scoped packages use `publishConfig.access: "public"`.
 
-Also install macOS / Windows / Linux [Tauri 2 prerequisites](https://v2.tauri.app/start/prerequisites/) as needed.
+## Notes
 
-Keyboard shortcuts (webview):
-
-- Undo / Redo: `Cmd/Ctrl+Z`, `Cmd/Ctrl+Shift+Z`
-- File: `Cmd/Ctrl+N` (new), `Cmd/Ctrl+O` (open), `Cmd/Ctrl+S` (save)
-
-The native menu emits the same actions as the File/Edit menu.
-
-## Tests
-
-```bash
-pnpm -r test
-```
-
-## Notes / follow-ups
-
-- Finder / Explorer “double click opens app” is configured via Tauri `bundle.fileAssociations`. Forwarding `RunEvent::Opened` into the webview can be added in `src-tauri` when you want “open file on cold start” wired end-to-end on all platforms.
-- CLI PDF export is intentionally raster-in-PDF for portability; use the desktop exporter for pure vector PDF output.
+- CLI PDF export uses a raster page inside PDF for portability; the desktop app can produce vector PDF via Rust.
+- Keyboard in the webview: undo/redo `Cmd/Ctrl+Z` / `Cmd+Shift+Z`; file shortcuts match the native menu when running in Tauri.

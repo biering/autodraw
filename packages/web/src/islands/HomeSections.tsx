@@ -1,8 +1,6 @@
 import { Check, Command, Download, Layers, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const MAC_DOWNLOAD_URL = "https://github.com/biering/autodraw/releases";
-
 const features = [
 	{
 		title: "Clarity by default",
@@ -96,15 +94,17 @@ pnpm exec autodraw add node ./design.adraw \\
 							Simple pricing story
 						</h2>
 						<p className="mt-4 text-lg text-neutral-600">
-							The web app stays free forever. The Mac app is a paid product for professionals who want native
-							performance and file workflows.
+							The web app stays free forever. The Mac app is a paid product for professionals who
+							want native performance and file workflows.
 						</p>
 					</div>
 					<div className="mx-auto mt-14 grid max-w-4xl gap-6 md:grid-cols-2">
 						<div className="flex flex-col rounded-xl border border-neutral-200 bg-white p-8">
 							<h3 className="text-xl font-medium">Web</h3>
 							<p className="mt-2 text-4xl font-medium tracking-tight">$0</p>
-							<p className="mt-2 text-neutral-600">Full canvas in your browser. Great for sharing and quick drafts.</p>
+							<p className="mt-2 text-neutral-600">
+								Full canvas in your browser. Great for sharing and quick drafts.
+							</p>
 							<Button className="mt-8" size="lg" asChild>
 								<a href="/app">Open /app</a>
 							</Button>
@@ -115,11 +115,15 @@ pnpm exec autodraw add node ./design.adraw \\
 							<p className="mt-2 text-neutral-600">
 								Native app with licensing, disk workflows, and export paths tuned for daily use.
 							</p>
-							<Button variant="outline" className="mt-8 gap-2" size="lg" asChild>
-								<a href={MAC_DOWNLOAD_URL} rel="noopener noreferrer" target="_blank">
-									<Download className="size-5 shrink-0" aria-hidden />
-									Download for Mac
-								</a>
+							<Button
+								variant="outline"
+								className="mt-8 gap-2"
+								size="lg"
+								disabled
+								title="Coming soon"
+							>
+								<Download className="size-5 shrink-0" aria-hidden />
+								Download for Mac
 							</Button>
 						</div>
 					</div>
