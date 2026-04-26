@@ -5,9 +5,9 @@
 	"type": "module",
 	"scripts": {
 		"dev": "astro dev",
-		"build": "astro build",
-		"preview": "astro build && wrangler dev",
-		"deploy": "astro build && wrangler deploy",
+		"build": "pnpm --filter @autodraw/core run build && astro build",
+		"preview": "pnpm --filter @autodraw/core run build && astro build && wrangler dev",
+		"deploy": "pnpm --filter @autodraw/core run build && astro build && wrangler deploy",
 		"typecheck": "astro check",
 		"lint:astro": "astro check",
 		"lint": "biome lint . && pnpm run lint:astro",
