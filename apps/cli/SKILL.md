@@ -184,7 +184,7 @@ Copies `palette` and `customStyles` from the source diagram into the target file
 
 ## MCP equivalents (`@autodraw/mcp`)
 
-If the host supports **Model Context Protocol** (stdio) instead of shelling out to the CLI, use the **`@autodraw/mcp`** server. After `pnpm --filter @autodraw/mcp build`, point the MCP client at `packages/mcp/bin/run.mjs` (see [`packages/mcp/README.md`](../mcp/README.md)).
+If the host supports **Model Context Protocol** (stdio) instead of shelling out to the CLI, use the **`@autodraw/mcp`** server. After `pnpm --filter @autodraw/mcp build`, point the MCP client at `apps/mcp/bin/run.mjs` (see [`apps/mcp/README.md`](../mcp/README.md)).
 
 | CLI | MCP tool |
 |-----|----------|

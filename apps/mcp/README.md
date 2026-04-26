@@ -14,7 +14,7 @@ pnpm --filter @autodraw/mcp build
 ## Run (stdio)
 
 ```bash
-node packages/mcp/bin/run.mjs
+node apps/mcp/bin/run.mjs
 ```
 
 Or after global/link install:
@@ -32,7 +32,7 @@ Add an MCP server entry pointing at the built binary, for example:
   "mcpServers": {
     "autodraw": {
       "command": "node",
-      "args": ["/absolute/path/to/agentsdraw/packages/mcp/bin/run.mjs"]
+      "args": ["/absolute/path/to/agentsdraw/apps/mcp/bin/run.mjs"]
     }
   }
 }
@@ -63,4 +63,4 @@ All tools take a filesystem `path` to a `.adraw` file (except `autodraw_init`, w
 | `autodraw_set_canvas` | Canvas settings |
 | `autodraw_copy_palette` | Copy palette from `fromPath` |
 
-See also [`packages/cli/SKILL.md`](../cli/SKILL.md) for the CLI equivalents.
+See also [`apps/cli/SKILL.md`](../cli/SKILL.md) for the CLI equivalents.

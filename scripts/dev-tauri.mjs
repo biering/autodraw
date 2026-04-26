@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Runs `tauri dev` from packages/app, after ensuring `cargo` is on PATH.
+ * Runs `tauri dev` from apps/editor, after ensuring `cargo` is on PATH.
  * Many editors spawn shells without ~/.cargo/bin, so we prepend it when the binary exists.
  */
 import { spawnSync } from "node:child_process";

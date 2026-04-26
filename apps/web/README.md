@@ -10,7 +10,7 @@ From the monorepo root:
 pnpm --filter web dev
 ```
 
-Or from `packages/web`:
+Or from `apps/web`:
 
 ```bash
 pnpm dev
@@ -36,7 +36,7 @@ From the monorepo root:
 pnpm deploy:web
 ```
 
-Or from `packages/web`:
+Or from `apps/web`:
 
 ```bash
 pnpm preview   # astro build + wrangler dev
