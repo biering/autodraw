@@ -10,7 +10,7 @@ import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const appDir = join(root, "packages", "app");
+const appDir = join(root, "apps", "editor");
 
 const cargoName = process.platform === "win32" ? "cargo.exe" : "cargo";
 const cargoHomeBin = join(homedir(), ".cargo", "bin");

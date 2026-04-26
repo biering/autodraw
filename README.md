@@ -42,9 +42,9 @@ The desktop app needs [Rust](https://rustup.rs/) and [Tauri 2 prerequisites](htt
 
 ## Let your agent draw
 
-1. **`.adraw` v1** — UTF-8 JSON; validated in [`@autodraw/core`](packages/core). Full field list: [autodraw.ink/spec](https://autodraw.ink/spec).
-2. **CLI** — [`@autodraw/cli`](packages/cli): `pnpm exec autodraw …` from any machine with the package built or installed.
-3. **MCP** — [`@autodraw/mcp`](packages/mcp): stdio server with the same operations for Cursor, Claude Desktop, and other MCP hosts.
+1. **`.adraw` v1** — UTF-8 JSON; validated in [`@autodraw/core`](apps/core). Full field list: [autodraw.ink/spec](https://autodraw.ink/spec).
+2. **CLI** — [`@autodraw/cli`](apps/cli): `pnpm exec autodraw …` from any machine with the package built or installed.
+3. **MCP** — [`@autodraw/mcp`](apps/mcp): stdio server with the same operations for Cursor, Claude Desktop, and other MCP hosts.
 
 Agents can emit JSON that matches the spec, write `.adraw` files in-repo, or call CLI/MCP in CI. Share links (`/v?d=…`, `/app?d=…`) use gzip + base64url encoding — see the spec page for details.
 
@@ -52,12 +52,12 @@ Agents can emit JSON that matches the spec, write `.adraw` files in-repo, or cal
 
 | Package | Role |
 |---------|------|
-| [`packages/core`](packages/core) | Schema (Zod), palettes, routing, `renderSVG()` |
-| [`packages/editor`](packages/editor) | React Flow editor (web + desktop) |
-| [`packages/app`](packages/app) | Tauri 2 shell, licensing, native export |
-| [`packages/web`](packages/web) | Astro site + public `/app` canvas |
-| [`packages/cli`](packages/cli) | `oclif` CLI for scripts and agents |
-| [`packages/mcp`](packages/mcp) | MCP server over stdio |
+| [`apps/core`](apps/core) | Schema (Zod), palettes, routing, `renderSVG()` |
+| [`apps/editor`](apps/editor) | React Flow editor (web + desktop) |
+| [`apps/app`](apps/app) | Tauri 2 shell, licensing, native export |
+| [`apps/web`](apps/web) | Astro site + public `/app` canvas |
+| [`apps/cli`](apps/cli) | `oclif` CLI for scripts and agents |
+| [`apps/mcp`](apps/mcp) | MCP server over stdio |
 
 ## Contributing
 
