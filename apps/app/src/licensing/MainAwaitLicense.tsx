@@ -7,7 +7,7 @@ export function MainAwaitLicense() {
   return (
     <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-[#131316] text-sm text-[#a1a1aa]">
       <img
-        src="/img/logo-1024x.png"
+        src="/img/app-icon.png"
         alt=""
         width={56}
         height={56}

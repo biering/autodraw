@@ -7,9 +7,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "dev": "vite",
-    "dev:tauri": "tauri dev",
+    "dev:tauri": "node scripts/tauri-dev.mjs",
     "build": "tsc -p tsconfig.json --noEmit && vite build",
     "preview": "vite preview",
+    "icons": "tauri icon app-icon.png -o src-tauri/icons",
     "tauri": "tauri"
   },
   "dependencies": {

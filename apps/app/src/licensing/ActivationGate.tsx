@@ -59,7 +59,7 @@ export function ActivationGate({ fillWindow = false }: ActivationGateProps) {
         <div className="shrink-0 border-b border-zinc-800 px-6 pb-5 pt-8 text-center">
           <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center">
             <img
-              src="/img/logo-autodraw.png"
+              src="/img/app-icon.png"
               alt=""
               width={80}
               height={80}
