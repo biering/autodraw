@@ -1,4 +1,15 @@
-import type { DiagramV1, EdgeDash, EdgeHead, EdgeRecord, NodeRecord, NodeShape } from "./schema.js";
+import { frameSvgStrokeFill } from "./frameTokens.js";
+import type {
+  DiagramV1,
+  EdgeDash,
+  EdgeHead,
+  EdgeRecord,
+  FrameRecord,
+  ImageRecord,
+  NodeRecord,
+  NodeShape,
+  TextLabelRecord,
+} from "./schema.js";
 import { pathPoints } from "./routing.js";
 import { resolvedStyles, styleById } from "./palettes.js";
 import { resolvedNodeSvgFillParts, resolvedNodeSvgStrokeParts } from "./nodeColors.js";
@@ -14,6 +25,11 @@ function esc(s: string): string {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
+}
+
+/** Escape for XML attribute values (e.g. image href). */
+function escAttr(s: string): string {
+  return s.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 }
 
 function dashArray(d: EdgeDash): string {
@@ -33,22 +49,55 @@ function nodeRect(n: NodeRecord): { x: number; y: number; w: number; h: number }
   return { x: n.x, y: n.y, w: n.w, h: n.h };
 }
 
+/**
+ * Resolve a node's absolute position. When `parentId` points to a frame, the stored coords are
+ * **relative** to that frame (React Flow sub-flow convention); we sum the parent's origin in.
+ */
+function absoluteNode(diagram: DiagramV1, n: NodeRecord): NodeRecord {
+  if (n.parentId == null) return n;
+  const parent = diagram.frames.find((f) => f.id === n.parentId);
+  if (!parent) return n;
+  return { ...n, x: n.x + parent.x, y: n.y + parent.y };
+}
+
+function textLabelBounds(t: TextLabelRecord): { x: number; y: number; w: number; h: number } {
+  const lineH = 18;
+  const approxW = Math.max(40, Math.min(480, t.text.length * 7.5 + 8));
+  return { x: t.x, y: t.y, w: approxW, h: lineH };
+}
+
 function contentBounds(
   diagram: DiagramV1,
   padding: number,
 ): { x: number; y: number; w: number; h: number } {
-  if (diagram.nodes.length === 0) {
-    return { x: 0, y: 0, w: 400, h: 300 };
-  }
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
+  let any = false;
+  const bump = (x: number, y: number, w: number, h: number) => {
+    any = true;
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x + w);
+    maxY = Math.max(maxY, y + h);
+  };
   for (const n of diagram.nodes) {
-    minX = Math.min(minX, n.x);
-    minY = Math.min(minY, n.y);
-    maxX = Math.max(maxX, n.x + n.w);
-    maxY = Math.max(maxY, n.y + n.h);
+    const a = absoluteNode(diagram, n);
+    bump(a.x, a.y, a.w, a.h);
+  }
+  for (const f of diagram.frames) {
+    bump(f.x, f.y, f.w, f.h);
+  }
+  for (const im of diagram.images) {
+    bump(im.x, im.y, im.w, im.h);
+  }
+  for (const t of diagram.textLabels) {
+    const b = textLabelBounds(t);
+    bump(b.x, b.y, b.w, b.h);
+  }
+  if (!any) {
+    return { x: 0, y: 0, w: 400, h: 300 };
   }
   return {
     x: minX - padding,
@@ -172,6 +221,27 @@ function renderNodeShape(
   }
 }
 
+function renderFrameSvg(f: FrameRecord): string {
+  const rx = Math.min(12, Math.min(f.w, f.h) * 0.12);
+  const title = f.name?.trim() ? esc(f.name.trim()) : "";
+  const { stroke, fill } = frameSvgStrokeFill(f.color);
+  const rect = `<rect x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" rx="${rx}" ry="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-dasharray="6 4"/>`;
+  const label = title
+    ? `<text x="${f.x + 10}" y="${f.y + 18}" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#555">${title}</text>`
+    : "";
+  return `${rect}\n${label}`;
+}
+
+function renderImageSvg(im: ImageRecord): string {
+  const href = escAttr(im.src);
+  const alt = im.alt ? ` role="img" aria-label="${escAttr(im.alt)}"` : "";
+  return `<image x="${im.x}" y="${im.y}" width="${im.w}" height="${im.h}" href="${href}" preserveAspectRatio="xMidYMid meet"${alt}/>`;
+}
+
+function renderTextLabelSvg(t: TextLabelRecord): string {
+  return `<text x="${t.x}" y="${t.y}" dominant-baseline="hanging" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#111">${esc(t.text)}</text>`;
+}
+
 /** Pure SVG string for export (PDF/PNG) and tests. Coordinates in diagram space. */
 export function renderSVG(diagram: DiagramV1, opts: RenderSVGOptions = {}): string {
   const padding = opts.padding ?? 40;
@@ -194,7 +264,16 @@ export function renderSVG(diagram: DiagramV1, opts: RenderSVGOptions = {}): stri
     }
   }
 
-  const nodeMap = new Map(diagram.nodes.map((n) => [n.id, n]));
+  for (const f of diagram.frames) {
+    body.push(renderFrameSvg(f));
+  }
+
+  for (const im of diagram.images) {
+    body.push(renderImageSvg(im));
+  }
+
+  const absoluteNodes = diagram.nodes.map((n) => absoluteNode(diagram, n));
+  const nodeMap = new Map(absoluteNodes.map((n) => [n.id, n]));
 
   for (const e of diagram.edges) {
     const a = nodeMap.get(e.from);
@@ -215,7 +294,7 @@ export function renderSVG(diagram: DiagramV1, opts: RenderSVGOptions = {}): stri
     );
   }
 
-  for (const n of diagram.nodes) {
+  for (const n of absoluteNodes) {
     const st = styleById(diagram, n.styleId) ?? styles[0];
     if (!st) continue;
     const shape = n.shape ?? st.shape;
@@ -225,6 +304,10 @@ export function renderSVG(diagram: DiagramV1, opts: RenderSVGOptions = {}): stri
     body.push(
       `<text x="${n.x + n.w / 2}" y="${n.y + n.h / 2}" text-anchor="middle" dominant-baseline="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#111">${esc(n.text)}</text>`,
     );
+  }
+
+  for (const t of diagram.textLabels) {
+    body.push(renderTextLabelSvg(t));
   }
 
   return `<?xml version="1.0" encoding="UTF-8"?>

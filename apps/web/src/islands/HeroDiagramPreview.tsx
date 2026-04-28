@@ -7,6 +7,9 @@ const HERO_DIAGRAM_INITIAL: DiagramV1 = {
 	name: "Preview",
 	palette: "universal",
 	canvas: { showGrid: true, gridSpacing: 16, zoom: 1 },
+	textLabels: [],
+	frames: [],
+	images: [],
 	nodes: [
 		{ id: "hero-left", text: "API", x: 64, y: 92, w: 132, h: 56, styleId: "hero-lime" },
 		{ id: "hero-right", text: "Service", x: 320, y: 92, w: 132, h: 56, styleId: "hero-lime" },

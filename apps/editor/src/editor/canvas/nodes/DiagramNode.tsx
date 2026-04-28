@@ -1,6 +1,6 @@
 import { Handle, Position, type NodeProps, useConnection } from "@xyflow/react";
 import type { ConnectionState } from "@xyflow/system";
-import { Link2 } from "lucide-react";
+import { ExternalLink, Link2, Lock } from "lucide-react";
 import type { CSSProperties } from "react";
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
@@ -29,7 +29,9 @@ function diagramNodePropsAreEqual(
     a.resolvedStyle.stroke === b.resolvedStyle.stroke &&
     a.resolvedStyle.defaultShape === b.resolvedStyle.defaultShape &&
     a.canvasTheme === b.canvasTheme &&
-    (a.interactionDisabled ?? false) === (b.interactionDisabled ?? false)
+    (a.interactionDisabled ?? false) === (b.interactionDisabled ?? false) &&
+    (a.link ?? "") === (b.link ?? "") &&
+    (a.locked ?? false) === (b.locked ?? false)
   );
 }
 
@@ -58,7 +60,8 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
   const data = props.data;
   const { id, selected, dragging } = props;
   const readOnly = data.interactionDisabled === true;
-  const isEditing = useDocument((s) => !readOnly && s.editingNodeId === id);
+  const locked = data.locked === true;
+  const isEditing = useDocument((s) => !readOnly && !locked && s.editingNodeId === id);
   const setEditingNodeId = useDocument((s) => s.setEditingNodeId);
   const updateNode = useDocument((s) => s.updateNode);
 
@@ -149,7 +152,7 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
   const sx = clip[shape] ?? clip.roundedRect!;
 
   const startEditing = () => {
-    if (readOnly) return;
+    if (readOnly || locked) return;
     setEditingNodeId(id);
   };
 
@@ -173,7 +176,7 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
         outlineOffset: isConnectDropTarget ? 3 : undefined,
       }}
       onDoubleClick={
-        readOnly
+        readOnly || locked
           ? undefined
           : (e) => {
               e.stopPropagation();
@@ -181,6 +184,33 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
             }
       }
     >
+      {!readOnly && (data.link || locked) ? (
+        <div className="pointer-events-auto absolute left-1 top-1 z-[6] flex items-center gap-1 [-webkit-app-region:no-drag] [app-region:no-drag]">
+          {data.link ? (
+            <button
+              type="button"
+              className="nodrag nopan flex h-6 w-6 items-center justify-center rounded-md border border-black/10 bg-white/95 text-[#334155] shadow-sm hover:bg-white dark:border-white/15 dark:bg-zinc-800/95 dark:text-slate-200"
+              title="Open link"
+              aria-label="Open link"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(data.link, "_blank", "noopener,noreferrer");
+              }}
+            >
+              <ExternalLink size={12} strokeWidth={2} aria-hidden />
+            </button>
+          ) : null}
+          {locked ? (
+            <span
+              className="flex h-6 w-6 items-center justify-center rounded-md border border-black/10 bg-white/95 text-[#334155] shadow-sm dark:border-white/15 dark:bg-zinc-800/95 dark:text-slate-200"
+              title="Locked"
+            >
+              <Lock size={12} strokeWidth={2} aria-hidden />
+            </span>
+          ) : null}
+        </div>
+      ) : null}
       {/*
        * Target handle fills the node so dropping a connection anywhere on the node is accepted.
        * React Flow's drop hit-test finds the handle through the opaque body above it.
@@ -235,7 +265,7 @@ function DiagramNodeInner(props: NodeProps<DiagramFlowNode>) {
         )}
       </div>
 
-      {selected && !isEditing ? (
+      {selected && !isEditing && !locked ? (
         <Handle
           id={DIAGRAM_BODY_SOURCE_BUTTON_HANDLE}
           type="source"

@@ -1,17 +1,20 @@
 import {
-  defaultStyleId,
-  emptyDiagram,
-  normalizeDiagramName,
-  parseDiagram,
   type DiagramV1,
+  defaultStyleId,
   type EdgeHead,
   type EdgeRecord,
+  emptyDiagram,
+  type FrameRecord,
+  type ImageRecord,
   type NodeRecord,
+  normalizeDiagramName,
   type PalettePreset,
+  parseDiagram,
+  type TextLabelRecord,
 } from "@autodraw/core";
 import { temporal } from "zundo";
 import { create } from "zustand";
-import { normalizeDiagramConnectionHandle } from "../canvas/flowAdapter";
+import { normalizeDiagramConnectionHandle, withPaddedFrames } from "../canvas/flowAdapter";
 
 /** Upper bound for canvas zoom (toolbar + React Flow viewport). */
 export const MAX_VIEW_ZOOM = 1.5;
@@ -67,6 +70,8 @@ export type AppState = {
   showExportSheet: boolean;
   pendingEdgeSource: string | null;
   editingNodeId: string | null;
+  /** Frame id whose title is being edited inline (React Flow frame node). */
+  editingFrameId: string | null;
   /** Bottom inspector: new edge flow (pick start/end markers to create the edge). */
   relationshipDraft: RelationshipDraft | null;
   setDiagram: (d: DiagramV1, opts?: { filePath?: string | null; dirty?: boolean }) => void;
@@ -81,6 +86,7 @@ export type AppState = {
   setCanvasTheme: (t: CanvasTheme) => void;
   setPendingEdgeSource: (id: string | null) => void;
   setEditingNodeId: (id: string | null) => void;
+  setEditingFrameId: (id: string | null) => void;
   setRelationshipDraft: (d: RelationshipDraft | null) => void;
   commitRelationshipDraft: (markers: { head: EdgeHead; tail: EdgeHead }) => void;
   newDocument: (palette: PalettePreset) => void;
@@ -88,6 +94,14 @@ export type AppState = {
   addNode: (n: Omit<NodeRecord, "id"> & { id?: string }, opts?: { focusLabel?: boolean }) => string;
   updateNode: (id: string, patch: Partial<NodeRecord>) => void;
   removeNode: (id: string) => void;
+  /** Removes a diagram node, frame, image, or text label by React Flow id. */
+  removeElementById: (id: string) => void;
+  addTextLabel: (t: Omit<TextLabelRecord, "id"> & { id?: string }) => string;
+  updateTextLabel: (id: string, patch: Partial<TextLabelRecord>) => void;
+  addFrame: (f: Omit<FrameRecord, "id"> & { id?: string }) => string;
+  updateFrame: (id: string, patch: Partial<FrameRecord>) => void;
+  addImage: (i: Omit<ImageRecord, "id"> & { id?: string }) => string;
+  updateImage: (id: string, patch: Partial<ImageRecord>) => void;
   addEdge: (
     e: Pick<EdgeRecord, "from" | "to"> &
       Partial<Omit<EdgeRecord, "id" | "from" | "to">> & { id?: string },
@@ -110,6 +124,7 @@ const initial = (): Omit<
   | "setCanvasTheme"
   | "setPendingEdgeSource"
   | "setEditingNodeId"
+  | "setEditingFrameId"
   | "setRelationshipDraft"
   | "commitRelationshipDraft"
   | "newDocument"
@@ -117,6 +132,13 @@ const initial = (): Omit<
   | "addNode"
   | "updateNode"
   | "removeNode"
+  | "removeElementById"
+  | "addTextLabel"
+  | "updateTextLabel"
+  | "addFrame"
+  | "updateFrame"
+  | "addImage"
+  | "updateImage"
   | "addEdge"
   | "updateEdge"
   | "removeEdge"
@@ -131,6 +153,7 @@ const initial = (): Omit<
   showExportSheet: false,
   pendingEdgeSource: null,
   editingNodeId: null,
+  editingFrameId: null,
   relationshipDraft: null,
 });
 
@@ -144,6 +167,7 @@ export const useDocument = create<AppState>()(
           diagram: d,
           filePath: nextPath,
           dirty: opts?.dirty ?? false,
+          editingFrameId: null,
           ...(typeof nextPath === "string" && nextPath.length > 0
             ? { showWelcomeGate: false }
             : {}),
@@ -204,6 +228,7 @@ export const useDocument = create<AppState>()(
       },
       setPendingEdgeSource: (id) => set({ pendingEdgeSource: id }),
       setEditingNodeId: (id) => set({ editingNodeId: id }),
+      setEditingFrameId: (id) => set({ editingFrameId: id }),
       setRelationshipDraft: (d) => set({ relationshipDraft: d }),
       commitRelationshipDraft: ({ head, tail }) => {
         const d = get().relationshipDraft;
@@ -247,10 +272,13 @@ export const useDocument = create<AppState>()(
           h: n.h,
           styleId: n.styleId,
           shape: n.shape,
+          ...(n.link !== undefined ? { link: n.link } : {}),
+          ...(n.locked !== undefined ? { locked: n.locked } : {}),
+          ...(n.parentId !== undefined ? { parentId: n.parentId } : {}),
         };
         const focusLabel = opts?.focusLabel !== false;
         set((s) => ({
-          diagram: { ...s.diagram, nodes: [...s.diagram.nodes, node] },
+          diagram: withPaddedFrames({ ...s.diagram, nodes: [...s.diagram.nodes, node] }),
           dirty: true,
           ...(focusLabel ? { editingNodeId: id } : {}),
         }));
@@ -258,10 +286,10 @@ export const useDocument = create<AppState>()(
       },
       updateNode: (id, patch) =>
         set((s) => ({
-          diagram: {
+          diagram: withPaddedFrames({
             ...s.diagram,
             nodes: s.diagram.nodes.map((x) => (x.id === id ? { ...x, ...patch } : x)),
-          },
+          }),
           dirty: true,
         })),
       removeNode: (id) =>
@@ -284,6 +312,152 @@ export const useDocument = create<AppState>()(
             ...dropDraft,
           };
         }),
+      removeElementById: (id) =>
+        set((s) => {
+          if (s.diagram.nodes.some((n) => n.id === id)) {
+            const rd = s.relationshipDraft;
+            const dropDraft =
+              rd && (rd.source === id || rd.target === id) ? { relationshipDraft: null } : {};
+            return {
+              diagram: {
+                ...s.diagram,
+                nodes: s.diagram.nodes.filter((x) => x.id !== id),
+                edges: s.diagram.edges.filter((e) => e.from !== id && e.to !== id),
+              },
+              dirty: true,
+              selection: {
+                nodeIds: s.selection.nodeIds.filter((x) => x !== id),
+                edgeIds: s.selection.edgeIds,
+              },
+              editingNodeId: s.editingNodeId === id ? null : s.editingNodeId,
+              ...dropDraft,
+            };
+          }
+          if (s.diagram.edges.some((e) => e.id === id)) {
+            return {
+              diagram: { ...s.diagram, edges: s.diagram.edges.filter((x) => x.id !== id) },
+              dirty: true,
+              selection: {
+                nodeIds: s.selection.nodeIds,
+                edgeIds: s.selection.edgeIds.filter((x) => x !== id),
+              },
+            };
+          }
+          if (s.diagram.frames.some((f) => f.id === id)) {
+            // Detach children: promote their relative coords to absolute and clear parentId so the
+            // visual position stays stable when the frame is removed.
+            const parent = s.diagram.frames.find((f) => f.id === id);
+            const px = parent?.x ?? 0;
+            const py = parent?.y ?? 0;
+            return {
+              diagram: {
+                ...s.diagram,
+                frames: s.diagram.frames.filter((f) => f.id !== id),
+                nodes: s.diagram.nodes.map((n) => {
+                  if (n.parentId !== id) return n;
+                  const { parentId: _drop, ...rest } = n;
+                  return { ...rest, x: n.x + px, y: n.y + py };
+                }),
+              },
+              dirty: true,
+              selection: {
+                nodeIds: s.selection.nodeIds.filter((x) => x !== id),
+                edgeIds: s.selection.edgeIds,
+              },
+            };
+          }
+          if (s.diagram.images.some((im) => im.id === id)) {
+            return {
+              diagram: { ...s.diagram, images: s.diagram.images.filter((im) => im.id !== id) },
+              dirty: true,
+              selection: {
+                nodeIds: s.selection.nodeIds.filter((x) => x !== id),
+                edgeIds: s.selection.edgeIds,
+              },
+            };
+          }
+          if (s.diagram.textLabels.some((t) => t.id === id)) {
+            return {
+              diagram: {
+                ...s.diagram,
+                textLabels: s.diagram.textLabels.filter((t) => t.id !== id),
+              },
+              dirty: true,
+              selection: {
+                nodeIds: s.selection.nodeIds.filter((x) => x !== id),
+                edgeIds: s.selection.edgeIds,
+              },
+            };
+          }
+          return s;
+        }),
+      addTextLabel: (t) => {
+        const id = t.id ?? crypto.randomUUID();
+        const rec: TextLabelRecord = { id, x: t.x, y: t.y, text: t.text };
+        set((s) => ({
+          diagram: { ...s.diagram, textLabels: [...s.diagram.textLabels, rec] },
+          dirty: true,
+        }));
+        return id;
+      },
+      updateTextLabel: (id, patch) =>
+        set((s) => ({
+          diagram: {
+            ...s.diagram,
+            textLabels: s.diagram.textLabels.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+          },
+          dirty: true,
+        })),
+      addFrame: (f) => {
+        const id = f.id ?? crypto.randomUUID();
+        const rec: FrameRecord = {
+          id,
+          x: f.x,
+          y: f.y,
+          w: f.w,
+          h: f.h,
+          ...(f.name !== undefined ? { name: f.name } : {}),
+          ...(f.color !== undefined ? { color: f.color } : {}),
+        };
+        set((s) => ({
+          diagram: { ...s.diagram, frames: [...s.diagram.frames, rec] },
+          dirty: true,
+        }));
+        return id;
+      },
+      updateFrame: (id, patch) =>
+        set((s) => ({
+          diagram: {
+            ...s.diagram,
+            frames: s.diagram.frames.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+          },
+          dirty: true,
+        })),
+      addImage: (i) => {
+        const id = i.id ?? crypto.randomUUID();
+        const rec: ImageRecord = {
+          id,
+          src: i.src,
+          x: i.x,
+          y: i.y,
+          w: i.w,
+          h: i.h,
+          ...(i.alt !== undefined ? { alt: i.alt } : {}),
+        };
+        set((s) => ({
+          diagram: { ...s.diagram, images: [...s.diagram.images, rec] },
+          dirty: true,
+        }));
+        return id;
+      },
+      updateImage: (id, patch) =>
+        set((s) => ({
+          diagram: {
+            ...s.diagram,
+            images: s.diagram.images.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+          },
+          dirty: true,
+        })),
       addEdge: (e) => {
         const id = e.id ?? crypto.randomUUID();
         const edge: EdgeRecord = {
@@ -296,6 +470,11 @@ export const useDocument = create<AppState>()(
           tail: e.tail ?? "none",
           label: e.label ?? "",
           strokeWidth: e.strokeWidth ?? 1,
+          ...(e.relationshipPreset !== undefined
+            ? { relationshipPreset: e.relationshipPreset }
+            : {}),
+          ...(e.link !== undefined ? { link: e.link } : {}),
+          ...(e.locked !== undefined ? { locked: e.locked } : {}),
         };
         const sh = normalizeDiagramConnectionHandle(e.sourceHandle, "source");
         if (sh != null) edge.sourceHandle = sh;
@@ -340,4 +519,4 @@ export function redoDocument(): void {
   useDocument.temporal.getState().redo();
 }
 
-export { defaultStyleId, parseDiagram, emptyDiagram };
+export { defaultStyleId, emptyDiagram, parseDiagram };

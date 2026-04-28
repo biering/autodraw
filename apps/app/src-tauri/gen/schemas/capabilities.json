@@ -1,1 +1,50 @@
-{"default":{"identifier":"default","description":"Default capability for the main window","remote":{"urls":["http://127.0.0.1:1420/*","http://localhost:1420/*","ws://127.0.0.1:1420/*","ws://localhost:1420/*"]},"local":true,"windows":["*"],"permissions":["core:default","core:window:allow-create","core:webview:allow-create-webview-window","core:window:allow-close","core:window:allow-set-focus","core:window:allow-show","core:window:allow-start-dragging","core:webview:allow-webview-close","core:event:default","dialog:default","fs:default",{"identifier":"fs:allow-read-text-file","allow":[{"path":"$HOME/**"},{"path":"$DOCUMENT/**"},{"path":"$DESKTOP/**"},{"path":"$DOWNLOAD/**"}]},{"identifier":"fs:allow-write-text-file","allow":[{"path":"$HOME/**"},{"path":"$DOCUMENT/**"},{"path":"$DESKTOP/**"},{"path":"$DOWNLOAD/**"}]},"shell:default","clipboard-manager:allow-read-text","clipboard-manager:allow-write-text"]}}
+{
+  "default": {
+    "identifier": "default",
+    "description": "Default capability for the main window",
+    "remote": {
+      "urls": [
+        "http://127.0.0.1:1420/*",
+        "http://localhost:1420/*",
+        "ws://127.0.0.1:1420/*",
+        "ws://localhost:1420/*"
+      ]
+    },
+    "local": true,
+    "windows": ["*"],
+    "permissions": [
+      "core:default",
+      "core:window:allow-create",
+      "core:webview:allow-create-webview-window",
+      "core:window:allow-close",
+      "core:window:allow-set-focus",
+      "core:window:allow-show",
+      "core:window:allow-start-dragging",
+      "core:webview:allow-webview-close",
+      "core:event:default",
+      "dialog:default",
+      "fs:default",
+      {
+        "identifier": "fs:allow-read-text-file",
+        "allow": [
+          { "path": "$HOME/**" },
+          { "path": "$DOCUMENT/**" },
+          { "path": "$DESKTOP/**" },
+          { "path": "$DOWNLOAD/**" }
+        ]
+      },
+      {
+        "identifier": "fs:allow-write-text-file",
+        "allow": [
+          { "path": "$HOME/**" },
+          { "path": "$DOCUMENT/**" },
+          { "path": "$DESKTOP/**" },
+          { "path": "$DOWNLOAD/**" }
+        ]
+      },
+      "shell:default",
+      "clipboard-manager:allow-read-text",
+      "clipboard-manager:allow-write-text"
+    ]
+  }
+}

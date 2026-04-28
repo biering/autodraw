@@ -1,9 +1,10 @@
-import { defaultStyleId } from "@autodraw/core";
+import { defaultStyleId, parseDiagram } from "@autodraw/core";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   DIAGRAM_BODY_SOURCE_HANDLE,
   DIAGRAM_BODY_TARGET_HANDLE,
   toFlowEdges,
+  toFlowNodes,
 } from "../canvas/flowAdapter";
 import { useDocument } from "./useDocument";
 
@@ -117,5 +118,34 @@ describe("useDocument edge handle stripping", () => {
     expect(flow).toHaveLength(1);
     expect(flow[0]!.sourceHandle).toBeUndefined();
     expect(flow[0]!.targetHandle).toBeUndefined();
+  });
+});
+
+describe("updateFrame color", () => {
+  beforeEach(() => {
+    useDocument.getState().newDocument(PALETTE);
+  });
+
+  it("persists frame color, propagates through toFlowNodes, and round-trips through parse", () => {
+    const id = useDocument.getState().addFrame({ x: 0, y: 0, w: 200, h: 150 });
+    expect(useDocument.getState().diagram.frames[0]!.color).toBeUndefined();
+
+    useDocument.getState().updateFrame(id, { color: "pink" });
+    expect(useDocument.getState().diagram.frames[0]!.color).toBe("pink");
+
+    const flowNode = toFlowNodes(useDocument.getState().diagram).find((n) => n.id === id);
+    expect((flowNode?.data as { color?: string } | undefined)?.color).toBe("pink");
+
+    const parsed = parseDiagram(JSON.parse(JSON.stringify(useDocument.getState().diagram)));
+    expect(parsed.frames[0]!.color).toBe("pink");
+
+    useDocument.getState().updateFrame(id, { color: undefined });
+    expect(useDocument.getState().diagram.frames[0]!.color).toBeUndefined();
+  });
+
+  it("addFrame round-trips frame color when supplied at creation time", () => {
+    const id = useDocument.getState().addFrame({ x: 0, y: 0, w: 200, h: 150, color: "blue" });
+    expect(useDocument.getState().diagram.frames[0]!.color).toBe("blue");
+    expect(useDocument.getState().diagram.frames[0]!.id).toBe(id);
   });
 });

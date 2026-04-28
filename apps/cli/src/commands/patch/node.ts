@@ -22,6 +22,12 @@ export default class PatchNode extends Command {
       description: "Node shape",
       options: [...nodeShapeSchema.options],
     }),
+    link: Flags.string({ description: "Set clickable link URL (https://…)" }),
+    "no-link": Flags.boolean({ description: "Remove link from the node" }),
+    locked: Flags.boolean({
+      allowNo: true,
+      description: "Set locked (--no-locked clears)",
+    }),
   };
 
   async run(): Promise<void> {
@@ -36,10 +42,15 @@ export default class PatchNode extends Command {
       flags.w !== undefined ||
       flags.h !== undefined ||
       flags.style !== undefined ||
-      flags.shape !== undefined;
+      flags.shape !== undefined ||
+      flags.link !== undefined ||
+      flags["no-link"] === true ||
+      flags.locked !== undefined;
 
     if (!hasPatch) {
-      this.error("Provide at least one of: --text, --x, --y, --w, --h, --style, --shape");
+      this.error(
+        "Provide at least one of: --text, --x, --y, --w, --h, --style, --shape, --link, --no-link, --locked/--no-locked",
+      );
     }
 
     const idx = doc.nodes.findIndex((n) => n.id === flags.id);
@@ -53,6 +64,21 @@ export default class PatchNode extends Command {
     if (flags.h !== undefined) next.h = flags.h;
     if (flags.style !== undefined) next.styleId = flags.style;
     if (flags.shape !== undefined) next.shape = flags.shape as NodeShape;
+    if (flags["no-link"] === true) {
+      delete next.link;
+    } else if (flags.link !== undefined) {
+      const raw = flags.link.trim();
+      try {
+        new URL(raw);
+      } catch {
+        this.error("Invalid --link URL");
+      }
+      next.link = raw;
+    }
+    if (flags.locked !== undefined) {
+      if (flags.locked) next.locked = true;
+      else delete next.locked;
+    }
 
     doc.nodes[idx] = next;
     writeDiagram(args.file, doc);

@@ -14,6 +14,9 @@ const buttonVariants = cva(
           "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
+        /** Glass / light-chrome strips (e.g. editor toolbar): avoid `accent-foreground` on pale hover wash. */
+        toolbarGhost:
+          "border-transparent bg-transparent text-[#1d1d1f] shadow-none hover:bg-black/[0.06] hover:text-[#1d1d1f] focus-visible:text-[#1d1d1f] active:text-[#1d1d1f]",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

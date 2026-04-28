@@ -30,7 +30,7 @@ export function EditorShellLicensed() {
   const dirty = useDocument((s) => s.dirty);
   const diagram = useDocument(useShallow((s) => s.diagram));
   const markClean = useDocument((s) => s.markClean);
-  const removeNode = useDocument((s) => s.removeNode);
+  const removeElementById = useDocument((s) => s.removeElementById);
   const removeEdge = useDocument((s) => s.removeEdge);
 
   const autosaveTimer = useRef<number | undefined>(undefined);
@@ -115,10 +115,10 @@ export function EditorShellLicensed() {
         removeEdge(id);
       }
       for (const id of nodeIds) {
-        removeNode(id);
+        removeElementById(id);
       }
     },
-    [removeNode, removeEdge],
+    [removeElementById, removeEdge],
   );
 
   useEffect(() => {

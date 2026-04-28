@@ -47,6 +47,12 @@ export default class PatchEdge extends Command {
       min: 0,
       max: 7,
     }),
+    link: Flags.string({ description: "Set clickable link URL (https://…)" }),
+    "no-link": Flags.boolean({ description: "Remove link from the edge" }),
+    locked: Flags.boolean({
+      allowNo: true,
+      description: "Set locked (--no-locked clears)",
+    }),
   };
 
   async run(): Promise<void> {
@@ -63,11 +69,14 @@ export default class PatchEdge extends Command {
       flags["stroke-width"] !== undefined ||
       flags["source-handle"] !== undefined ||
       flags["target-handle"] !== undefined ||
-      flags.preset !== undefined;
+      flags.preset !== undefined ||
+      flags.link !== undefined ||
+      flags["no-link"] === true ||
+      flags.locked !== undefined;
 
     if (!hasPatch) {
       this.error(
-        "Provide at least one of: --routing, --dash, --head, --tail, --label, --stroke-width, --source-handle, --target-handle, --preset",
+        "Provide at least one of: --routing, --dash, --head, --tail, --label, --stroke-width, --source-handle, --target-handle, --preset, --link, --no-link, --locked/--no-locked",
       );
     }
 
@@ -91,6 +100,22 @@ export default class PatchEdge extends Command {
     if (flags["target-handle"] !== undefined) {
       if (flags["target-handle"] === "") delete e.targetHandle;
       else e.targetHandle = flags["target-handle"];
+    }
+
+    if (flags["no-link"] === true) {
+      delete e.link;
+    } else if (flags.link !== undefined) {
+      const raw = flags.link.trim();
+      try {
+        new URL(raw);
+      } catch {
+        this.error("Invalid --link URL");
+      }
+      e.link = raw;
+    }
+    if (flags.locked !== undefined) {
+      if (flags.locked) e.locked = true;
+      else delete e.locked;
     }
 
     doc.edges[idx] = e;

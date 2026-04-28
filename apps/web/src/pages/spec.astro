@@ -56,6 +56,9 @@ const minimalExample = {
 	name: "Minimal",
 	palette: "universal",
 	canvas: { showGrid: true, gridSpacing: 16, zoom: 1 },
+	textLabels: [],
+	frames: [],
+	images: [],
 	nodes: [
 		{
 			id: "a",
@@ -101,8 +104,11 @@ OUTPUT RULES:
   - name: short string (max 256 chars)
   - palette: one of "universal" | "grayscale" | "flowchart" | "empty"
   - canvas: { "showGrid": boolean, "gridSpacing": number, "zoom": number }
-  - nodes: array of { id, text, x, y, w, h, styleId, shape? }
-  - edges: array of { id, from, to, routing, dash, head, tail, label, strokeWidth?, sourceHandle?, targetHandle?, relationshipPreset? }
+  - nodes: array of { id, text, x, y, w, h, styleId, shape?, link?, locked? }
+  - edges: array of { id, from, to, routing, dash, head, tail, label, strokeWidth?, sourceHandle?, targetHandle?, relationshipPreset?, link?, locked? }
+  - textLabels: array of { id, text, x, y } (optional; omit or [] for none)
+  - frames: array of { id, x, y, w, h, name? } (optional; omit or [] for none)
+  - images: array of { id, src, x, y, w, h, alt? } — src must be https URL; no base64 (optional; omit or [] for none)
 
 NODE shapes (optional): rectangle | roundedRect | oval | circle | diamond | hexagon | octagon | parallelogram
 
@@ -133,8 +139,10 @@ const nodeRecordExample = `{
   "text": "string",
   "x": 0, "y": 0, "w": 160, "h": 72,
   "styleId": "yellow",
-  "shape": "roundedRect"   // optional; one of:
+  "shape": "roundedRect",   // optional; one of:
   // rectangle | roundedRect | oval | circle | diamond | hexagon | octagon | parallelogram
+  "link": "https://example.com",  // optional https URL (opens from editor)
+  "locked": true                   // optional; when true, node is not draggable in the editor
 }`;
 
 const edgeRecordExample = `{
@@ -149,7 +157,9 @@ const edgeRecordExample = `{
   "strokeWidth": 1,
   "sourceHandle": "src",    // optional React Flow handle id
   "targetHandle": "tgt",
-  "relationshipPreset": 1  // optional 0–7; aligns with editor presets
+  "relationshipPreset": 1, // optional 0–7; aligns with editor presets
+  "link": "https://example.com/runbook",  // optional
+  "locked": true                           // optional; when true, edge style is fixed in the editor
 }`;
 ---
 
@@ -203,6 +213,18 @@ const edgeRecordExample = `{
 					<li><code class="font-mono text-sm">nodes</code> — array of node records</li>
 					<li><code class="font-mono text-sm">edges</code> — array of edge records</li>
 					<li>
+						<code class="font-mono text-sm">textLabels</code> — optional free-floating text (same font size as node labels;
+						omit or <code class="font-mono">[]</code>)
+					</li>
+					<li>
+						<code class="font-mono text-sm">frames</code> — optional named regions behind nodes (omit or <code
+							class="font-mono">[]</code>)
+					</li>
+					<li>
+						<code class="font-mono text-sm">images</code> — optional URL-referenced images, no embedding (omit or <code
+							class="font-mono">[]</code>)
+					</li>
+					<li>
 						<code class="font-mono text-sm">customStyles</code> — optional array of style definitions (advanced)
 					</li>
 				</ul>
@@ -222,6 +244,22 @@ const edgeRecordExample = `{
 				<h2 class="text-2xl font-medium tracking-tight">Edge record</h2>
 				<pre
 					class="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-neutral-50 p-4 font-mono text-xs leading-relaxed text-neutral-800 md:text-sm">{edgeRecordExample}</pre>
+			</section>
+
+			<section class="mt-14">
+				<h2 class="text-2xl font-medium tracking-tight">Text labels, frames, and images</h2>
+				<p class="mt-3 text-neutral-600">
+					These arrays are optional on the wire: older files without them parse as empty. CLI / MCP expose <code
+						class="font-mono text-sm">add text</code>, <code class="font-mono text-sm">add frame</code>, <code
+						class="font-mono text-sm">add image</code>, matching remove/list commands, and <code class="font-mono text-sm"
+						>renderSVG</code> draws them (frames and images under edges; text labels on top).
+				</p>
+				<pre
+					class="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-neutral-50 p-4 font-mono text-xs leading-relaxed text-neutral-800 md:text-sm">{`{
+  "textLabels": [{ "id": "t1", "x": 40, "y": 40, "text": "Region eu-west" }],
+  "frames": [{ "id": "f1", "name": "VPC", "x": 32, "y": 120, "w": 520, "h": 280 }],
+  "images": [{ "id": "i1", "src": "https://example.com/logo.png", "x": 400, "y": 40, "w": 64, "h": 64, "alt": "Logo" }]
+}`}</pre>
 			</section>
 
 			<section class="mt-14">

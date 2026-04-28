@@ -53,15 +53,57 @@ export const nodeStyleDefinitionSchema = z.object({
   shape: nodeShapeSchema,
 });
 
+/** Free-floating text (not inside a node shape). */
+export const textLabelSchema = z.object({
+  id: z.string(),
+  x: z.number(),
+  y: z.number(),
+  text: z.string(),
+});
+
+/** Accent for frame border / fill in the editor and SVG export. */
+export const frameColorSchema = z.enum(["gray", "blue", "green", "pink", "yellow"]);
+
+/** Named region / frame behind other content. */
+export const frameSchema = z.object({
+  id: z.string(),
+  name: z.string().optional(),
+  x: z.number(),
+  y: z.number(),
+  w: z.number(),
+  h: z.number(),
+  color: frameColorSchema.optional(),
+});
+
+/** Raster image by URL only (no base64 in `.adraw`). */
+export const imageSchema = z.object({
+  id: z.string(),
+  src: z.string().url(),
+  x: z.number(),
+  y: z.number(),
+  w: z.number(),
+  h: z.number(),
+  alt: z.string().optional(),
+});
+
 export const nodeSchema = z.object({
   id: z.string(),
   text: z.string(),
+  /**
+   * Position. **Absolute** when the node has no parent; **relative to the parent frame's
+   * top-left** when {@link nodeSchema.parentId} is set (matches React Flow sub-flows).
+   */
   x: z.number(),
   y: z.number(),
   w: z.number(),
   h: z.number(),
   styleId: z.string(),
   shape: nodeShapeSchema.optional(),
+  /** Open when the diagram is interactive (viewer / app). */
+  link: z.string().url().optional(),
+  locked: z.boolean().optional(),
+  /** Frame id this node lives inside (sub-flow). When set, x/y are relative to that frame. */
+  parentId: z.string().optional(),
 });
 
 export const edgeSchema = z.object({
@@ -79,6 +121,8 @@ export const edgeSchema = z.object({
   label: z.string(),
   strokeWidth: z.number().optional(),
   relationshipPreset: z.number().int().optional(),
+  link: z.string().url().optional(),
+  locked: z.boolean().optional(),
 });
 
 export const canvasSchema = z.object({
@@ -96,6 +140,9 @@ export const diagramSchemaV1 = z.object({
   nodes: z.array(nodeSchema),
   edges: z.array(edgeSchema),
   customStyles: z.array(nodeStyleDefinitionSchema).optional(),
+  textLabels: z.array(textLabelSchema).default([]),
+  frames: z.array(frameSchema).default([]),
+  images: z.array(imageSchema).default([]),
 });
 
 export type PalettePreset = z.infer<typeof palettePresetSchema>;
@@ -107,6 +154,10 @@ export type NodeStyleDefinition = z.infer<typeof nodeStyleDefinitionSchema>;
 export type NodeRecord = z.infer<typeof nodeSchema>;
 export type EdgeRecord = z.infer<typeof edgeSchema>;
 export type CanvasSettings = z.infer<typeof canvasSchema>;
+export type TextLabelRecord = z.infer<typeof textLabelSchema>;
+export type FrameRecord = z.infer<typeof frameSchema>;
+export type FrameColor = z.infer<typeof frameColorSchema>;
+export type ImageRecord = z.infer<typeof imageSchema>;
 export type DiagramV1 = z.infer<typeof diagramSchemaV1>;
 
 /** Permissive edge shape: accepts legacy `head`/`tail` names so {@link parseDiagram} can migrate them. */
@@ -124,6 +175,9 @@ const looseDiagram = z
     nodes: z.array(nodeSchema),
     edges: z.array(looseEdgeSchema),
     customStyles: z.array(nodeStyleDefinitionSchema).optional(),
+    textLabels: z.array(textLabelSchema).optional(),
+    frames: z.array(frameSchema).optional(),
+    images: z.array(imageSchema).optional(),
   })
   .passthrough();
 
@@ -162,6 +216,9 @@ export function parseDiagram(raw: unknown): DiagramV1 {
       strokeWidth: e.strokeWidth ?? 1,
     })),
     customStyles: parsed.customStyles ?? [],
+    textLabels: parsed.textLabels ?? [],
+    frames: parsed.frames ?? [],
+    images: parsed.images ?? [],
   });
 }
 
@@ -178,5 +235,8 @@ export function emptyDiagram(palette: PalettePreset = "universal"): DiagramV1 {
     nodes: [],
     edges: [],
     customStyles: [],
+    textLabels: [],
+    frames: [],
+    images: [],
   };
 }

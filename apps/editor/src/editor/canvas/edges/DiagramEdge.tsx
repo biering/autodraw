@@ -92,7 +92,9 @@ function diagramEdgePropsAreEqual(
     (a.label ?? "") === (b.label ?? "") &&
     (a.relationshipPreset ?? null) === (b.relationshipPreset ?? null) &&
     (a.sourceHandle ?? null) === (b.sourceHandle ?? null) &&
-    (a.targetHandle ?? null) === (b.targetHandle ?? null)
+    (a.targetHandle ?? null) === (b.targetHandle ?? null) &&
+    (a.link ?? "") === (b.link ?? "") &&
+    (a.locked ?? false) === (b.locked ?? false)
   );
 }
 

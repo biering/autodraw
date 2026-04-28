@@ -6,6 +6,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { cn } from "../../lib/utils";
@@ -167,3 +170,56 @@ function EdgeMarkerDropdownInner({ role, value, onChange, label }: EdgeMarkerDro
 }
 
 export const EdgeMarkerDropdown = memo(EdgeMarkerDropdownInner);
+
+export type EdgeMarkerSubMenuProps = {
+  role: MarkerRole;
+  value: EdgeHead;
+  onChange: (next: EdgeHead) => void;
+  /** Trigger label rendered next to the current marker glyph (e.g. "Start marker"). */
+  label: string;
+  disabled?: boolean;
+};
+
+/**
+ * Same marker picker as `EdgeMarkerDropdown`, but expressed as a Radix `DropdownMenuSub` so it
+ * can live inside another `DropdownMenu` (e.g. the edge context menu) without two independent
+ * Radix `Root`s fighting over focus / pointerDown-outside semantics.
+ */
+function EdgeMarkerSubMenuInner({
+  role,
+  value,
+  onChange,
+  label,
+  disabled,
+}: EdgeMarkerSubMenuProps) {
+  return (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger className="gap-2" disabled={disabled}>
+        <MarkerGlyph kind={value} role={role} />
+        <span className="flex flex-col text-left text-sm leading-tight">
+          <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            {label}
+          </span>
+          <span>{EDGE_MARKER_LABELS[value]}</span>
+        </span>
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent className="min-w-[14rem] p-1">
+        {EDGE_MARKER_OPTIONS.map((kind) => {
+          const active = value === kind;
+          return (
+            <DropdownMenuItem
+              key={kind}
+              onSelect={() => onChange(kind)}
+              className={cn("gap-2 px-2 py-1.5", active && "bg-accent")}
+            >
+              <MarkerGlyph kind={kind} role={role} />
+              <span>{EDGE_MARKER_LABELS[kind]}</span>
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
+  );
+}
+
+export const EdgeMarkerSubMenu = memo(EdgeMarkerSubMenuInner);

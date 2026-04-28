@@ -26,6 +26,9 @@ export default class ShowDiagram extends Command {
     this.log(`palette: ${doc.palette}`);
     this.log(`nodes: ${doc.nodes.length}`);
     this.log(`edges: ${doc.edges.length}`);
+    this.log(`textLabels: ${doc.textLabels.length}`);
+    this.log(`frames: ${doc.frames.length}`);
+    this.log(`images: ${doc.images.length}`);
     this.log(`customStyles: ${customLen}`);
     this.log(`canvas.showGrid: ${doc.canvas.showGrid}`);
     this.log(`canvas.gridSpacing: ${doc.canvas.gridSpacing}`);

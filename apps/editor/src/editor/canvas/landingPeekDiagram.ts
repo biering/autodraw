@@ -56,6 +56,9 @@ function cloneDiagram(d: DiagramV1): DiagramV1 {
     nodes: d.nodes.map((n) => ({ ...n })),
     edges: d.edges.map((e) => ({ ...e })),
     customStyles: d.customStyles ? d.customStyles.map((s) => ({ ...s })) : [],
+    textLabels: d.textLabels.map((t) => ({ ...t })),
+    frames: d.frames.map((f) => ({ ...f })),
+    images: d.images.map((i) => ({ ...i })),
   };
 }
 
