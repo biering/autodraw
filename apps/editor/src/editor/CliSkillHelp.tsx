@@ -11,10 +11,8 @@ import {
   DialogTitle,
 } from "../components/ui/dialog";
 import { cn } from "../lib/utils";
-import { isTauri } from "../platform/isTauri";
 import { useDocument } from "./state/useDocument";
-
-const DOWNLOAD_NAME = "autodraw-cli.SKILL.md";
+import { downloadCliSkill } from "./onboarding/downloadCliSkill";
 
 export function CliSkillHelp() {
   const canvasTheme = useDocument((s) => s.canvasTheme);
@@ -26,7 +24,7 @@ export function CliSkillHelp() {
   const triggerClass = useMemo(
     () =>
       cn(
-        "fixed right-4 top-[calc(10px+env(safe-area-inset-top,0px))] z-[85] h-10 w-10 rounded-full shadow-md [-webkit-app-region:no-drag] [app-region:no-drag]",
+        "fixed right-16 top-[calc(10px+env(safe-area-inset-top,0px))] z-[85] h-10 w-10 rounded-full shadow-md [-webkit-app-region:no-drag] [app-region:no-drag]",
         isDarkCanvas
           ? "border border-white/[0.14] bg-[rgba(255,255,255,0.08)] hover:bg-white/12"
           : "border border-black/[0.12] bg-[rgba(0,0,0,0.02)] hover:bg-black/10",
@@ -37,27 +35,7 @@ export function CliSkillHelp() {
   const download = useCallback(async () => {
     setBusy(true);
     try {
-      if (isTauri()) {
-        const { save } = await import("@tauri-apps/plugin-dialog");
-        const { writeTextFile } = await import("@tauri-apps/plugin-fs");
-        const path = await save({
-          filters: [{ name: "Markdown", extensions: ["md"] }],
-          defaultPath: DOWNLOAD_NAME,
-        });
-        if (typeof path !== "string") return;
-        await writeTextFile(path, cliSkillMarkdown);
-        setOpen(false);
-        return;
-      }
-      const blob = new Blob([cliSkillMarkdown], { type: "text/markdown;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = DOWNLOAD_NAME;
-      a.rel = "noopener";
-      a.click();
-      URL.revokeObjectURL(url);
-      setOpen(false);
+      await downloadCliSkill({ onAfter: () => setOpen(false) });
     } finally {
       setBusy(false);
     }

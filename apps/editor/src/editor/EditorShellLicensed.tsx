@@ -13,6 +13,9 @@ import {
 import { isTauri } from "../platform/isTauri";
 import { decodeDiagramSharePayload } from "../sharePayload";
 import { CliSkillHelp } from "./CliSkillHelp";
+import { OnboardingButton } from "./onboarding/OnboardingButton";
+import { OnboardingDialog } from "./onboarding/OnboardingDialog";
+import { useFirstRunOnboarding } from "./onboarding/useOnboarding";
 import { DiagramCanvas } from "./canvas/DiagramCanvas";
 import { isTypingInField } from "./isTypingInField";
 import { AddElementPopover } from "./popovers/AddElementPopover";
@@ -24,6 +27,7 @@ import { ZoomDock } from "./ZoomDock";
 
 /** Full editor UI + document bootstrap; only mounted after Polar license is valid. */
 export function EditorShellLicensed() {
+  useFirstRunOnboarding();
   const canvasTheme = useDocument((s) => s.canvasTheme);
   const setShowExport = useDocument((s) => s.setShowExportSheet);
   const filePath = useDocument((s) => s.filePath);
@@ -174,6 +178,8 @@ export function EditorShellLicensed() {
           <DiagramCanvas />
         </div>
         <Toolbar />
+        <OnboardingButton />
+        <OnboardingDialog />
         <CliSkillHelp />
         <ZoomDock />
         <WelcomeDiagramSheet />

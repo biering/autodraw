@@ -1,3 +1,4 @@
+import { CLI_EXAMPLE_LINES, CopyableCliExampleCard } from "@autodraw/editor";
 import { Check, Command, Download, Layers, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -65,20 +66,20 @@ export function HomeSections() {
 							))}
 						</ul>
 					</div>
-					<div className="rounded-xl border border-neutral-200 bg-neutral-50 p-6 md:p-8">
-						<p className="text-sm font-normal uppercase tracking-wide text-neutral-500">Example</p>
-						<pre className="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-white p-4 font-mono text-sm leading-relaxed text-neutral-800">
-							<code>
-								{`pnpm exec autodraw init ./design.adraw --palette universal
-pnpm exec autodraw add node ./design.adraw \\
-  --text "API Gateway" --x 240 --y 200`}
-							</code>
-						</pre>
-						<p className="mt-4 text-sm text-neutral-600">
-							Same `.adraw` on the web canvas, in the desktop app, and from the CLI. If you outgrow
-							the tool, you still own plain JSON.
-						</p>
-					</div>
+					<CopyableCliExampleCard
+						variant="light"
+						lines={[...CLI_EXAMPLE_LINES]}
+						footer={
+							<>
+								Same{" "}
+								<code className="rounded-md bg-neutral-100 px-1.5 py-0.5 font-mono text-[13px] text-neutral-800">
+									.adraw
+								</code>{" "}
+								on the web canvas, in the desktop app, and from the CLI. If you outgrow the tool, you still own
+								plain JSON.
+							</>
+						}
+					/>
 				</div>
 			</section>
 
