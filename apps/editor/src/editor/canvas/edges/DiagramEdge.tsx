@@ -2,12 +2,12 @@ import type { EdgeRecord } from "@autodraw/core";
 import type { InternalNode, Node } from "@xyflow/react";
 import {
   BaseEdge,
+  type EdgeProps,
   getBezierPath,
   getSmoothStepPath,
   getStraightPath,
   useInternalNode,
   useStore,
-  type EdgeProps,
 } from "@xyflow/react";
 import { memo, useCallback, useMemo } from "react";
 import { floatingEdgeGeometry } from "../floatingEndpoints";

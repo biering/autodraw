@@ -1,6 +1,5 @@
 import { z } from "zod";
-
-export const palettePresetSchema = z.enum(["universal", "grayscale", "flowchart", "empty"]);
+import { defaultDiagramCustomStyles } from "./palettes.js";
 
 export const nodeShapeSchema = z.enum([
   "rectangle",
@@ -135,7 +134,6 @@ export const diagramSchemaV1 = z.object({
   version: z.literal(1),
   /** User-visible diagram title; persisted in .adraw JSON. */
   name: z.string().max(256),
-  palette: palettePresetSchema,
   canvas: canvasSchema,
   nodes: z.array(nodeSchema),
   edges: z.array(edgeSchema),
@@ -145,7 +143,6 @@ export const diagramSchemaV1 = z.object({
   images: z.array(imageSchema).default([]),
 });
 
-export type PalettePreset = z.infer<typeof palettePresetSchema>;
 export type NodeShape = z.infer<typeof nodeShapeSchema>;
 export type EdgeRouting = z.infer<typeof edgeRoutingSchema>;
 export type EdgeDash = z.infer<typeof edgeDashSchema>;
@@ -170,7 +167,6 @@ const looseDiagram = z
   .object({
     version: z.number(),
     name: z.string().optional(),
-    palette: palettePresetSchema,
     canvas: canvasSchema.partial().optional(),
     nodes: z.array(nodeSchema),
     edges: z.array(looseEdgeSchema),
@@ -200,10 +196,10 @@ export function parseDiagram(raw: unknown): DiagramV1 {
     gridSpacing: parsed.canvas?.gridSpacing ?? 16,
     zoom: parsed.canvas?.zoom ?? 1,
   };
+  const customStyles = parsed.customStyles ?? [];
   return diagramSchemaV1.parse({
     version: 1 as const,
     name: normalizeDiagramName(parsed.name),
-    palette: parsed.palette,
     canvas,
     nodes: parsed.nodes.map((n) => ({
       ...n,
@@ -215,7 +211,7 @@ export function parseDiagram(raw: unknown): DiagramV1 {
       tail: migrateEdgeHead(e.tail ?? "none"),
       strokeWidth: e.strokeWidth ?? 1,
     })),
-    customStyles: parsed.customStyles ?? [],
+    customStyles,
     textLabels: parsed.textLabels ?? [],
     frames: parsed.frames ?? [],
     images: parsed.images ?? [],
@@ -226,15 +222,14 @@ export function serializeDiagram(d: DiagramV1): string {
   return JSON.stringify(d, null, 2);
 }
 
-export function emptyDiagram(palette: PalettePreset = "universal"): DiagramV1 {
+export function emptyDiagram(): DiagramV1 {
   return {
     version: 1,
     name: DEFAULT_DIAGRAM_NAME,
-    palette,
     canvas: { showGrid: true, gridSpacing: 16, zoom: 1 },
     nodes: [],
     edges: [],
-    customStyles: [],
+    customStyles: defaultDiagramCustomStyles(),
     textLabels: [],
     frames: [],
     images: [],

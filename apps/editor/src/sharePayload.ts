@@ -1,5 +1,5 @@
-import { parseDiagram, serializeDiagram, type DiagramV1 } from "@autodraw/core";
-import { gzipSync, gunzipSync, strFromU8, strToU8 } from "fflate";
+import { type DiagramV1, parseDiagram, serializeDiagram } from "@autodraw/core";
+import { gunzipSync, gzipSync, strFromU8, strToU8 } from "fflate";
 
 /** Base64url (no padding) encoding of bytes. */
 function bytesToBase64Url(bytes: Uint8Array): string {

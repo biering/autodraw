@@ -1,12 +1,12 @@
-/** Shared CLI snippet for landing + onboarding (`npx` installs `@autodraw/cli`, which exposes the `autodraw` binary). */
+/** Shared CLI snippet for landing + onboarding (`npx -y` installs `@autodraw/cli`, which exposes the `autodraw` binary). */
 export const CLI_EXAMPLE_LINES = [
   {
     id: "init",
-    text: "npx @autodraw/cli init ./design.adraw --palette universal",
+    text: "npx -y @autodraw/cli init ./design.adraw",
   },
   {
     id: "add-wrap",
-    text: "npx @autodraw/cli add node ./design.adraw \\",
+    text: "npx -y @autodraw/cli add node ./design.adraw \\",
   },
   {
     id: "add-args",

@@ -17,11 +17,7 @@
           "required": true,
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "pdf",
-            "png",
-            "svg"
-          ],
+          "options": ["pdf", "png", "svg"],
           "type": "option"
         },
         "output": {
@@ -56,11 +52,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "export.js"
-      ]
+      "relativePath": ["dist", "commands", "export.js"]
     },
     "init": {
       "aliases": [],
@@ -72,22 +64,7 @@
         }
       },
       "description": "Create a new empty .adraw diagram file",
-      "flags": {
-        "palette": {
-          "description": "Palette preset",
-          "name": "palette",
-          "default": "universal",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "options": [
-            "universal",
-            "grayscale",
-            "flowchart",
-            "empty"
-          ],
-          "type": "option"
-        }
-      },
+      "flags": {},
       "hasDynamicHelp": false,
       "hiddenAliases": [],
       "id": "init",
@@ -97,11 +74,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "init.js"
-      ]
+      "relativePath": ["dist", "commands", "init.js"]
     },
     "open": {
       "aliases": [],
@@ -123,11 +96,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "open.js"
-      ]
+      "relativePath": ["dist", "commands", "open.js"]
     },
     "validate": {
       "aliases": [],
@@ -162,11 +131,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "validate.js"
-      ]
+      "relativePath": ["dist", "commands", "validate.js"]
     },
     "add:edge": {
       "aliases": [],
@@ -201,11 +166,7 @@
           "default": "orthogonal",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "straight",
-            "orthogonal",
-            "curved"
-          ],
+          "options": ["straight", "orthogonal", "curved"],
           "type": "option"
         },
         "dash": {
@@ -214,11 +175,7 @@
           "default": "solid",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "solid",
-            "dashed",
-            "dotted"
-          ],
+          "options": ["solid", "dashed", "dotted"],
           "type": "option"
         },
         "head": {
@@ -299,12 +256,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "add",
-        "edge.js"
-      ]
+      "relativePath": ["dist", "commands", "add", "edge.js"]
     },
     "add:frame": {
       "aliases": [],
@@ -373,12 +325,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "add",
-        "frame.js"
-      ]
+      "relativePath": ["dist", "commands", "add", "frame.js"]
     },
     "add:image": {
       "aliases": [],
@@ -455,12 +402,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "add",
-        "image.js"
-      ]
+      "relativePath": ["dist", "commands", "add", "image.js"]
     },
     "add:node": {
       "aliases": [],
@@ -554,12 +496,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "add",
-        "node.js"
-      ]
+      "relativePath": ["dist", "commands", "add", "node.js"]
     },
     "add:text": {
       "aliases": [],
@@ -613,12 +550,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "add",
-        "text.js"
-      ]
+      "relativePath": ["dist", "commands", "add", "text.js"]
     },
     "copy:palette": {
       "aliases": [],
@@ -629,7 +561,7 @@
           "required": true
         }
       },
-      "description": "Copy palette and custom styles from another diagram",
+      "description": "Deprecated: use `copy styles` (copies customStyles only)",
       "flags": {
         "from": {
           "description": "Source diagram .adraw path",
@@ -649,12 +581,38 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "copy",
-        "palette.js"
-      ]
+      "relativePath": ["dist", "commands", "copy", "palette.js"]
+    },
+    "copy:styles": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Target diagram .adraw path (modified in place)",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Copy custom node styles from another diagram",
+      "flags": {
+        "from": {
+          "description": "Source diagram .adraw path",
+          "name": "from",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "copy:styles",
+      "pluginAlias": "@autodraw/cli",
+      "pluginName": "@autodraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": ["dist", "commands", "copy", "styles.js"]
     },
     "list:edges": {
       "aliases": [],
@@ -676,12 +634,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "list",
-        "edges.js"
-      ]
+      "relativePath": ["dist", "commands", "list", "edges.js"]
     },
     "list:frames": {
       "aliases": [],
@@ -703,12 +656,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "list",
-        "frames.js"
-      ]
+      "relativePath": ["dist", "commands", "list", "frames.js"]
     },
     "list:images": {
       "aliases": [],
@@ -730,12 +678,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "list",
-        "images.js"
-      ]
+      "relativePath": ["dist", "commands", "list", "images.js"]
     },
     "list:nodes": {
       "aliases": [],
@@ -757,12 +700,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "list",
-        "nodes.js"
-      ]
+      "relativePath": ["dist", "commands", "list", "nodes.js"]
     },
     "list:text": {
       "aliases": [],
@@ -784,12 +722,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "list",
-        "text.js"
-      ]
+      "relativePath": ["dist", "commands", "list", "text.js"]
     },
     "move:node": {
       "aliases": [],
@@ -836,12 +769,265 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "move",
-        "node.js"
-      ]
+      "relativePath": ["dist", "commands", "move", "node.js"]
+    },
+    "set:canvas": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Update canvas settings on a diagram",
+      "flags": {
+        "show-grid": {
+          "description": "Show background grid",
+          "name": "show-grid",
+          "allowNo": true,
+          "type": "boolean"
+        },
+        "grid-spacing": {
+          "description": "Grid spacing in diagram units",
+          "name": "grid-spacing",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "zoom": {
+          "description": "Canvas zoom factor (number, e.g. 1 or 0.75)",
+          "name": "zoom",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "set:canvas",
+      "pluginAlias": "@autodraw/cli",
+      "pluginName": "@autodraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": ["dist", "commands", "set", "canvas.js"]
+    },
+    "show:diagram": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Print diagram metadata summary",
+      "flags": {
+        "json": {
+          "description": "Print full diagram JSON",
+          "name": "json",
+          "allowNo": true,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "show:diagram",
+      "pluginAlias": "@autodraw/cli",
+      "pluginName": "@autodraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": ["dist", "commands", "show", "diagram.js"]
+    },
+    "remove:edge": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Remove an edge",
+      "flags": {
+        "id": {
+          "description": "Edge id",
+          "name": "id",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "remove:edge",
+      "pluginAlias": "@autodraw/cli",
+      "pluginName": "@autodraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": ["dist", "commands", "remove", "edge.js"]
+    },
+    "remove:frame": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Remove a frame by id",
+      "flags": {
+        "id": {
+          "description": "Frame id",
+          "name": "id",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "remove:frame",
+      "pluginAlias": "@autodraw/cli",
+      "pluginName": "@autodraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": ["dist", "commands", "remove", "frame.js"]
+    },
+    "remove:image": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Remove an image by id",
+      "flags": {
+        "id": {
+          "description": "Image id",
+          "name": "id",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "remove:image",
+      "pluginAlias": "@autodraw/cli",
+      "pluginName": "@autodraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": ["dist", "commands", "remove", "image.js"]
+    },
+    "remove:node": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Remove a node (and incident edges)",
+      "flags": {
+        "id": {
+          "description": "Node id",
+          "name": "id",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "remove:node",
+      "pluginAlias": "@autodraw/cli",
+      "pluginName": "@autodraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": ["dist", "commands", "remove", "node.js"]
+    },
+    "remove:text": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Remove a text label by id",
+      "flags": {
+        "id": {
+          "description": "Text label id",
+          "name": "id",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "remove:text",
+      "pluginAlias": "@autodraw/cli",
+      "pluginName": "@autodraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": ["dist", "commands", "remove", "text.js"]
+    },
+    "rename:diagram": {
+      "aliases": [],
+      "args": {
+        "file": {
+          "description": "Diagram .adraw path",
+          "name": "file",
+          "required": true
+        }
+      },
+      "description": "Set the diagram display name",
+      "flags": {
+        "name": {
+          "description": "New diagram name",
+          "name": "name",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "rename:diagram",
+      "pluginAlias": "@autodraw/cli",
+      "pluginName": "@autodraw/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": ["dist", "commands", "rename", "diagram.js"]
     },
     "patch:edge": {
       "aliases": [],
@@ -867,11 +1053,7 @@
           "name": "routing",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "straight",
-            "orthogonal",
-            "curved"
-          ],
+          "options": ["straight", "orthogonal", "curved"],
           "type": "option"
         },
         "dash": {
@@ -879,11 +1061,7 @@
           "name": "dash",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "solid",
-            "dashed",
-            "dotted"
-          ],
+          "options": ["solid", "dashed", "dotted"],
           "type": "option"
         },
         "head": {
@@ -980,12 +1158,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "patch",
-        "edge.js"
-      ]
+      "relativePath": ["dist", "commands", "patch", "edge.js"]
     },
     "patch:node": {
       "aliases": [],
@@ -1094,310 +1267,7 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "patch",
-        "node.js"
-      ]
-    },
-    "set:canvas": {
-      "aliases": [],
-      "args": {
-        "file": {
-          "description": "Diagram .adraw path",
-          "name": "file",
-          "required": true
-        }
-      },
-      "description": "Update canvas settings on a diagram",
-      "flags": {
-        "show-grid": {
-          "description": "Show background grid",
-          "name": "show-grid",
-          "allowNo": true,
-          "type": "boolean"
-        },
-        "grid-spacing": {
-          "description": "Grid spacing in diagram units",
-          "name": "grid-spacing",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "zoom": {
-          "description": "Canvas zoom factor (number, e.g. 1 or 0.75)",
-          "name": "zoom",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "set:canvas",
-      "pluginAlias": "@autodraw/cli",
-      "pluginName": "@autodraw/cli",
-      "pluginType": "core",
-      "strict": true,
-      "enableJsonFlag": false,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "set",
-        "canvas.js"
-      ]
-    },
-    "remove:edge": {
-      "aliases": [],
-      "args": {
-        "file": {
-          "description": "Diagram .adraw path",
-          "name": "file",
-          "required": true
-        }
-      },
-      "description": "Remove an edge",
-      "flags": {
-        "id": {
-          "description": "Edge id",
-          "name": "id",
-          "required": true,
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "remove:edge",
-      "pluginAlias": "@autodraw/cli",
-      "pluginName": "@autodraw/cli",
-      "pluginType": "core",
-      "strict": true,
-      "enableJsonFlag": false,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "remove",
-        "edge.js"
-      ]
-    },
-    "remove:frame": {
-      "aliases": [],
-      "args": {
-        "file": {
-          "description": "Diagram .adraw path",
-          "name": "file",
-          "required": true
-        }
-      },
-      "description": "Remove a frame by id",
-      "flags": {
-        "id": {
-          "description": "Frame id",
-          "name": "id",
-          "required": true,
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "remove:frame",
-      "pluginAlias": "@autodraw/cli",
-      "pluginName": "@autodraw/cli",
-      "pluginType": "core",
-      "strict": true,
-      "enableJsonFlag": false,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "remove",
-        "frame.js"
-      ]
-    },
-    "remove:image": {
-      "aliases": [],
-      "args": {
-        "file": {
-          "description": "Diagram .adraw path",
-          "name": "file",
-          "required": true
-        }
-      },
-      "description": "Remove an image by id",
-      "flags": {
-        "id": {
-          "description": "Image id",
-          "name": "id",
-          "required": true,
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "remove:image",
-      "pluginAlias": "@autodraw/cli",
-      "pluginName": "@autodraw/cli",
-      "pluginType": "core",
-      "strict": true,
-      "enableJsonFlag": false,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "remove",
-        "image.js"
-      ]
-    },
-    "remove:node": {
-      "aliases": [],
-      "args": {
-        "file": {
-          "description": "Diagram .adraw path",
-          "name": "file",
-          "required": true
-        }
-      },
-      "description": "Remove a node (and incident edges)",
-      "flags": {
-        "id": {
-          "description": "Node id",
-          "name": "id",
-          "required": true,
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "remove:node",
-      "pluginAlias": "@autodraw/cli",
-      "pluginName": "@autodraw/cli",
-      "pluginType": "core",
-      "strict": true,
-      "enableJsonFlag": false,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "remove",
-        "node.js"
-      ]
-    },
-    "remove:text": {
-      "aliases": [],
-      "args": {
-        "file": {
-          "description": "Diagram .adraw path",
-          "name": "file",
-          "required": true
-        }
-      },
-      "description": "Remove a text label by id",
-      "flags": {
-        "id": {
-          "description": "Text label id",
-          "name": "id",
-          "required": true,
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "remove:text",
-      "pluginAlias": "@autodraw/cli",
-      "pluginName": "@autodraw/cli",
-      "pluginType": "core",
-      "strict": true,
-      "enableJsonFlag": false,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "remove",
-        "text.js"
-      ]
-    },
-    "rename:diagram": {
-      "aliases": [],
-      "args": {
-        "file": {
-          "description": "Diagram .adraw path",
-          "name": "file",
-          "required": true
-        }
-      },
-      "description": "Set the diagram display name",
-      "flags": {
-        "name": {
-          "description": "New diagram name",
-          "name": "name",
-          "required": true,
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "rename:diagram",
-      "pluginAlias": "@autodraw/cli",
-      "pluginName": "@autodraw/cli",
-      "pluginType": "core",
-      "strict": true,
-      "enableJsonFlag": false,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "rename",
-        "diagram.js"
-      ]
-    },
-    "show:diagram": {
-      "aliases": [],
-      "args": {
-        "file": {
-          "description": "Diagram .adraw path",
-          "name": "file",
-          "required": true
-        }
-      },
-      "description": "Print diagram metadata summary",
-      "flags": {
-        "json": {
-          "description": "Print full diagram JSON",
-          "name": "json",
-          "allowNo": true,
-          "type": "boolean"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hiddenAliases": [],
-      "id": "show:diagram",
-      "pluginAlias": "@autodraw/cli",
-      "pluginName": "@autodraw/cli",
-      "pluginType": "core",
-      "strict": true,
-      "enableJsonFlag": false,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "show",
-        "diagram.js"
-      ]
+      "relativePath": ["dist", "commands", "patch", "node.js"]
     }
   },
   "version": "0.1.0"

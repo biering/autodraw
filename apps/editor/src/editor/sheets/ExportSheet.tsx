@@ -1,5 +1,5 @@
-import type { CheckedState } from "@radix-ui/react-checkbox";
 import { renderSVG } from "@autodraw/core";
+import type { CheckedState } from "@radix-ui/react-checkbox";
 import { useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { Button } from "../../components/ui/button";

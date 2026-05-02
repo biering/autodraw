@@ -66,7 +66,7 @@ Point at the built workspace binary instead of npx:
 }
 ```
 
-Build `@autodraw/mcp` first (`pnpm --filter @autodraw/mcp build`). You can also run `pnpm exec autodraw-mcp` from the repo with a wrapper script if your client requires a single executable.
+Build `@autodraw/mcp` first (`pnpm --filter @autodraw/mcp build`). You can also run `npx -y @autodraw/mcp` or `pnpm exec autodraw-mcp` from the repo if your client requires a single executable.
 
 ## Live editor sync
 
@@ -102,6 +102,7 @@ All tools take a filesystem `path` to an existing `.adraw` file except **`autodr
 | `autodraw_show_diagram` | Summary or full JSON |
 | `autodraw_rename_diagram` | Set diagram display name |
 | `autodraw_set_canvas` | Canvas grid / zoom settings |
-| `autodraw_copy_palette` | Copy palette from another `.adraw` |
+| `autodraw_copy_styles` | Copy `customStyles` from another `.adraw` |
+| `autodraw_copy_palette` | Deprecated alias of `autodraw_copy_styles` |
 
 See also [`apps/cli/SKILL.md`](../cli/SKILL.md) for CLI equivalents.

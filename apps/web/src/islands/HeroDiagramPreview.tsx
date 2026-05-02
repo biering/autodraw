@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 const HERO_DIAGRAM_INITIAL: DiagramV1 = {
 	version: 1,
 	name: "Preview",
-	palette: "universal",
 	canvas: { showGrid: true, gridSpacing: 16, zoom: 1 },
 	textLabels: [],
 	frames: [],

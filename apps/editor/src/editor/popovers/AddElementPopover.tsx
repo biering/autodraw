@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import { useShallow } from "zustand/react/shallow";
 import {
+  type NodeShape,
   resolvedNodeBodyFillRgba,
   resolvedNodeBodyStrokeRgba,
-  type NodeShape,
 } from "@autodraw/core";
+import { useEffect, useMemo, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { Button } from "../../components/ui/button";
 import {
   Dialog,
@@ -18,7 +18,7 @@ import { CreationShapeToggleInner, creationShapeToggleLabel } from "../CreationS
 import { creationMenuColors, creationMenuShapes } from "../creationMenuCatalog";
 import { useDocument } from "../state/useDocument";
 
-/** Centered palette picker; opened via window event from toolbar or canvas context menu.
+/** Centered color/shape picker; opened via window event from toolbar or canvas context menu.
  *  Event detail may carry { x, y } flow-coordinates for placement. */
 export function AddElementPopover() {
   const [open, setOpen] = useState(false);
@@ -46,10 +46,7 @@ export function AddElementPopover() {
     return () => window.removeEventListener("autodraw:open-add-element", onOpen as EventListener);
   }, []);
 
-  const colors = useMemo(
-    () => creationMenuColors(diagram),
-    [diagram.palette, diagram.customStyles],
-  );
+  const colors = useMemo(() => creationMenuColors(diagram), [diagram.customStyles]);
 
   return (
     <Dialog

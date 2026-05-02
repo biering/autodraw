@@ -20,6 +20,8 @@ From the **autodraw** monorepo root after building the CLI:
 ```bash
 pnpm --filter @autodraw/cli build
 pnpm exec autodraw --help
+# Or from any machine with npm:
+# npx -y @autodraw/cli --help
 ```
 
 Globally (optional): link or publish the `@autodraw/cli` package and run `autodraw`.
@@ -34,10 +36,10 @@ Globally (optional): link or publish the `@autodraw/cli` package and run `autodr
 ### `init` — new empty diagram
 
 ```bash
-autodraw init <file.adraw> [--palette universal|grayscale|flowchart|empty]
+autodraw init <file.adraw>
 ```
 
-Creates a new diagram file. Default palette is `universal`.
+Creates a new diagram file with default node styles in `customStyles`.
 
 ### `open` — open in default app
 
@@ -73,7 +75,7 @@ autodraw export <file.adraw> --format svg --output out.svg [--show-grid|--no-sho
 autodraw add node <file.adraw> --text "Label" [--shape roundedRect] [--x 240] [--y 240] [--w 160] [--h 72] [--style <styleId>] [--id <uuid>]
 ```
 
-`--shape` is one of: `rectangle`, `roundedRect`, `oval`, `circle`, `diamond`, `hexagon`, `octagon`, `parallelogram`. If `--style` is omitted, uses `defaultStyleId` for the diagram palette. Prints the new node `id` on stdout.
+`--shape` is one of: `rectangle`, `roundedRect`, `oval`, `circle`, `diamond`, `hexagon`, `octagon`, `parallelogram`. If `--style` is omitted, uses `defaultStyleId` for the diagram (first `customStyles` entry). Prints the new node `id` on stdout.
 
 ### `add edge`
 
@@ -149,7 +151,7 @@ If `--preset` is set, preset styling is applied first, then any other flags you 
 autodraw show diagram <file.adraw> [--json]
 ```
 
-Without `--json`, prints a short summary (name, palette, counts, canvas). With `--json`, prints the full diagram JSON (pretty-printed).
+Without `--json`, prints a short summary (name, counts, canvas). With `--json`, prints the full diagram JSON (pretty-printed).
 
 ### `rename diagram`
 
@@ -167,13 +169,15 @@ autodraw set canvas <file.adraw> [--show-grid|--no-show-grid] [--grid-spacing N]
 
 At least one flag is required. `--zoom` is a decimal string (e.g. `1`, `0.75`).
 
-### `copy palette`
+### `copy styles`
 
 ```bash
-autodraw copy palette <target.adraw> --from <source.adraw>
+autodraw copy styles <target.adraw> --from <source.adraw>
 ```
 
-Copies `palette` and `customStyles` from the source diagram into the target file (same behavior as the app’s “load palette from”).
+Copies `customStyles` from the source diagram into the target file.
+
+`autodraw copy palette` is deprecated but still runs (same as `copy styles`).
 
 ## Agent workflow tips
 
@@ -203,12 +207,13 @@ If the host supports **Model Context Protocol** (stdio) instead of shelling out 
 | `autodraw show diagram …` | `autodraw_show_diagram` |
 | `autodraw rename diagram …` | `autodraw_rename_diagram` |
 | `autodraw set canvas …` | `autodraw_set_canvas` |
-| `autodraw copy palette …` | `autodraw_copy_palette` |
+| `autodraw copy styles …` | `autodraw_copy_styles` |
+| `autodraw copy palette …` (deprecated) | `autodraw_copy_palette` |
 
 MCP tools take the same filesystem paths and fields as the CLI (snake_case / camelCase as documented in each tool’s JSON schema).
 
 ## Related packages
 
-- **`@autodraw/core`**: `parseDiagram`, `serializeDiagram`, `emptyDiagram`, `renderSVG`, palette and relationship helpers.
+- **`@autodraw/core`**: `parseDiagram`, `serializeDiagram`, `emptyDiagram`, `renderSVG`, style and relationship helpers.
 - **`@autodraw/mcp`**: MCP stdio server mirroring CLI operations for agent hosts that prefer MCP over subprocesses.
 - **Desktop app (Tauri)**: interactive editing; CLI / MCP are for automation and headless pipelines.

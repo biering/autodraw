@@ -27,8 +27,6 @@ export function FrameContextMenu({ cx, cy, frameId, onClose }: FrameContextMenuP
   const updateFrame = useDocument((s) => s.updateFrame);
   const removeElementById = useDocument((s) => s.removeElementById);
   const setEditingFrameId = useDocument((s) => s.setEditingFrameId);
-  const palette = useDocument((s) => s.diagram.palette);
-
   const frame = useDocument(useShallow((s) => s.diagram.frames.find((f) => f.id === frameId)));
   const currentColor = frame?.color;
   const activeColorId: FrameColor = currentColor ?? "gray";
@@ -43,14 +41,14 @@ export function FrameContextMenu({ cx, cy, frameId, onClose }: FrameContextMenuP
         y: pos.y,
         w: 140,
         h: 64,
-        styleId: defaultStyleId(palette),
+        styleId: defaultStyleId(d),
         shape: "roundedRect",
         parentId: frameId,
       },
       { focusLabel: true },
     );
     onClose();
-  }, [addNode, frameId, onClose, palette]);
+  }, [addNode, frameId, onClose]);
 
   const handleRename = useCallback(() => {
     setEditingFrameId(frameId);

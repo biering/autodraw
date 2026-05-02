@@ -75,8 +75,8 @@ export function HomeSections() {
 								<code className="rounded-md bg-neutral-100 px-1.5 py-0.5 font-mono text-[13px] text-neutral-800">
 									.adraw
 								</code>{" "}
-								on the web canvas, in the desktop app, and from the CLI. If you outgrow the tool, you still own
-								plain JSON.
+								on the web canvas, in the desktop app, and from the CLI. If you outgrow the tool,
+								you still own plain JSON.
 							</>
 						}
 					/>

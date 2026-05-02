@@ -1,10 +1,10 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import {
-  parseDiagram,
-  serializeDiagram,
   type DiagramV1,
   type EdgeRecord,
   type NodeRecord,
+  parseDiagram,
+  serializeDiagram,
 } from "@autodraw/core";
 
 export class McpDiagramError extends Error {

@@ -13,11 +13,11 @@ Architecture and flow diagrams should be easy to sketch, hand off, and evolve. A
 From the repo root after `pnpm install`, build the CLI once (`pnpm build` or `pnpm --filter @autodraw/cli build`), then:
 
 ```bash
-pnpm exec autodraw init ./demo.adraw --palette universal
-pnpm exec autodraw add node ./demo.adraw --text "API" --x 200 --y 200
-pnpm exec autodraw add node ./demo.adraw --text "Worker" --x 420 --y 220
-pnpm exec autodraw add edge ./demo.adraw --from <first-id> --to <second-id> --preset 1
-pnpm exec autodraw export ./demo.adraw --format svg --output ./demo.svg
+npx -y @autodraw/cli init ./demo.adraw
+npx -y @autodraw/cli add node ./demo.adraw --text "API" --x 200 --y 200
+npx -y @autodraw/cli add node ./demo.adraw --text "Worker" --x 420 --y 220
+npx -y @autodraw/cli add edge ./demo.adraw --from <first-id> --to <second-id> --preset 1
+npx -y @autodraw/cli export ./demo.adraw --format svg --output ./demo.svg
 ```
 
 Open [`autodraw.ink/app`](https://autodraw.ink/app) and drag in `demo.adraw`, or paste a share payload from the spec page. Same format everywhere.
@@ -43,7 +43,7 @@ The desktop app needs [Rust](https://rustup.rs/) and [Tauri 2 prerequisites](htt
 ## Let your agent draw
 
 1. **`.adraw` v1** — UTF-8 JSON; validated in [`@autodraw/core`](apps/core). Full field list: [autodraw.ink/spec](https://autodraw.ink/spec).
-2. **CLI** — [`@autodraw/cli`](apps/cli): `pnpm exec autodraw …` from any machine with the package built or installed.
+2. **CLI** — [`@autodraw/cli`](apps/cli): `npx -y @autodraw/cli …` (or `pnpm exec autodraw …` when developing from this repo).
 3. **MCP** — [`@autodraw/mcp`](apps/mcp): stdio server with the same operations for Cursor, Claude Desktop, and other MCP hosts.
 
 Agents can emit JSON that matches the spec, write `.adraw` files in-repo, or call CLI/MCP in CI. Share links (`/v?d=…`, `/app?d=…`) use gzip + base64url encoding — see the spec page for details.
@@ -52,7 +52,7 @@ Agents can emit JSON that matches the spec, write `.adraw` files in-repo, or cal
 
 | Package | Role |
 |---------|------|
-| [`apps/core`](apps/core) | Schema (Zod), palettes, routing, `renderSVG()` |
+| [`apps/core`](apps/core) | Schema (Zod), node styles, routing, `renderSVG()` |
 | [`apps/editor`](apps/editor) | React Flow editor (web + desktop) |
 | [`apps/app`](apps/app) | Tauri 2 shell, licensing, native export |
 | [`apps/web`](apps/web) | Astro site + public `/app` canvas |

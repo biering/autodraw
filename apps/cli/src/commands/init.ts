@@ -1,6 +1,6 @@
-import { Args, Command, Flags } from "@oclif/core";
 import { writeFileSync } from "node:fs";
-import { emptyDiagram, serializeDiagram, type PalettePreset } from "@autodraw/core";
+import { emptyDiagram, serializeDiagram } from "@autodraw/core";
+import { Args, Command } from "@oclif/core";
 
 export default class Init extends Command {
   static id = "init";
@@ -10,18 +10,9 @@ export default class Init extends Command {
     file: Args.string({ description: "Output path", required: true }),
   };
 
-  static flags = {
-    palette: Flags.string({
-      description: "Palette preset",
-      options: ["universal", "grayscale", "flowchart", "empty"],
-      default: "universal",
-    }),
-  };
-
   async run(): Promise<void> {
-    const { args, flags } = await this.parse(Init);
-    const palette = flags.palette as PalettePreset;
-    const doc = emptyDiagram(palette);
+    const { args } = await this.parse(Init);
+    const doc = emptyDiagram();
     writeFileSync(args.file, serializeDiagram(doc), "utf8");
     this.log(`Created ${args.file}`);
   }

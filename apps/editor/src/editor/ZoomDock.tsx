@@ -3,6 +3,7 @@ import { Minus, Plus, Square } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
+import { canvasZoomDockShellClass } from "./canvas/chrome";
 import { useDocument } from "./state/useDocument";
 
 /** Bottom-left floating zoom control (must render under ReactFlowProvider). */
@@ -12,16 +13,7 @@ export function ZoomDock() {
   const canvasTheme = useDocument((s) => s.canvasTheme);
   const isDarkCanvas = canvasTheme === "dark";
 
-  const dockShellClass = useMemo(
-    () =>
-      cn(
-        "fixed bottom-[max(16px,env(safe-area-inset-bottom,0px))] left-[max(16px,env(safe-area-inset-left,0px))] z-[75] flex flex-col overflow-hidden rounded-xl",
-        isDarkCanvas
-          ? "border border-white/[0.14] bg-[rgba(255,255,255,0.08)]"
-          : "border border-black/[0.12] bg-[rgba(0,0,0,0.02)]",
-      ),
-    [isDarkCanvas],
-  );
+  const dockShellClass = useMemo(() => canvasZoomDockShellClass(isDarkCanvas), [isDarkCanvas]);
 
   const zoomBtnClass = useMemo(
     () =>

@@ -1,8 +1,8 @@
 import {
-  styleById,
   type DiagramV1,
   type NodeShape,
   type NodeStyleDefinition,
+  styleById,
 } from "@autodraw/core";
 
 /** Palette style ids shown in the “Color” row (add-element + node context menu), in order. */

@@ -1,4 +1,4 @@
-import { Position, getSmoothStepPath } from "@xyflow/react";
+import { getSmoothStepPath, Position } from "@xyflow/react";
 import { describe, expect, it } from "vitest";
 
 describe("getSmoothStepPath (orthogonal / step edges)", () => {

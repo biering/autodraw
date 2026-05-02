@@ -33,9 +33,7 @@ export function CopyableCliExampleCard({
     <div
       className={cn(
         "rounded-xl border p-6 md:p-8",
-        isLight
-          ? "border-neutral-200 bg-neutral-50"
-          : "border-border bg-muted/30 dark:bg-muted/20",
+        isLight ? "border-neutral-200 bg-neutral-50" : "border-border bg-muted/30 dark:bg-muted/20",
         className,
       )}
     >
@@ -59,7 +57,16 @@ export function CopyableCliExampleCard({
           <CopyableCliLineRow key={row.id} line={row} variant={variant} />
         ))}
       </div>
-      {footer ? <div className={cn("mt-4", isLight ? "text-sm text-neutral-600" : "text-sm text-muted-foreground")}>{footer}</div> : null}
+      {footer ? (
+        <div
+          className={cn(
+            "mt-4",
+            isLight ? "text-sm text-neutral-600" : "text-sm text-muted-foreground",
+          )}
+        >
+          {footer}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -88,7 +95,9 @@ function CopyableCliLineRow({
 
   return (
     <div className="flex items-center gap-2 px-3 py-2.5 sm:px-4">
-      <code className="min-w-0 flex-1 whitespace-pre-wrap break-all text-[13px] sm:text-sm">{line.text}</code>
+      <code className="min-w-0 flex-1 whitespace-pre-wrap break-all text-[13px] sm:text-sm">
+        {line.text}
+      </code>
       <button
         type="button"
         onClick={copy}

@@ -1,9 +1,9 @@
 import {
+  type DiagramV1,
   defaultStyleId,
+  type NodeRecord,
   nodeShapeSchema,
   styleById,
-  type DiagramV1,
-  type NodeRecord,
 } from "@autodraw/core";
 
 /** Current clipboard marker (serialized JSON `$type`). */
@@ -141,7 +141,7 @@ export function parseAutodrawNodeClipboard(text: string): Omit<NodeRecord, "id">
 }
 
 export function resolveStyleIdForPaste(diagram: DiagramV1, styleId: string): string {
-  return styleById(diagram, styleId) ? styleId : defaultStyleId(diagram.palette);
+  return styleById(diagram, styleId) ? styleId : defaultStyleId(diagram);
 }
 
 /** Place pasted node centered on `(flowX, flowY)` with grid snap; clipboard x/y are ignored. */

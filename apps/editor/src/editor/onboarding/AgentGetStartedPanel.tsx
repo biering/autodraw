@@ -1,16 +1,19 @@
 "use client";
 
 /**
- * Dark “terminal / matrix” get-started panel (copyable command rows + Works with pills).
+ * Dark “terminal / matrix” panel: copyable rows for agent prompt, CLI, and MCP.
  * Self-contained styling so it reads clearly inside the onboarding dialog and on any canvas theme.
  */
 
-import { siClaude } from "simple-icons";
-import { Bot, Code2, Copy } from "lucide-react";
-import type { CSSProperties } from "react";
+import { Bot, Copy } from "lucide-react";
+import type { CSSProperties, ReactNode } from "react";
 import { useCallback, useState } from "react";
+import * as SimpleIcons from "simple-icons";
 import { toast } from "sonner";
 import { cn } from "../../lib/utils";
+
+const siClaude = SimpleIcons.siClaude;
+const siCursor = SimpleIcons.siCursor;
 
 export type AgentGetStartedCopyRow = {
   id: string;
@@ -22,11 +25,12 @@ export type AgentGetStartedPanelProps = {
   heading?: string;
   primaryLabel: string;
   primaryRow: AgentGetStartedCopyRow;
-  secondaryLabel?: string;
-  secondaryRow?: AgentGetStartedCopyRow;
   orRunLabel?: string;
   orRunRows: AgentGetStartedCopyRow[];
-  hideWorksWith?: boolean;
+  mcpLabel?: string;
+  mcpRows?: AgentGetStartedCopyRow[];
+  /** Rendered inside the card shell, bottom-right (e.g. Done). */
+  footer?: ReactNode;
 };
 
 const shell = cn(
@@ -38,9 +42,14 @@ const shell = cn(
 /** Faint green dot grid (matrix-style) */
 const matrixDots: CSSProperties = {
   backgroundColor: "transparent",
-  backgroundImage: "radial-gradient(circle at center, rgba(52, 211, 153, 0.14) 1px, transparent 1px)",
+  backgroundImage:
+    "radial-gradient(circle at center, rgba(52, 211, 153, 0.14) 1px, transparent 1px)",
   backgroundSize: "14px 14px",
 };
+
+function SectionLabel({ children }: { children: string }) {
+  return <p className="font-mono text-[13px] font-medium text-emerald-100/85">{children}</p>;
+}
 
 function SimpleIconGlyph({
   icon,
@@ -67,8 +76,45 @@ function SimpleIconGlyph({
   );
 }
 
-function SectionLabel({ children }: { children: string }) {
-  return <p className="font-mono text-[13px] font-medium text-emerald-100/85">{children}</p>;
+function WorksWithBar() {
+  const pill = cn(
+    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5",
+    "border-emerald-800/60 bg-black/50 font-mono text-[11px] font-medium text-emerald-50/95",
+    "shadow-sm",
+  );
+
+  return (
+    <div className="mt-5 flex flex-col gap-3 border-t border-emerald-800/45 pt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <span className="shrink-0 font-mono text-[11px] text-emerald-200/65">Works with:</span>
+      <div className="flex flex-wrap gap-2 sm:justify-end">
+        <span className={pill}>
+          <SimpleIconGlyph
+            icon={siClaude}
+            className="size-4 shrink-0"
+            style={{ color: `#${siClaude.hex}` }}
+            aria-label="Claude"
+          />
+          Claude
+        </span>
+        <span className={pill}>
+          <SimpleIconGlyph
+            icon={siCursor}
+            className="size-4 shrink-0 text-white"
+            aria-label="Cursor"
+          />
+          Cursor
+        </span>
+        <span className={pill}>
+          <Bot
+            className="size-4 shrink-0 text-white"
+            strokeWidth={2}
+            aria-hidden
+          />
+          Other agents
+        </span>
+      </div>
+    </div>
+  );
 }
 
 function CopyableRow({ row }: { row: AgentGetStartedCopyRow }) {
@@ -106,44 +152,13 @@ function CopyableRow({ row }: { row: AgentGetStartedCopyRow }) {
         aria-label={done ? "Copied" : `Copy: ${row.id}`}
       >
         {done ? (
-          <span className="font-mono text-[10px] font-medium uppercase tracking-wide text-emerald-400">Copied</span>
+          <span className="font-mono text-[10px] font-medium uppercase tracking-wide text-emerald-400">
+            Copied
+          </span>
         ) : (
           <Copy className="size-4" strokeWidth={2.25} aria-hidden />
         )}
       </button>
-    </div>
-  );
-}
-
-function WorksWithFooter() {
-  const pill = cn(
-    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5",
-    "border-emerald-800/60 bg-black/50 font-mono text-[11px] font-medium text-emerald-50/95",
-    "shadow-sm",
-  );
-
-  return (
-    <div className="mt-5 flex flex-col gap-3 border-t border-emerald-800/45 pt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-      <span className="shrink-0 font-mono text-[11px] text-emerald-200/65">Works with:</span>
-      <div className="flex flex-wrap gap-2 sm:justify-end">
-        <span className={pill}>
-          <SimpleIconGlyph
-            icon={siClaude}
-            className="size-4 shrink-0"
-            style={{ color: `#${siClaude.hex}` }}
-            aria-label="Claude"
-          />
-          Claude
-        </span>
-        <span className={pill}>
-          <Bot className="size-4 shrink-0 text-emerald-300/80" aria-hidden />
-          OpenClaw
-        </span>
-        <span className={pill}>
-          <Code2 className="size-4 shrink-0 text-emerald-300/80" aria-hidden />
-          Custom agents
-        </span>
-      </div>
     </div>
   );
 }
@@ -153,37 +168,32 @@ export function AgentGetStartedPanel({
   heading = "Get started",
   primaryLabel,
   primaryRow,
-  secondaryLabel,
-  secondaryRow,
   orRunLabel = "Or run:",
   orRunRows,
-  hideWorksWith = false,
+  mcpLabel,
+  mcpRows,
+  footer,
 }: AgentGetStartedPanelProps) {
   return (
-    <div className={cn(shell, className)}>
+    <div className={cn(shell, "flex max-h-[min(88vh,760px)] flex-col", className)}>
       {heading ? (
-        <div className="border-b border-emerald-800/50 bg-emerald-950/70 px-4 py-2.5">
-          <p className="text-center font-sans text-xs font-medium tracking-wide text-emerald-100/90">{heading}</p>
+        <div className="shrink-0 border-b border-emerald-800/50 bg-emerald-950/70 px-4 py-2.5">
+          <p className="text-center font-sans text-xs font-medium tracking-wide text-emerald-100/90">
+            {heading}
+          </p>
         </div>
       ) : null}
 
-      <div className="relative px-4 py-4 md:px-5 md:py-5" style={matrixDots}>
+      <div className="relative min-h-0 flex-1 overflow-y-auto" style={matrixDots}>
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-gradient-to-b from-emerald-950/20 to-transparent"
         />
-        <div className="relative space-y-4">
+        <div className="relative space-y-4 px-4 py-4 md:px-5 md:py-5">
           <div className="space-y-2">
             <SectionLabel>{primaryLabel}</SectionLabel>
             <CopyableRow row={primaryRow} />
           </div>
-
-          {secondaryLabel && secondaryRow ? (
-            <div className="space-y-2">
-              <SectionLabel>{secondaryLabel}</SectionLabel>
-              <CopyableRow row={secondaryRow} />
-            </div>
-          ) : null}
 
           <div className="space-y-2">
             <SectionLabel>{orRunLabel}</SectionLabel>
@@ -193,10 +203,27 @@ export function AgentGetStartedPanel({
               ))}
             </div>
           </div>
-        </div>
 
-        {hideWorksWith ? null : <WorksWithFooter />}
+          {mcpLabel && mcpRows?.length ? (
+            <div className="space-y-2">
+              <SectionLabel>{mcpLabel}</SectionLabel>
+              <div className="space-y-2">
+                {mcpRows.map((row) => (
+                  <CopyableRow key={row.id} row={row} />
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <WorksWithBar />
+        </div>
       </div>
+
+      {footer ? (
+        <div className="shrink-0 border-t border-emerald-800/45 bg-[#0a1210] px-4 py-3 md:px-5">
+          <div className="flex justify-end">{footer}</div>
+        </div>
+      ) : null}
     </div>
   );
 }

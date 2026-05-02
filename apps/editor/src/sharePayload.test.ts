@@ -1,10 +1,10 @@
+import { defaultStyleId, emptyDiagram, parseDiagram } from "@autodraw/core";
 import { describe, expect, it } from "vitest";
-import { defaultStyleId, type DiagramV1, emptyDiagram } from "@autodraw/core";
 import { decodeDiagramSharePayload, encodeDiagramSharePayload } from "./sharePayload";
 
 describe("sharePayload", () => {
   it("round-trips gzip payload", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
     d.name = "Round trip";
     d.nodes.push({
       id: "n1",
@@ -13,7 +13,7 @@ describe("sharePayload", () => {
       y: 100,
       w: 120,
       h: 60,
-      styleId: defaultStyleId(d.palette),
+      styleId: defaultStyleId(d),
     });
     const enc = encodeDiagramSharePayload(d);
     const back = decodeDiagramSharePayload(enc);
@@ -23,7 +23,7 @@ describe("sharePayload", () => {
   });
 
   it("decodes uncompressed UTF-8 JSON base64url (fallback)", () => {
-    const d = emptyDiagram("grayscale");
+    const d = emptyDiagram();
     d.name = "Plain";
     const json = JSON.stringify(d);
     const b64 = Buffer.from(json, "utf8")
@@ -32,15 +32,16 @@ describe("sharePayload", () => {
       .replace(/\//g, "_")
       .replace(/=+$/, "");
     const back = decodeDiagramSharePayload(b64);
-    expect(back.palette).toBe("grayscale");
     expect(back.name).toBe("Plain");
+    expect(back).toEqual(parseDiagram(JSON.parse(json) as unknown));
   });
 
   it("encode → decode deep-equals a rich diagram (frames, images, textLabels, links, locked)", () => {
-    const d: DiagramV1 = {
-      version: 1,
+    const base = emptyDiagram();
+    const d = {
+      ...base,
+      version: 1 as const,
       name: "Share rich",
-      palette: "universal",
       canvas: { showGrid: false, gridSpacing: 18, zoom: 1.5 },
       nodes: [
         {
@@ -51,7 +52,7 @@ describe("sharePayload", () => {
           w: 110,
           h: 44,
           styleId: "red",
-          shape: "diamond",
+          shape: "diamond" as const,
           link: "https://example.com/share-n",
           locked: true,
         },
@@ -63,10 +64,10 @@ describe("sharePayload", () => {
           to: "n-1",
           sourceHandle: "src-top",
           targetHandle: "tgt-bottom",
-          routing: "orthogonal",
-          dash: "dotted",
-          head: "lineArrow",
-          tail: "diamond",
+          routing: "orthogonal" as const,
+          dash: "dotted" as const,
+          head: "lineArrow" as const,
+          tail: "diamond" as const,
           label: "self & loop",
           strokeWidth: 2,
           relationshipPreset: 1,
@@ -74,6 +75,19 @@ describe("sharePayload", () => {
         },
       ],
       customStyles: [
+        ...(base.customStyles ?? []),
+        {
+          id: "red",
+          fillRed: 0.9,
+          fillGreen: 0.1,
+          fillBlue: 0.1,
+          fillAlpha: 1,
+          strokeRed: 0.5,
+          strokeGreen: 0.1,
+          strokeBlue: 0.1,
+          strokeAlpha: 1,
+          shape: "rectangle" as const,
+        },
         {
           id: "share-style",
           fillRed: 200,
@@ -84,12 +98,12 @@ describe("sharePayload", () => {
           strokeGreen: 80,
           strokeBlue: 120,
           strokeAlpha: 255,
-          shape: "rectangle",
+          shape: "rectangle" as const,
         },
       ],
       textLabels: [{ id: "t-1", x: 0, y: 100, text: "Note" }],
       frames: [
-        { id: "f-titled", name: "Edge case", x: 0, y: 0, w: 300, h: 180, color: "pink" },
+        { id: "f-titled", name: "Edge case", x: 0, y: 0, w: 300, h: 180, color: "pink" as const },
         { id: "f-untitled", x: 320, y: 0, w: 240, h: 180 },
       ],
       images: [
@@ -104,7 +118,8 @@ describe("sharePayload", () => {
         },
       ],
     };
-    const back = decodeDiagramSharePayload(encodeDiagramSharePayload(d));
-    expect(back).toEqual(d);
+    const normalized = parseDiagram(JSON.parse(JSON.stringify(d)) as unknown);
+    const back = decodeDiagramSharePayload(encodeDiagramSharePayload(normalized));
+    expect(back).toEqual(normalized);
   });
 });

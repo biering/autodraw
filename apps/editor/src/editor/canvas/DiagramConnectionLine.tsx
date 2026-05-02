@@ -1,5 +1,5 @@
 import type { ConnectionLineComponentProps, InternalNode, Node } from "@xyflow/react";
-import { getSmoothStepPath, Position } from "@xyflow/react";
+import { getSmoothStepPath, type Position } from "@xyflow/react";
 import { memo, useMemo } from "react";
 import { clampedInsetEndpoints, computeEdgeInsetPx } from "./edges/edgeHandleInset";
 import { floatingEdgeGeometry, rectFloatingEndpoint } from "./floatingEndpoints";

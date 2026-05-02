@@ -1,5 +1,5 @@
-import { Args, Command, Flags } from "@oclif/core";
 import { serializeDiagram } from "@autodraw/core";
+import { Args, Command, Flags } from "@oclif/core";
 import { readDiagram } from "../../internal/io.js";
 
 export default class ShowDiagram extends Command {
@@ -23,7 +23,6 @@ export default class ShowDiagram extends Command {
     }
     const customLen = doc.customStyles?.length ?? 0;
     this.log(`name: ${doc.name}`);
-    this.log(`palette: ${doc.palette}`);
     this.log(`nodes: ${doc.nodes.length}`);
     this.log(`edges: ${doc.edges.length}`);
     this.log(`textLabels: ${doc.textLabels.length}`);

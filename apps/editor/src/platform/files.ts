@@ -136,7 +136,7 @@ export async function saveDocumentInteractive(): Promise<void> {
 /** File ▸ New: blank universal diagram in a new window (desktop); in-browser dev uses the current tab. */
 export async function newDocumentInteractive(): Promise<void> {
   if (!isTauri()) {
-    useDocument.getState().newDocument("universal");
+    useDocument.getState().newDocument();
     return;
   }
   await spawnEditorWebviewWindow({ newDiagram: true });

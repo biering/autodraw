@@ -1,6 +1,6 @@
-import { Args, Command, Flags } from "@oclif/core";
 import { randomUUID } from "node:crypto";
-import { defaultStyleId, nodeShapeSchema, type NodeShape } from "@autodraw/core";
+import { defaultStyleId, type NodeShape, nodeShapeSchema } from "@autodraw/core";
+import { Args, Command, Flags } from "@oclif/core";
 import { readDiagram, writeDiagram } from "../../internal/io.js";
 
 export default class AddNode extends Command {
@@ -29,7 +29,7 @@ export default class AddNode extends Command {
     const { args, flags } = await this.parse(AddNode);
     const doc = readDiagram(args.file);
     const id = flags.id ?? randomUUID();
-    const styleId = flags.style ?? defaultStyleId(doc.palette);
+    const styleId = flags.style ?? defaultStyleId(doc);
     const shape = flags.shape as NodeShape | undefined;
     doc.nodes.push({
       id,

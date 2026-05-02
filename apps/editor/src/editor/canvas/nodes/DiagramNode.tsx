@@ -1,15 +1,15 @@
-import { Handle, Position, type NodeProps, useConnection } from "@xyflow/react";
+import { Handle, type NodeProps, Position, useConnection } from "@xyflow/react";
 import type { ConnectionState } from "@xyflow/system";
 import { ExternalLink, Link2, Lock } from "lucide-react";
 import type { CSSProperties } from "react";
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useDocument } from "../../state/useDocument";
 import {
   DIAGRAM_BODY_SOURCE_BUTTON_HANDLE,
   DIAGRAM_BODY_SOURCE_HANDLE,
   DIAGRAM_BODY_TARGET_HANDLE,
   type DiagramFlowNode,
 } from "../flowAdapter";
-import { useDocument } from "../../state/useDocument";
 
 function diagramNodePropsAreEqual(
   prev: NodeProps<DiagramFlowNode>,

@@ -1,10 +1,8 @@
 import { useEffect } from "react";
 import { create } from "zustand";
 
-/** Persisted when the user finishes, skips, or dismisses the wizard. */
+/** Persisted when the user dismisses the onboarding dialog. */
 export const ONBOARDING_SEEN_KEY = "autodraw:onboardingSeen";
-
-const STEP_MAX = 3;
 
 function persistSeen(): void {
   try {
@@ -27,8 +25,6 @@ export function hasSeenOnboarding(): boolean {
 
 type OnboardingState = {
   open: boolean;
-  step: number;
-  setStep: (n: number) => void;
   openFromUser: () => void;
   openAsFirstRun: () => void;
   close: () => void;
@@ -36,13 +32,11 @@ type OnboardingState = {
 
 export const useOnboarding = create<OnboardingState>((set) => ({
   open: false,
-  step: 0,
-  setStep: (step) => set({ step: Math.max(0, Math.min(STEP_MAX, step)) }),
-  openFromUser: () => set({ open: true, step: 0 }),
-  openAsFirstRun: () => set({ open: true, step: 0 }),
+  openFromUser: () => set({ open: true }),
+  openAsFirstRun: () => set({ open: true }),
   close: () => {
     persistSeen();
-    set({ open: false, step: 0 });
+    set({ open: false });
   },
 }));
 

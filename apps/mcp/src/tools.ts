@@ -12,7 +12,6 @@ import {
   type NodeShape,
   nodeShapeSchema,
   normalizeDiagramName,
-  type PalettePreset,
   parseDiagram,
   renderSVG,
   serializeDiagram,
@@ -71,11 +70,6 @@ export const TOOL_DEFINITIONS = [
       type: "object",
       properties: {
         path: { type: "string", description: "Output file path" },
-        palette: {
-          type: "string",
-          enum: ["universal", "grayscale", "flowchart", "empty"],
-          description: "Palette preset (default universal)",
-        },
       },
       required: ["path"],
     },
@@ -92,7 +86,10 @@ export const TOOL_DEFINITIONS = [
         y: { type: "number", description: "Default 240" },
         w: { type: "number", description: "Default 160" },
         h: { type: "number", description: "Default 72" },
-        styleId: { type: "string", description: "Optional style id; defaults to palette default" },
+        styleId: {
+          type: "string",
+          description: "Optional style id; defaults to first custom style",
+        },
         id: { type: "string", description: "Optional explicit node id" },
         shape: { type: "string", enum: [...nodeShapeSchema.options] },
         link: { type: "string", description: "Optional https URL" },
@@ -401,8 +398,20 @@ export const TOOL_DEFINITIONS = [
     },
   },
   {
+    name: "autodraw_copy_styles",
+    description: "Copy customStyles from source diagram into target.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Target diagram path (modified)" },
+        fromPath: { type: "string", description: "Source diagram path" },
+      },
+      required: ["path", "fromPath"],
+    },
+  },
+  {
     name: "autodraw_copy_palette",
-    description: "Copy palette and customStyles from source diagram into target.",
+    description: "Deprecated: use autodraw_copy_styles (copies customStyles only).",
     inputSchema: {
       type: "object",
       properties: {
@@ -430,11 +439,7 @@ async function dispatchTool(name: string, args: unknown): Promise<CallToolResult
     case "autodraw_init": {
       const path = str(r, "path");
       if (!path) return errText("path is required");
-      const palette = (str(r, "palette") ?? "universal") as PalettePreset;
-      if (!["universal", "grayscale", "flowchart", "empty"].includes(palette)) {
-        return errText("invalid palette");
-      }
-      const doc = emptyDiagram(palette);
+      const doc = emptyDiagram();
       writeFileSync(path, serializeDiagram(doc), "utf8");
       return okText({ ok: true, path, message: `Created ${path}` });
     }
@@ -445,7 +450,7 @@ async function dispatchTool(name: string, args: unknown): Promise<CallToolResult
       if (!path || text === undefined) return errText("path and text are required");
       const doc = readDiagram(path);
       const id = str(r, "id") ?? randomUUID();
-      const styleId = str(r, "styleId") ?? defaultStyleId(doc.palette);
+      const styleId = str(r, "styleId") ?? defaultStyleId(doc);
       const shapeRaw = str(r, "shape");
       let shape: NodeShape | undefined;
       if (shapeRaw !== undefined) {
@@ -877,7 +882,6 @@ async function dispatchTool(name: string, args: unknown): Promise<CallToolResult
       }
       return okText({
         name: doc.name,
-        palette: doc.palette,
         nodes: doc.nodes.length,
         edges: doc.edges.length,
         textLabels: doc.textLabels.length,
@@ -925,16 +929,17 @@ async function dispatchTool(name: string, args: unknown): Promise<CallToolResult
       return okText({ ok: true });
     }
 
+    case "autodraw_copy_styles":
     case "autodraw_copy_palette": {
       const path = str(r, "path");
       const fromPath = str(r, "fromPath");
       if (!path || !fromPath) return errText("path and fromPath are required");
       const target = readDiagram(path);
       const source = readDiagram(fromPath);
-      target.palette = source.palette;
       target.customStyles = source.customStyles ?? [];
       writeDiagram(path, target);
-      return okText({ ok: true, message: `Copied palette from ${fromPath}` });
+      const verb = name === "autodraw_copy_palette" ? "palette (deprecated name)" : "styles";
+      return okText({ ok: true, message: `Copied ${verb} from ${fromPath}` });
     }
 
     default:

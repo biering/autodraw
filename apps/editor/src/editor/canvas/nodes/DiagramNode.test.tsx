@@ -4,12 +4,12 @@ import { ReactFlow, ReactFlowProvider } from "@xyflow/react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { useDocument } from "../../state/useDocument";
 import {
   DIAGRAM_BODY_SOURCE_BUTTON_HANDLE,
   DIAGRAM_BODY_SOURCE_HANDLE,
   type DiagramFlowNode,
 } from "../flowAdapter";
-import { useDocument } from "../../state/useDocument";
 import { DiagramNode } from "./DiagramNode";
 
 function anchorSelector(): string {
@@ -82,7 +82,7 @@ describe("DiagramNode source handles", () => {
   });
 
   beforeEach(() => {
-    useDocument.getState().newDocument("universal");
+    useDocument.getState().newDocument();
   });
 
   afterEach(() => {

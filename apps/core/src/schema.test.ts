@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { emptyDiagram, parseDiagram, serializeDiagram, type DiagramV1 } from "./schema.js";
 import { renderSVG } from "./renderer.js";
+import { type DiagramV1, emptyDiagram, parseDiagram, serializeDiagram } from "./schema.js";
 
 /** Import (parse) then export (serialize) — the `.adraw` wire round-trip. */
 function wireRoundtrip(json: string): string {
@@ -9,7 +9,7 @@ function wireRoundtrip(json: string): string {
 
 describe("edge connection ports", () => {
   it("round-trips optional sourceHandle and targetHandle on edges", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
     d.nodes.push({
       id: "n1",
       text: "A",
@@ -17,7 +17,7 @@ describe("edge connection ports", () => {
       y: 0,
       w: 100,
       h: 50,
-      styleId: "red",
+      styleId: "yellow",
       shape: "roundedRect",
     });
     d.nodes.push({
@@ -27,7 +27,7 @@ describe("edge connection ports", () => {
       y: 0,
       w: 100,
       h: 50,
-      styleId: "red",
+      styleId: "orange",
       shape: "roundedRect",
     });
     d.edges.push({
@@ -52,10 +52,9 @@ describe("edge connection ports", () => {
 });
 
 describe("diagram name", () => {
-  it("defaults missing name to Diagram when parsing legacy JSON", () => {
+  it("defaults missing name to Diagram when parsing minimal JSON", () => {
     const raw = {
       version: 1,
-      palette: "universal",
       canvas: { showGrid: true, gridSpacing: 16, zoom: 1 },
       nodes: [],
       edges: [],
@@ -65,7 +64,7 @@ describe("diagram name", () => {
   });
 
   it("round-trips name in serialized files", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
     d.name = "My flow";
     const back = parseDiagram(JSON.parse(serializeDiagram(d)) as unknown);
     expect(back.name).toBe("My flow");
@@ -73,10 +72,10 @@ describe("diagram name", () => {
 });
 
 describe("diagram import / export (wire format)", () => {
-  it("is idempotent for a minimal diagram (defaults applied once, then stable)", () => {
+  it("is idempotent for a minimal diagram (wire format stable)", () => {
     const minimal = {
       version: 1,
-      palette: "flowchart" as const,
+      canvas: { showGrid: true, gridSpacing: 16, zoom: 1 },
       nodes: [],
       edges: [],
     };
@@ -84,14 +83,15 @@ describe("diagram import / export (wire format)", () => {
     const again = wireRoundtrip(canonical);
     expect(again).toBe(canonical);
     expect((JSON.parse(canonical) as { name: string }).name).toBe("Diagram");
-    expect((JSON.parse(canonical) as { customStyles: unknown[] }).customStyles).toEqual([]);
+    const parsed = JSON.parse(canonical) as { customStyles?: { id: string }[] };
+    expect(parsed.customStyles ?? []).toEqual([]);
   });
 
   it("is idempotent for a full diagram with nodes, edges, handles, preset, and customStyles", () => {
-    const d: DiagramV1 = {
-      version: 1,
+    const base = emptyDiagram();
+    const d = {
+      version: 1 as const,
       name: "Export test",
-      palette: "universal",
       canvas: { showGrid: false, gridSpacing: 20, zoom: 1.25 },
       textLabels: [],
       frames: [],
@@ -134,6 +134,19 @@ describe("diagram import / export (wire format)", () => {
         },
       ],
       customStyles: [
+        ...(base.customStyles ?? []),
+        {
+          id: "red",
+          fillRed: 1,
+          fillGreen: 0,
+          fillBlue: 0,
+          fillAlpha: 1,
+          strokeRed: 0.5,
+          strokeGreen: 0,
+          strokeBlue: 0,
+          strokeAlpha: 1,
+          shape: "roundedRect",
+        },
         {
           id: "custom-1",
           fillRed: 10,
@@ -158,7 +171,6 @@ describe("diagram import / export (wire format)", () => {
   it("is idempotent after legacy edge head migration (serialize output stable)", () => {
     const legacy = {
       version: 1,
-      palette: "universal",
       name: "Legacy",
       canvas: { showGrid: true, gridSpacing: 16, zoom: 1 },
       nodes: [
@@ -184,6 +196,20 @@ describe("diagram import / export (wire format)", () => {
           label: "",
         },
       ],
+      customStyles: [
+        {
+          id: "red",
+          fillRed: 1,
+          fillGreen: 0,
+          fillBlue: 0,
+          fillAlpha: 1,
+          strokeRed: 0.5,
+          strokeGreen: 0,
+          strokeBlue: 0,
+          strokeAlpha: 1,
+          shape: "roundedRect",
+        },
+      ],
     };
     const migratedOnce = serializeDiagram(parseDiagram(legacy));
     expect(migratedOnce).toContain('"head": "lineArrow"');
@@ -193,7 +219,7 @@ describe("diagram import / export (wire format)", () => {
   });
 
   it("matches exactly: parse → serialize bytes equal re-import of same file", () => {
-    const d = emptyDiagram("grayscale");
+    const d = emptyDiagram();
     d.name = "Bytes";
     d.nodes.push({
       id: "n1",
@@ -202,7 +228,7 @@ describe("diagram import / export (wire format)", () => {
       y: 2,
       w: 3,
       h: 4,
-      styleId: "red",
+      styleId: "yellow",
       shape: "oval",
     });
     const fileBytes = serializeDiagram(d);
@@ -216,7 +242,6 @@ describe("text labels, frames, images, link, locked", () => {
     const raw = {
       version: 1,
       name: "Rich",
-      palette: "universal",
       canvas: { showGrid: true, gridSpacing: 16, zoom: 1 },
       nodes: [
         {
@@ -245,6 +270,20 @@ describe("text labels, frames, images, link, locked", () => {
           alt: "Logo",
         },
       ],
+      customStyles: [
+        {
+          id: "red",
+          fillRed: 1,
+          fillGreen: 0,
+          fillBlue: 0,
+          fillAlpha: 1,
+          strokeRed: 0.5,
+          strokeGreen: 0,
+          strokeBlue: 0,
+          strokeAlpha: 1,
+          shape: "roundedRect",
+        },
+      ],
     };
     const d = parseDiagram(raw);
     expect(d.textLabels).toHaveLength(1);
@@ -257,7 +296,7 @@ describe("text labels, frames, images, link, locked", () => {
   });
 
   it("renders text labels and frames in SVG export", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
     d.textLabels.push({ id: "tl", x: 5, y: 8, text: "Note A & B" });
     d.frames.push({ id: "fr", name: "Zone", x: 0, y: 40, w: 200, h: 100 });
     const svg = renderSVG(d, { showGrid: false });
@@ -268,7 +307,7 @@ describe("text labels, frames, images, link, locked", () => {
 
 describe("diagram round-trip", () => {
   it("parses fixture and renders SVG", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
     d.nodes.push({
       id: "n1",
       text: "A & node",
@@ -276,7 +315,7 @@ describe("diagram round-trip", () => {
       y: 100,
       w: 140,
       h: 64,
-      styleId: "red",
+      styleId: "yellow",
       shape: "roundedRect",
     });
     const json = serializeDiagram(d);
@@ -295,10 +334,10 @@ describe("diagram round-trip", () => {
  */
 describe("export → import deep equality", () => {
   function richDiagram(): DiagramV1 {
+    const base = emptyDiagram();
     return {
-      version: 1,
+      ...base,
       name: "Rich roundtrip",
-      palette: "universal",
       canvas: { showGrid: false, gridSpacing: 24, zoom: 0.85 },
       nodes: [
         {
@@ -343,6 +382,19 @@ describe("export → import deep equality", () => {
         },
       ],
       customStyles: [
+        ...(base.customStyles ?? []),
+        {
+          id: "red",
+          fillRed: 0.95,
+          fillGreen: 0.2,
+          fillBlue: 0.2,
+          fillAlpha: 1,
+          strokeRed: 0.5,
+          strokeGreen: 0.1,
+          strokeBlue: 0.1,
+          strokeAlpha: 1,
+          shape: "roundedRect",
+        },
         {
           id: "custom-1",
           fillRed: 240,
@@ -403,7 +455,7 @@ describe("export → import deep equality", () => {
   });
 
   it("preserves resized frame dimensions across export → import", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
     d.frames.push({ id: "f1", name: "Area", x: 100, y: 100, w: 320, h: 200 });
     const resized: DiagramV1 = {
       ...d,
@@ -423,14 +475,14 @@ describe("export → import deep equality", () => {
   });
 
   it("drops the title when frame.name is omitted (no implicit empty string)", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
     d.frames.push({ id: "f-untitled", x: 0, y: 0, w: 200, h: 120 });
     const back = parseDiagram(JSON.parse(serializeDiagram(d)) as unknown);
     expect(back.frames[0]).not.toHaveProperty("name");
   });
 
   it("clearing a frame title (name: undefined) does not reappear as empty after export → import", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
     d.frames.push({ id: "f-x", name: "Old", x: 0, y: 0, w: 200, h: 120 });
     const cleared: DiagramV1 = {
       ...d,
@@ -444,7 +496,22 @@ describe("export → import deep equality", () => {
   });
 
   it("preserves parent → child sub-flow relationships and relative positions", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
+    d.customStyles = [
+      ...(d.customStyles ?? []),
+      {
+        id: "red",
+        fillRed: 1,
+        fillGreen: 0,
+        fillBlue: 0,
+        fillAlpha: 1,
+        strokeRed: 0.5,
+        strokeGreen: 0,
+        strokeBlue: 0,
+        strokeAlpha: 1,
+        shape: "roundedRect",
+      },
+    ];
     d.frames.push({ id: "frame-A", name: "Group", x: 100, y: 200, w: 400, h: 240 });
     d.nodes.push({
       id: "child-1",
@@ -484,7 +551,22 @@ describe("export → import deep equality", () => {
 
 describe("renderer absolute positioning for sub-flow children", () => {
   it("renders child node text at parent + relative coords", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
+    d.customStyles = [
+      ...(d.customStyles ?? []),
+      {
+        id: "red",
+        fillRed: 1,
+        fillGreen: 0,
+        fillBlue: 0,
+        fillAlpha: 1,
+        strokeRed: 0.5,
+        strokeGreen: 0,
+        strokeBlue: 0,
+        strokeAlpha: 1,
+        shape: "roundedRect",
+      },
+    ];
     d.frames.push({ id: "frame-A", x: 100, y: 200, w: 400, h: 240 });
     d.nodes.push({
       id: "child-1",
@@ -505,7 +587,22 @@ describe("renderer absolute positioning for sub-flow children", () => {
   });
 
   it("falls back to relative coords when the parent frame is missing", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
+    d.customStyles = [
+      ...(d.customStyles ?? []),
+      {
+        id: "red",
+        fillRed: 1,
+        fillGreen: 0,
+        fillBlue: 0,
+        fillAlpha: 1,
+        strokeRed: 0.5,
+        strokeGreen: 0,
+        strokeBlue: 0,
+        strokeAlpha: 1,
+        shape: "roundedRect",
+      },
+    ];
     d.nodes.push({
       id: "orphan",
       text: "No parent",
@@ -524,7 +621,7 @@ describe("renderer absolute positioning for sub-flow children", () => {
 describe("frame color wire format", () => {
   it("round-trips each frame color token", () => {
     for (const color of ["gray", "blue", "green", "pink", "yellow"] as const) {
-      const d = emptyDiagram("universal");
+      const d = emptyDiagram();
       d.frames.push({
         id: "f1",
         x: 0,
@@ -543,9 +640,10 @@ describe("frame color wire format", () => {
   });
 
   it("emits colored frame stroke in SVG export", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
     d.frames.push({ id: "f1", x: 0, y: 0, w: 200, h: 120, color: "blue" });
     const svg = renderSVG(d, { showGrid: false });
     expect(svg).toContain('stroke="#3b82f6"');
   });
 });
+

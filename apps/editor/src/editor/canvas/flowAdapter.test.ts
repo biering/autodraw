@@ -1,19 +1,19 @@
 import {
-  defaultStyleId,
-  emptyDiagram,
   type DiagramV1,
+  defaultStyleId,
   type EdgeRecord,
+  emptyDiagram,
   type NodeRecord,
 } from "@autodraw/core";
-import { describe, expect, it } from "vitest";
 import type { Node } from "@xyflow/react";
+import { describe, expect, it } from "vitest";
 import {
   applyNodeLayoutChanges,
   DIAGRAM_BODY_SOURCE_HANDLE,
   DIAGRAM_BODY_TARGET_HANDLE,
+  FRAME_INNER_PAD,
   findDropTargetFrame,
   flowNodePixelSize,
-  FRAME_INNER_PAD,
   nextChildRelativePlacement,
   normalizeDiagramConnectionHandle,
   paddedFrameLayout,
@@ -54,9 +54,8 @@ function baseEdge(over: Partial<EdgeRecord> & Pick<EdgeRecord, "id" | "from" | "
 }
 
 function diagramWith(edge: EdgeRecord): DiagramV1 {
-  const preset = "universal" as const;
-  const sid = defaultStyleId(preset);
-  const d = emptyDiagram(preset);
+  const d = emptyDiagram();
+  const sid = defaultStyleId(d);
   d.nodes.push(node("a", 0, sid), node("b", 200, sid));
   d.edges.push(edge);
   return d;
@@ -139,8 +138,7 @@ describe("flowNodePixelSize", () => {
 
 describe("applyNodeLayoutChanges", () => {
   it("updates frame position and dimensions from flow nodes", () => {
-    const preset = "universal" as const;
-    const d = emptyDiagram(preset);
+    const d = emptyDiagram();
     d.frames.push({
       id: "frame1",
       x: 10,
@@ -164,9 +162,8 @@ describe("applyNodeLayoutChanges", () => {
 
 describe("toFlowNodes sub-flow", () => {
   it("sets parentId, extent parent, and expandParent for nodes inside a frame", () => {
-    const preset = "universal" as const;
-    const sid = defaultStyleId(preset);
-    const d = emptyDiagram(preset);
+    const d = emptyDiagram();
+    const sid = defaultStyleId(d);
     d.frames.push({ id: "f1", x: 0, y: 0, w: 400, h: 400 });
     d.nodes.push({
       id: "c1",
@@ -185,9 +182,8 @@ describe("toFlowNodes sub-flow", () => {
   });
 
   it("does not set parent props on nodes without a parent", () => {
-    const preset = "universal" as const;
-    const sid = defaultStyleId(preset);
-    const d = emptyDiagram(preset);
+    const d = emptyDiagram();
+    const sid = defaultStyleId(d);
     d.nodes.push(node("a", 0, sid));
     const n = toFlowNodes(d).find((x) => x.id === "a");
     expect(n?.parentId).toBeUndefined();
@@ -198,9 +194,8 @@ describe("toFlowNodes sub-flow", () => {
 
 describe("nextChildRelativePlacement", () => {
   it("stacks vertically under siblings inside a frame", () => {
-    const preset = "universal" as const;
-    const sid = defaultStyleId(preset);
-    const d = emptyDiagram(preset);
+    const d = emptyDiagram();
+    const sid = defaultStyleId(d);
     d.frames.push({ id: "f1", x: 0, y: 0, w: 400, h: 400 });
     d.nodes.push({
       id: "a",
@@ -216,8 +211,7 @@ describe("nextChildRelativePlacement", () => {
   });
 
   it("uses FRAME_INNER_PAD top/left for the first child", () => {
-    const preset = "universal" as const;
-    const d = emptyDiagram(preset);
+    const d = emptyDiagram();
     d.frames.push({ id: "f1", x: 0, y: 0, w: 400, h: 400 });
     expect(nextChildRelativePlacement(d, "f1")).toEqual({
       x: FRAME_INNER_PAD.left,
@@ -287,9 +281,8 @@ describe("paddedFrameSize / withPaddedFrames", () => {
   });
 
   it("withPaddedFrames pads only frames whose children would otherwise touch the border", () => {
-    const preset = "universal" as const;
-    const sid = defaultStyleId(preset);
-    const d: DiagramV1 = emptyDiagram(preset);
+    const d: DiagramV1 = emptyDiagram();
+    const sid = defaultStyleId(d);
     d.frames.push(frame("tight", 0, 0, 100, 80), frame("loose", 500, 500, 600, 500));
     d.nodes.push(
       child("c1", "tight", 24, 36, 140, 64, sid),
@@ -304,15 +297,14 @@ describe("paddedFrameSize / withPaddedFrames", () => {
   });
 
   it("withPaddedFrames returns the same reference when nothing needs padding", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
     d.frames.push(frame("f1", 0, 0, 200, 150));
     expect(withPaddedFrames(d)).toBe(d);
   });
 
   it("withPaddedFrames shifts the frame up-left and re-roots children when they sit inside the left/top gutter", () => {
-    const preset = "universal" as const;
-    const sid = defaultStyleId(preset);
-    const d: DiagramV1 = emptyDiagram(preset);
+    const d: DiagramV1 = emptyDiagram();
+    const sid = defaultStyleId(d);
     d.frames.push(frame("f1", 100, 100, 200, 150));
     d.nodes.push(child("c1", "f1", 0, 0, 80, 40, sid));
     const out = withPaddedFrames(d);
@@ -327,9 +319,8 @@ describe("paddedFrameSize / withPaddedFrames", () => {
   });
 
   it("withPaddedFrames preserves the child's absolute position after a left/top shift", () => {
-    const preset = "universal" as const;
-    const sid = defaultStyleId(preset);
-    const d: DiagramV1 = emptyDiagram(preset);
+    const d: DiagramV1 = emptyDiagram();
+    const sid = defaultStyleId(d);
     d.frames.push(frame("f1", 100, 100, 400, 300));
     d.nodes.push(child("c1", "f1", 5, 8, 80, 40, sid));
     const beforeAbs = { x: 100 + 5, y: 100 + 8 };
@@ -360,10 +351,10 @@ describe("paddedFrameSize / withPaddedFrames", () => {
 });
 
 describe("findDropTargetFrame", () => {
-  const sid = defaultStyleId("universal");
+  const sid = defaultStyleId(emptyDiagram());
 
   it("returns the frame whose bounds contain the node's center", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
     d.frames.push({ id: "f1", x: 100, y: 100, w: 400, h: 300 });
     d.nodes.push({
       id: "n1",
@@ -379,7 +370,7 @@ describe("findDropTargetFrame", () => {
   });
 
   it("returns undefined when the node center is outside any frame", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
     d.frames.push({ id: "f1", x: 100, y: 100, w: 400, h: 300 });
     d.nodes.push({
       id: "n1",
@@ -395,7 +386,7 @@ describe("findDropTargetFrame", () => {
   });
 
   it("returns undefined when the node already has a parent (extent: parent prevents cross-frame drops)", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
     d.frames.push({ id: "f1", x: 100, y: 100, w: 400, h: 300 });
     d.nodes.push({
       id: "n1",

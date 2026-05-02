@@ -12,6 +12,9 @@ const esTarget = process.env.TAURI_ENV_PLATFORM === "windows" ? "chrome105" : "s
 
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: {
+    exclude: ["simple-icons"],
+  },
   resolve: {
     alias: {
       "@": path.resolve(appDir, "src"),

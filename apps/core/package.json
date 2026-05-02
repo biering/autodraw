@@ -1,7 +1,7 @@
 {
   "name": "@autodraw/core",
   "version": "0.1.0",
-  "description": "Diagram v1 schema, palettes, routing, and SVG rendering for Autodraw",
+  "description": "Diagram v1 schema, node styles, routing, and SVG rendering for Autodraw",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

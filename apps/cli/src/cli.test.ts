@@ -1,14 +1,14 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
 import { emptyDiagram, parseDiagram, renderSVG, serializeDiagram } from "@autodraw/core";
+import { describe, expect, it } from "vitest";
 
 describe("cli fixture roundtrip", () => {
   it("writes and parses a diagram fixture", () => {
     const dir = mkdtempSync(join(tmpdir(), "autodraw-"));
     try {
-      const doc = emptyDiagram("universal");
+      const doc = emptyDiagram();
       doc.nodes.push({
         id: "n1",
         text: "Hello",
@@ -16,7 +16,7 @@ describe("cli fixture roundtrip", () => {
         y: 10,
         w: 120,
         h: 60,
-        styleId: "red",
+        styleId: "yellow",
       });
       const p = join(dir, "t.adraw");
       writeFileSync(p, serializeDiagram(doc), "utf8");

@@ -9,5 +9,9 @@ export default defineConfig({
 	integrations: [react(), sitemap()],
 	vite: {
 		plugins: [tailwindcss()],
+		// `simple-icons` is one huge ESM; Vite’s dep optimizer can mis-resolve named exports (`siCursor`).
+		optimizeDeps: {
+			exclude: ["simple-icons"],
+		},
 	},
 });

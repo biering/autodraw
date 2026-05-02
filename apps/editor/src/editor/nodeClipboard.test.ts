@@ -13,8 +13,8 @@ import {
 } from "./nodeClipboard";
 
 function sampleNode(over: Partial<NodeRecord> = {}): NodeRecord {
-  const d = emptyDiagram("universal");
-  const sid = defaultStyleId("universal");
+  const d = emptyDiagram();
+  const sid = defaultStyleId(d);
   return {
     id: "n1",
     text: "Hello",
@@ -111,7 +111,7 @@ describe("parseAutodrawNodesClipboard", () => {
   });
 
   it("accepts legacy Agentsdraw multi-node marker", () => {
-    const sid = defaultStyleId("universal");
+    const sid = defaultStyleId(emptyDiagram());
     const json = JSON.stringify({
       $type: "agentsdraw-nodes-clip-v1",
       nodes: [{ text: "L", x: 0, y: 0, w: 80, h: 40, styleId: sid, shape: "roundedRect" }],
@@ -124,7 +124,7 @@ describe("parseAutodrawNodesClipboard", () => {
 
 describe("placementForMultiPaste", () => {
   it("matches single-node placement behavior", () => {
-    const d = emptyDiagram("universal");
+    const d = emptyDiagram();
     const n = sampleNode();
     const payload = parseAutodrawNodeClipboard(serializeNodeForClip(n))!;
     const placed = placementForMultiPaste([payload], 100, 100, d);
@@ -133,8 +133,8 @@ describe("placementForMultiPaste", () => {
   });
 
   it("preserves relative layout for multiple nodes", () => {
-    const d = emptyDiagram("universal");
-    const sid = defaultStyleId("universal");
+    const d = emptyDiagram();
+    const sid = defaultStyleId(emptyDiagram());
     const a: Omit<NodeRecord, "id"> = {
       text: "A",
       x: 0,
@@ -164,8 +164,8 @@ describe("placementForMultiPaste", () => {
 
 describe("placementForPaste", () => {
   it("centers on flow coords with 16px snap and resolves unknown styleId", () => {
-    const d = emptyDiagram("universal");
-    const fallback = defaultStyleId("universal");
+    const d = emptyDiagram();
+    const fallback = defaultStyleId(d);
     const payload = sampleNode({ styleId: "does-not-exist-in-diagram" });
     const placed = placementForPaste(payload, 100, 100, d);
     expect(placed.styleId).toBe(fallback);
@@ -179,8 +179,8 @@ describe("placementForPaste", () => {
   });
 
   it("keeps known styleId", () => {
-    const d = emptyDiagram("universal");
-    const sid = defaultStyleId("universal");
+    const d = emptyDiagram();
+    const sid = defaultStyleId(emptyDiagram());
     const payload = sampleNode({ styleId: sid });
     const placed = placementForPaste(payload, 200, 200, d);
     expect(placed.styleId).toBe(sid);
@@ -189,7 +189,7 @@ describe("placementForPaste", () => {
 
 describe("resolveStyleIdForPaste", () => {
   it("falls back to default when style is unknown", () => {
-    const d = emptyDiagram("universal");
-    expect(resolveStyleIdForPaste(d, "__missing__")).toBe(defaultStyleId("universal"));
+    const d = emptyDiagram();
+    expect(resolveStyleIdForPaste(d, "__missing__")).toBe(defaultStyleId(d));
   });
 });

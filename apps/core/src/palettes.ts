@@ -1,4 +1,4 @@
-import type { NodeShape, NodeStyleDefinition, PalettePreset } from "./schema.js";
+import type { NodeShape, NodeStyleDefinition } from "./schema.js";
 
 function style(
   id: string,
@@ -23,14 +23,13 @@ function style(
 /** `#RRGGBB` → linear RGB channels 0–1. */
 function hexRgb(hex: string): [number, number, number] {
   const h = hex.replace("#", "").trim();
-  const n = parseInt(h, 16);
+  const n = Number.parseInt(h, 16);
   return [(n >> 16) / 255, ((n >> 8) & 0xff) / 255, (n & 0xff) / 255];
 }
 
 function styleFromHex(
   id: string,
   fillHex: string,
-  _strokeDarken = 1,
   shape: NodeShape = "roundedRect",
 ): NodeStyleDefinition {
   const [r, g, b] = hexRgb(fillHex);
@@ -38,10 +37,9 @@ function styleFromHex(
 }
 
 /**
- * Primary node fills (editor + export): the five brand hexes on yellow/orange/green/blue/purple;
- * `red` / `pink` reuse coral and purple for older `styleId` values. Strokes match fills.
+ * Default node fills (editor + export): brand hexes; `red` / `pink` reuse coral and purple for older `styleId` values.
  */
-const universal: NodeStyleDefinition[] = [
+const defaultSwatches: NodeStyleDefinition[] = [
   styleFromHex("yellow", "#F0EC57"),
   styleFromHex("orange", "#E2856E"),
   styleFromHex("pink", "#6A66A3"),
@@ -51,50 +49,24 @@ const universal: NodeStyleDefinition[] = [
   style("gray", [0.82, 0.82, 0.84, 1], [0.45, 0.45, 0.48, 1], "roundedRect"),
 ];
 
-function toGray(s: NodeStyleDefinition): NodeStyleDefinition {
-  const y = (f: number, g: number, b: number) => 0.299 * f + 0.587 * g + 0.114 * b;
-  const fy = y(s.fillRed, s.fillGreen, s.fillBlue);
-  const sy = y(s.strokeRed, s.strokeGreen, s.strokeBlue);
-  return {
-    ...s,
-    fillRed: fy,
-    fillGreen: fy,
-    fillBlue: fy,
-    strokeRed: sy,
-    strokeGreen: sy,
-    strokeBlue: sy,
-  };
+/** Shallow copy of default brand swatches for new diagrams (`emptyDiagram`). */
+export function defaultDiagramCustomStyles(): NodeStyleDefinition[] {
+  return defaultSwatches.map((s) => ({ ...s }));
 }
 
-const grayscale = universal.map(toGray);
-
-const flowchart: NodeStyleDefinition[] = [
-  style("fc_process", [1, 1, 1, 1], [0, 0, 0, 1], "rectangle"),
-  style("fc_decision", [1, 1, 1, 1], [0, 0, 0, 1], "diamond"),
-  style("fc_terminator", [1, 1, 1, 1], [0, 0, 0, 1], "oval"),
-  style("fc_io", [1, 1, 1, 1], [0, 0, 0, 1], "parallelogram"),
-  style("fc_connector", [0.95, 0.95, 0.95, 1], [0.2, 0.2, 0.2, 1], "circle"),
-  style("fc_doc", [1, 1, 0.92, 1], [0.2, 0.2, 0.2, 1], "roundedRect"),
-  style("fc_prep", [0.92, 0.92, 1, 1], [0.2, 0.2, 0.2, 1], "hexagon"),
-  style("fc_manual", [1, 0.95, 0.9, 1], [0.2, 0.2, 0.2, 1], "roundedRect"),
-];
-
-export function paletteStyles(preset: PalettePreset): NodeStyleDefinition[] {
-  switch (preset) {
-    case "universal":
-      return universal;
-    case "grayscale":
-      return grayscale;
-    case "flowchart":
-      return flowchart;
-    case "empty":
-      return [];
-  }
+export function resolvedStyles(diagram: import("./schema.js").DiagramV1): NodeStyleDefinition[] {
+  return diagram.customStyles ?? [];
 }
 
-export function defaultStyleId(preset: PalettePreset): string {
-  const s = paletteStyles(preset);
-  return s[0]?.id ?? "yellow";
+export function defaultStyleId(diagram: import("./schema.js").DiagramV1): string {
+  return diagram.customStyles?.[0]?.id ?? "yellow";
+}
+
+export function styleById(
+  diagram: import("./schema.js").DiagramV1,
+  id: string,
+): NodeStyleDefinition | undefined {
+  return resolvedStyles(diagram).find((s) => s.id === id);
 }
 
 /** Relationship popover presets 0..7 */
@@ -202,15 +174,4 @@ export function applyRelationshipPreset(
         strokeWidth: 1,
       };
   }
-}
-
-export function resolvedStyles(diagram: import("./schema.js").DiagramV1): NodeStyleDefinition[] {
-  return [...paletteStyles(diagram.palette), ...(diagram.customStyles ?? [])];
-}
-
-export function styleById(
-  diagram: import("./schema.js").DiagramV1,
-  id: string,
-): NodeStyleDefinition | undefined {
-  return resolvedStyles(diagram).find((s) => s.id === id);
 }

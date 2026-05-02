@@ -11,7 +11,7 @@ This file orients AI assistants and humans working across the **pnpm monorepo**.
 
 | Package | Path | Role |
 |--------|------|------|
-| `@autodraw/core` | `apps/core` | Zod schema, palettes, routing, `renderSVG()` — **published entry is `dist/`** (compiled with `tsc`). |
+| `@autodraw/core` | `apps/core` | Zod schema, node styles, routing, `renderSVG()` — **published entry is `dist/`** (compiled with `tsc`). |
 | `@autodraw/editor` | `apps/editor` | React Flow canvas UI — **exports TypeScript source** (`./src/...`); no separate `build` script. |
 | `@autodraw/app` | `apps/app` | Tauri 2 desktop shell, licensing, Vite + React; consumes editor + core. |
 | `web` | `apps/web` | Astro 6 SSG + React islands; marketing site, `/app` canvas, `/spec`, `/v`, imprint/privacy. Deploy: static **Workers Assets** + Wrangler. |

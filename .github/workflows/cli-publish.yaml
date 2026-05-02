@@ -1,0 +1,63 @@
+name: Publish CLI to npm
+
+# Publishes `@autodraw/cli`. `@autodraw/core` must already be published at the
+# version declared in apps/core/package.json (pnpm rewrites workspace:* on publish).
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "If true, only run npm publish --dry-run (no upload)"
+        type: boolean
+        default: true
+
+concurrency:
+  group: cli-publish-npm
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Test @autodraw/core
+        run: pnpm --filter @autodraw/core run test
+
+      - name: Test @autodraw/cli
+        run: pnpm --filter @autodraw/cli run test
+
+      - name: Build @autodraw/core
+        run: pnpm --filter @autodraw/core run build
+
+      - name: Build @autodraw/cli
+        run: pnpm --filter @autodraw/cli run build
+
+      - name: Publish @autodraw/cli (dry-run)
+        if: inputs.dry_run
+        run: pnpm --filter @autodraw/cli publish --access public --dry-run --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @autodraw/cli
+        if: ${{ !inputs.dry_run }}
+        run: pnpm --filter @autodraw/cli publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,17 +1,15 @@
 ---
-import RootLayout from "../layouts/RootLayout.astro";
 import { defaultStyleId, emptyDiagram, relationshipPresets } from "@autodraw/core";
 import { encodeDiagramSharePayload } from "@autodraw/editor/share-payload";
 import { Button } from "@/components/ui/button";
+import RootLayout from "../layouts/RootLayout.astro";
 
 const title = ".adraw v1 spec · Autodraw";
 const description =
-	"Diagram file format, palettes, relationship presets, and share links for agents.";
-
-const PALETTES = ["universal", "grayscale", "flowchart", "empty"] as const;
+	"Diagram file format, node styles, relationship presets, and share links for agents.";
 
 function buildDemoPayload(): string {
-	const d = emptyDiagram("universal");
+	const d = emptyDiagram();
 	d.name = "Agent demo";
 	d.nodes.push({
 		id: "demo-node-1",
@@ -20,7 +18,7 @@ function buildDemoPayload(): string {
 		y: 220,
 		w: 160,
 		h: 72,
-		styleId: defaultStyleId(d.palette),
+		styleId: defaultStyleId(d),
 		shape: "roundedRect",
 	});
 	d.nodes.push({
@@ -30,7 +28,7 @@ function buildDemoPayload(): string {
 		y: 240,
 		w: 160,
 		h: 72,
-		styleId: defaultStyleId(d.palette),
+		styleId: defaultStyleId(d),
 	});
 	d.edges.push({
 		id: "demo-edge-1",
@@ -51,14 +49,10 @@ const demoD = buildDemoPayload();
 const demoViewerHref = `/v?d=${encodeURIComponent(demoD)}`;
 const demoAppHref = `/app?d=${encodeURIComponent(demoD)}`;
 
+const minimalBase = emptyDiagram();
 const minimalExample = {
-	version: 1,
+	...minimalBase,
 	name: "Minimal",
-	palette: "universal",
-	canvas: { showGrid: true, gridSpacing: 16, zoom: 1 },
-	textLabels: [],
-	frames: [],
-	images: [],
 	nodes: [
 		{
 			id: "a",
@@ -102,13 +96,13 @@ OUTPUT RULES:
 - The object MUST satisfy diagram v1:
   - version: 1 (number)
   - name: short string (max 256 chars)
-  - palette: one of "universal" | "grayscale" | "flowchart" | "empty"
   - canvas: { "showGrid": boolean, "gridSpacing": number, "zoom": number }
   - nodes: array of { id, text, x, y, w, h, styleId, shape?, link?, locked? }
   - edges: array of { id, from, to, routing, dash, head, tail, label, strokeWidth?, sourceHandle?, targetHandle?, relationshipPreset?, link?, locked? }
   - textLabels: array of { id, text, x, y } (optional; omit or [] for none)
   - frames: array of { id, x, y, w, h, name? } (optional; omit or [] for none)
   - images: array of { id, src, x, y, w, h, alt? } — src must be https URL; no base64 (optional; omit or [] for none)
+  - customStyles: array of style definitions (fill/stroke/shape per id). New files include default brand swatches; add entries here to define custom colors or shapes.
 
 NODE shapes (optional): rectangle | roundedRect | oval | circle | diamond | hexagon | octagon | parallelogram
 
@@ -126,7 +120,7 @@ For consistent relationship styling you MAY set relationshipPreset to an integer
 6 orthogonal dashed diamond head
 7 orthogonal dotted open head
 
-STYLE IDs: for palette "universal", common styleIds include yellow, orange, pink, blue, green, lime, gray (see Autodraw spec page).
+STYLE IDs: each node styleId must match an entry in customStyles (default templates include yellow, orange, pink, blue, green, lime, gray).
 
 SHARING: After emitting JSON, tell the user they can:
 - Save as file.adraw and open in the Autodraw Mac app or import in the web editor, OR
@@ -200,11 +194,8 @@ const edgeRecordExample = `{
 					<li><code class="font-mono text-sm">version</code> — must be <code class="font-mono">1</code></li>
 					<li><code class="font-mono text-sm">name</code> — user-visible title (string, max 256 chars)</li>
 					<li>
-						<code class="font-mono text-sm">palette</code> — one of: {
-							PALETTES.map((p) => (
-								<code class="mr-1 font-mono text-sm">{p}</code>
-							))
-						}
+						<code class="font-mono text-sm">customStyles</code> — array of node style definitions (colors, stroke, shape
+						per <code class="font-mono">id</code>). New diagrams ship default brand swatches; extend or override here.
 					</li>
 					<li>
 						<code class="font-mono text-sm">canvas</code> — <code class="font-mono text-sm"
@@ -224,9 +215,6 @@ const edgeRecordExample = `{
 						<code class="font-mono text-sm">images</code> — optional URL-referenced images, no embedding (omit or <code
 							class="font-mono">[]</code>)
 					</li>
-					<li>
-						<code class="font-mono text-sm">customStyles</code> — optional array of style definitions (advanced)
-					</li>
 				</ul>
 			</section>
 
@@ -235,8 +223,8 @@ const edgeRecordExample = `{
 				<pre
 					class="mt-4 overflow-x-auto rounded-xl border border-neutral-200 bg-neutral-50 p-4 font-mono text-xs leading-relaxed text-neutral-800 md:text-sm">{nodeRecordExample}</pre>
 				<p class="mt-3 text-sm text-neutral-600">
-					<code class="font-mono">styleId</code> must exist in the resolved palette (built-in palette styles + <code
-						class="font-mono">customStyles</code>).
+					<code class="font-mono">styleId</code> must exist in <code class="font-mono">customStyles</code> (each entry defines
+					fill, stroke, and default shape for that id).
 				</p>
 			</section>
 

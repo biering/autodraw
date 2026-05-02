@@ -1,9 +1,10 @@
 import { Args, Command, Flags } from "@oclif/core";
-import { readDiagram, writeDiagram } from "../../internal/io.js";
+import { copyCustomStylesInPlace } from "./styles.js";
 
+/** @deprecated Use `copy styles`. */
 export default class CopyPalette extends Command {
   static id = "copy palette";
-  static description = "Copy palette and custom styles from another diagram";
+  static description = "Deprecated: use `copy styles` (copies customStyles only)";
 
   static args = {
     file: Args.string({
@@ -18,11 +19,10 @@ export default class CopyPalette extends Command {
 
   async run(): Promise<void> {
     const { args, flags } = await this.parse(CopyPalette);
-    const target = readDiagram(args.file);
-    const source = readDiagram(flags.from);
-    target.palette = source.palette;
-    target.customStyles = source.customStyles ?? [];
-    writeDiagram(args.file, target);
-    this.log(`Copied palette from ${flags.from}`);
+    this.warn(
+      "`autodraw copy palette` is deprecated; use `autodraw copy styles` (node styles live in customStyles).",
+    );
+    copyCustomStylesInPlace(args.file, flags.from);
+    this.log(`Copied styles from ${flags.from}`);
   }
 }

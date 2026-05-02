@@ -1,4 +1,4 @@
-import { defaultStyleId, parseDiagram } from "@autodraw/core";
+import { defaultStyleId, emptyDiagram, parseDiagram } from "@autodraw/core";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   DIAGRAM_BODY_SOURCE_HANDLE,
@@ -8,12 +8,11 @@ import {
 } from "../canvas/flowAdapter";
 import { useDocument } from "./useDocument";
 
-const PALETTE = "universal" as const;
-const STYLE = defaultStyleId(PALETTE);
+const STYLE = defaultStyleId(emptyDiagram());
 
 /** Reset the singleton store and seed two nodes to serve as edge endpoints. */
 function resetStoreWithTwoNodes(): { a: string; b: string } {
-  useDocument.getState().newDocument(PALETTE);
+  useDocument.getState().newDocument();
   const a = useDocument
     .getState()
     .addNode(
@@ -44,7 +43,7 @@ function resetStoreWithTwoNodes(): { a: string; b: string } {
  */
 describe("useDocument edge handle stripping", () => {
   beforeEach(() => {
-    useDocument.getState().newDocument(PALETTE);
+    useDocument.getState().newDocument();
   });
 
   it("addEdge never stores sourceHandle or targetHandle, regardless of input", () => {
@@ -123,7 +122,7 @@ describe("useDocument edge handle stripping", () => {
 
 describe("updateFrame color", () => {
   beforeEach(() => {
-    useDocument.getState().newDocument(PALETTE);
+    useDocument.getState().newDocument();
   });
 
   it("persists frame color, propagates through toFlowNodes, and round-trips through parse", () => {

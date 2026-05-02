@@ -8,7 +8,6 @@ import {
   type ImageRecord,
   type NodeRecord,
   normalizeDiagramName,
-  type PalettePreset,
   parseDiagram,
   type TextLabelRecord,
 } from "@autodraw/core";
@@ -65,8 +64,6 @@ export type AppState = {
   canvasTheme: CanvasTheme;
   selection: { nodeIds: string[]; edgeIds: string[] };
   zoom: number;
-  /** In-app welcome sheet (open vs new); not used on cold start — use File ▸ Open Diagram. */
-  showWelcomeGate: boolean;
   showExportSheet: boolean;
   pendingEdgeSource: string | null;
   editingNodeId: string | null;
@@ -81,7 +78,6 @@ export type AppState = {
   markClean: () => void;
   setSelection: (nodeIds: string[], edgeIds?: string[]) => void;
   setZoom: (z: number) => void;
-  setShowWelcomeGate: (v: boolean) => void;
   setShowExportSheet: (v: boolean) => void;
   setCanvasTheme: (t: CanvasTheme) => void;
   setPendingEdgeSource: (id: string | null) => void;
@@ -89,8 +85,8 @@ export type AppState = {
   setEditingFrameId: (id: string | null) => void;
   setRelationshipDraft: (d: RelationshipDraft | null) => void;
   commitRelationshipDraft: (markers: { head: EdgeHead; tail: EdgeHead }) => void;
-  newDocument: (palette: PalettePreset) => void;
-  loadPaletteFrom: (source: DiagramV1) => void;
+  newDocument: () => void;
+  loadStylesFrom: (source: DiagramV1) => void;
   addNode: (n: Omit<NodeRecord, "id"> & { id?: string }, opts?: { focusLabel?: boolean }) => string;
   updateNode: (id: string, patch: Partial<NodeRecord>) => void;
   removeNode: (id: string) => void;
@@ -119,7 +115,6 @@ const initial = (): Omit<
   | "markClean"
   | "setSelection"
   | "setZoom"
-  | "setShowWelcomeGate"
   | "setShowExportSheet"
   | "setCanvasTheme"
   | "setPendingEdgeSource"
@@ -128,7 +123,7 @@ const initial = (): Omit<
   | "setRelationshipDraft"
   | "commitRelationshipDraft"
   | "newDocument"
-  | "loadPaletteFrom"
+  | "loadStylesFrom"
   | "addNode"
   | "updateNode"
   | "removeNode"
@@ -143,13 +138,12 @@ const initial = (): Omit<
   | "updateEdge"
   | "removeEdge"
 > => ({
-  diagram: emptyDiagram("universal"),
+  diagram: emptyDiagram(),
   filePath: null,
   dirty: false,
   canvasTheme: readStoredCanvasTheme(),
   selection: { nodeIds: [], edgeIds: [] },
   zoom: 1,
-  showWelcomeGate: false,
   showExportSheet: false,
   pendingEdgeSource: null,
   editingNodeId: null,
@@ -168,9 +162,6 @@ export const useDocument = create<AppState>()(
           filePath: nextPath,
           dirty: opts?.dirty ?? false,
           editingFrameId: null,
-          ...(typeof nextPath === "string" && nextPath.length > 0
-            ? { showWelcomeGate: false }
-            : {}),
         });
       },
       setDiagramName: (raw) =>
@@ -182,11 +173,7 @@ export const useDocument = create<AppState>()(
             dirty: true,
           };
         }),
-      setFilePath: (p) =>
-        set({
-          filePath: p,
-          ...(p != null && p !== "" ? { showWelcomeGate: false } : {}),
-        }),
+      setFilePath: (p) => set({ filePath: p }),
       markDirty: () => set({ dirty: true }),
       markClean: () => set({ dirty: false }),
       setSelection: (nodeIds, edgeIds = []) => {
@@ -206,7 +193,6 @@ export const useDocument = create<AppState>()(
         });
       },
       setZoom: (z) => set({ zoom: Math.min(MAX_VIEW_ZOOM, z) }),
-      setShowWelcomeGate: (v) => set({ showWelcomeGate: v }),
       setShowExportSheet: (v) => set({ showExportSheet: v }),
       setCanvasTheme: (canvasTheme) => {
         if (typeof window !== "undefined") {
@@ -244,19 +230,17 @@ export const useDocument = create<AppState>()(
         });
         set({ relationshipDraft: null });
       },
-      newDocument: (palette) =>
+      newDocument: () =>
         set({
           ...initial(),
-          diagram: emptyDiagram(palette),
-          showWelcomeGate: false,
+          diagram: emptyDiagram(),
           dirty: false,
           filePath: null,
         }),
-      loadPaletteFrom: (source) =>
+      loadStylesFrom: (source) =>
         set((s) => ({
           diagram: {
             ...s.diagram,
-            palette: source.palette,
             customStyles: source.customStyles ?? [],
           },
           dirty: true,
@@ -518,5 +502,3 @@ export function undoDocument(): void {
 export function redoDocument(): void {
   useDocument.temporal.getState().redo();
 }
-
-export { defaultStyleId, emptyDiagram, parseDiagram };

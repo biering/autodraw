@@ -12,15 +12,13 @@ import {
 } from "../platform/files";
 import { isTauri } from "../platform/isTauri";
 import { decodeDiagramSharePayload } from "../sharePayload";
-import { CliSkillHelp } from "./CliSkillHelp";
+import { DiagramCanvas } from "./canvas/DiagramCanvas";
+import { isTypingInField } from "./isTypingInField";
 import { OnboardingButton } from "./onboarding/OnboardingButton";
 import { OnboardingDialog } from "./onboarding/OnboardingDialog";
 import { useFirstRunOnboarding } from "./onboarding/useOnboarding";
-import { DiagramCanvas } from "./canvas/DiagramCanvas";
-import { isTypingInField } from "./isTypingInField";
 import { AddElementPopover } from "./popovers/AddElementPopover";
 import { ExportSheet } from "./sheets/ExportSheet";
-import { WelcomeDiagramSheet } from "./sheets/WelcomeDiagramSheet";
 import { redoDocument, undoDocument, useDocument } from "./state/useDocument";
 import { Toolbar } from "./Toolbar";
 import { ZoomDock } from "./ZoomDock";
@@ -72,7 +70,7 @@ export function EditorShellLicensed() {
         if (openPath) {
           await openDocumentFromPath(openPath);
         } else if (wantNew) {
-          useDocument.getState().newDocument("universal");
+          useDocument.getState().newDocument();
         }
       } finally {
         const url = new URL(window.location.href);
@@ -180,9 +178,7 @@ export function EditorShellLicensed() {
         <Toolbar />
         <OnboardingButton />
         <OnboardingDialog />
-        <CliSkillHelp />
         <ZoomDock />
-        <WelcomeDiagramSheet />
         <ExportSheet />
         <AddElementPopover />
         <Toaster position="bottom-right" closeButton />

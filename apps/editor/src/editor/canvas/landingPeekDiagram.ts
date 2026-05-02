@@ -1,6 +1,6 @@
 import {
-  emptyDiagram,
   type DiagramV1,
+  emptyDiagram,
   type NodeRecord,
   type NodeStyleDefinition,
 } from "@autodraw/core";
@@ -23,7 +23,7 @@ const PEEK_STYLE: NodeStyleDefinition = {
 
 /** Static sample used on the marketing page; ids prefixed so they never collide with editor sessions. */
 export function createLandingPeekDiagram(): DiagramV1 {
-  const d = emptyDiagram("grayscale");
+  const d = emptyDiagram();
   d.name = "Preview";
   d.canvas = { showGrid: true, gridSpacing: 16, zoom: 1 };
   return {
